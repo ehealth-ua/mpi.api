@@ -44,14 +44,18 @@ defmodule Mpi.PersonHist do
     updated_by
   )
 
+  @required_fields ~W(
+    first_name
+    last_name
+    birth_date
+    gender
+    inserted_by
+    updated_by
+  )
+
   def changeset(struct, params \\ %{}) do
     struct
     |> cast(params, @fields)
-    |> validate_required(:first_name)
-    |> validate_required(:last_name)
-    |> validate_required(:birth_date)
-    |> validate_required(:gender)
-    |> validate_required(:inserted_by)
-    |> validate_required(:updated_by)
+    |> validate_required(@required_fields)
   end
 end
