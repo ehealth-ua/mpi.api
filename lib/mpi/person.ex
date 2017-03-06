@@ -4,7 +4,7 @@ defmodule Mpi.Person do
   import Ecto.Changeset
 
   @primary_key {:id, Ecto.UUID, autogenerate: true}
-  schema "persons" do
+  schema "persons_hist" do
     field :first_name, :string
     field :last_name, :string
     field :second_name, :string
@@ -15,9 +15,29 @@ defmodule Mpi.Person do
     field :national_id, :string
     field :death_date, :date
     field :is_active, :boolean
-    field :documents, {:array, :map}
-    field :addresses, {:array, :map}
-    field :phones, {:array, :map}
+    embeds_many :documents, Document do
+      field :type, :string
+      field :number, :string
+      field :issue_date, :date
+      field :expiration_date, :date
+      field :issued_by, :string
+    end
+    embeds_many :addresses, Address do
+      field :type, :string
+      field :country, :string
+      field :area, :string
+      field :region, :string
+      field :city, :string
+      field :city_type, :string
+      field :street, :string
+      field :building, :string
+      field :apartment, :string
+      field :zip, :string
+    end
+    embeds_many :phones, Phone do
+      field :type, :string
+      field :number, :string
+    end
     field :history, {:array, :map}
     field :inserted_by, :string
     field :updated_by, :string
@@ -36,12 +56,37 @@ defmodule Mpi.Person do
     national_id
     death_date
     is_active
-    documents
-    addresses
-    phones
     history
     inserted_by
     updated_by
+  )
+
+  @document_fields ~W(
+    type
+    number
+    issue_date
+    expiration_date
+    issued_by
+  )
+
+  @address_fields ~W(
+    type
+    number
+    type
+    country
+    area
+    region
+    city
+    city_type
+    street
+    building
+    apartment
+    zip
+  )
+
+  @phone_fields ~W(
+    type
+    number
   )
 
   @required_fields [
@@ -56,6 +101,22 @@ defmodule Mpi.Person do
   def changeset(struct, params \\ %{}) do
     struct
     |> cast(params, @fields)
+    |> cast_embed(:documents, with: &document_changeset/2)
     |> validate_required(@required_fields)
+  end
+
+  def document_changeset(struct, params) do
+    struct
+    |> cast(params, @document_fields)
+  end
+
+  def address_changeset(struct, params) do
+    struct
+    |> cast(params, @address_fields)
+  end
+
+  def phone_changeset(struct, params) do
+    struct
+    |> cast(params, @phone_fields)
   end
 end

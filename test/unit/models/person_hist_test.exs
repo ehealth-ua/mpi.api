@@ -17,9 +17,35 @@ defmodule Mpi.PersonHistTest do
         national_id: "123",
         death_date: "2016-12-25",
         is_active: false,
-        documents: [],
-        addresses: [],
-        phones: [],
+        documents: [
+          %{
+            type: "PASSPORT",
+            number: "120518",
+            issue_date: "2015-04-07",
+            expiration_date: "2015-04-07",
+            issued_by: "DMSU"
+          }
+        ],
+        addresses: [
+          %{
+            type: "RESIDENCE",
+            country: "UA",
+            area: "Житомирська",
+            region: "Бердичівський",
+            city: "Київ",
+            city_type: "CITY",
+            street: "вул. Ніжинська",
+            building: "15",
+            apartment: "23",
+            zip: "02090"
+          }
+        ],
+        phones: [
+          %{
+            type: "MOBILE",
+            number: "+380601234567"
+          }
+        ],
         history: [],
         inserted_by: "Eugene",
         updated_by: "Eugene"
