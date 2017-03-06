@@ -14,9 +14,9 @@ environment :default do
   set cookie: cookie
 end
 
-release :mpi_api do
-  set version: current_version(:mpi_api)
+release :mpi do
+  set version: current_version(:mpi)
   set applications: [
-    mpi_api: :permanent
+    mpi: :permanent
   ]
 end

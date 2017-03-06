@@ -1,8 +1,8 @@
-defmodule MpiApi.Web.UserSocket do
+defmodule Mpi.Web.UserSocket do
   use Phoenix.Socket
 
   ## Channels
-  # channel "room:*", MpiApi.Web.RoomChannel
+  # channel "room:*", Mpi.Web.RoomChannel
 
   ## Transports
   transport :websocket, Phoenix.Transports.WebSocket
@@ -30,7 +30,7 @@ defmodule MpiApi.Web.UserSocket do
   # Would allow you to broadcast a "disconnect" event and terminate
   # all active sockets and channels for a given user:
   #
-  #     MpiApi.Web.Endpoint.broadcast("user_socket:#{user.id}", "disconnect", %{})
+  #     Mpi.Web.Endpoint.broadcast("user_socket:#{user.id}", "disconnect", %{})
   #
   # Returning `nil` makes this socket anonymous.
   def id(_socket), do: nil

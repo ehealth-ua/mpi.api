@@ -1,6 +1,6 @@
 #!/bin/sh
-# `pwd` should be /opt/mpi_api
-APP_NAME="mpi_api"
+# `pwd` should be /opt/mpi
+APP_NAME="mpi"
 
 if [ "${APP_MIGRATE}" == "true" ]; then
   echo "[WARNING] Migrating database!"

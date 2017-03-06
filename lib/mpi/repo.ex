@@ -1,5 +1,5 @@
-defmodule MpiApi.Repo do
-  use Ecto.Repo, otp_app: :mpi_api
+defmodule Mpi.Repo do
+  use Ecto.Repo, otp_app: :mpi
 
   @doc """
   Dynamically loads the repository url from the

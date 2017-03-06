@@ -1,5 +1,5 @@
-defmodule MpiApi.Web.ErrorView do
-  use MpiApi.Web, :view
+defmodule Mpi.Web.ErrorView do
+  use Mpi.Web, :view
 
   def render("404.html", _assigns) do
     "Page not found"

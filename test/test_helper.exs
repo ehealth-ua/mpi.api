@@ -1,4 +1,4 @@
 ExUnit.start()
 
-Ecto.Adapters.SQL.Sandbox.mode(MpiApi.Repo, :manual)
+Ecto.Adapters.SQL.Sandbox.mode(Mpi.Repo, :manual)
 

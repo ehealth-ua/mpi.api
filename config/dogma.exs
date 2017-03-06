@@ -4,7 +4,7 @@ alias Dogma.Rule
 config :dogma,
   rule_set: Dogma.RuleSet.All,
   exclude: [
-    ~r(\Alib/mpi_api/tasks.ex), # TODO: https://github.com/lpil/dogma/issues/221
+    ~r(\Alib/mpi/tasks.ex), # TODO: https://github.com/lpil/dogma/issues/221
     ~r(\Arel/),
     ~r(\Adeps/),
   ],

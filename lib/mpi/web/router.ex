@@ -1,5 +1,5 @@
-defmodule MpiApi.Web.Router do
-  use MpiApi.Web, :router
+defmodule Mpi.Web.Router do
+  use Mpi.Web, :router
 
   pipeline :browser do
     plug :accepts, ["html"]
@@ -13,14 +13,14 @@ defmodule MpiApi.Web.Router do
     plug :accepts, ["json"]
   end
 
-  scope "/", MpiApi.Web do
+  scope "/", Mpi.Web do
     pipe_through :browser # Use the default browser stack
 
     get "/", PageController, :index
   end
 
   # Other scopes may use custom stacks.
-  # scope "/api", MpiApi.Web do
+  # scope "/api", Mpi.Web do
   #   pipe_through :api
   # end
 end

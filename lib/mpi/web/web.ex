@@ -1,12 +1,12 @@
-defmodule MpiApi.Web do
+defmodule Mpi.Web do
   @moduledoc """
   A module that keeps using definitions for controllers,
   views and so on.
 
   This can be used in your application as:
 
-      use MpiApi.Web, :controller
-      use MpiApi.Web, :view
+      use Mpi.Web, :controller
+      use Mpi.Web, :view
 
   The definitions below will be executed for every view,
   controller, etc, so keep them short and clean, focused
@@ -18,17 +18,17 @@ defmodule MpiApi.Web do
 
   def controller do
     quote do
-      use Phoenix.Controller, namespace: MpiApi.Web
+      use Phoenix.Controller, namespace: Mpi.Web
       import Plug.Conn
-      import MpiApi.Web.Router.Helpers
-      import MpiApi.Web.Gettext
+      import Mpi.Web.Router.Helpers
+      import Mpi.Web.Gettext
     end
   end
 
   def view do
     quote do
-      use Phoenix.View, root: "lib/mpi_api/web/templates",
-                        namespace: MpiApi.Web
+      use Phoenix.View, root: "lib/mpi/web/templates",
+                        namespace: Mpi.Web
 
       # Import convenience functions from controllers
       import Phoenix.Controller, only: [get_csrf_token: 0, get_flash: 2, view_module: 1]
@@ -36,9 +36,9 @@ defmodule MpiApi.Web do
       # Use all HTML functionality (forms, tags, etc)
       use Phoenix.HTML
 
-      import MpiApi.Web.Router.Helpers
-      import MpiApi.Web.ErrorHelpers
-      import MpiApi.Web.Gettext
+      import Mpi.Web.Router.Helpers
+      import Mpi.Web.ErrorHelpers
+      import Mpi.Web.Gettext
     end
   end
 
@@ -53,7 +53,7 @@ defmodule MpiApi.Web do
   def channel do
     quote do
       use Phoenix.Channel
-      import MpiApi.Web.Gettext
+      import Mpi.Web.Gettext
     end
   end
 

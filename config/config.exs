@@ -6,15 +6,15 @@
 use Mix.Config
 
 # General application configuration
-config :mpi_api,
-  ecto_repos: [MpiApi.Repo]
+config :mpi,
+  ecto_repos: [Mpi.Repo]
 
 # Configures the endpoint
-config :mpi_api, MpiApi.Web.Endpoint,
+config :mpi, Mpi.Web.Endpoint,
   url: [host: "localhost"],
   secret_key_base: "bvzeKHzH8k+qavTDh5NTxFcnPVHIL+Ybi1Bucq2TrJ3I3zqbXEqFr37QbrL0c202",
-  render_errors: [view: MpiApi.Web.ErrorView, accepts: ~w(html json)],
-  pubsub: [name: MpiApi.PubSub,
+  render_errors: [view: Mpi.Web.ErrorView, accepts: ~w(html json)],
+  pubsub: [name: Mpi.PubSub,
            adapter: Phoenix.PubSub.PG2]
 
 # Configures Elixir's Logger

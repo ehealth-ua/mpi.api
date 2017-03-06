@@ -1,4 +1,4 @@
-defmodule MpiApi.ModelCase do
+defmodule Mpi.ModelCase do
   @moduledoc """
   This module defines the test case to be used by
   model tests.
@@ -14,20 +14,20 @@ defmodule MpiApi.ModelCase do
 
   using do
     quote do
-      alias MpiApi.Repo
+      alias Mpi.Repo
 
       import Ecto
       import Ecto.Changeset
       import Ecto.Query
-      import MpiApi.ModelCase
+      import Mpi.ModelCase
     end
   end
 
   setup tags do
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(MpiApi.Repo)
+    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Mpi.Repo)
 
     unless tags[:async] do
-      Ecto.Adapters.SQL.Sandbox.mode(MpiApi.Repo, {:shared, self()})
+      Ecto.Adapters.SQL.Sandbox.mode(Mpi.Repo, {:shared, self()})
     end
 
     :ok

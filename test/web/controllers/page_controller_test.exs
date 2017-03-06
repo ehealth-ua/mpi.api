@@ -1,5 +1,5 @@
-defmodule MpiApi.Web.PageControllerTest do
-  use MpiApi.Web.ConnCase
+defmodule Mpi.Web.PageControllerTest do
+  use Mpi.Web.ConnCase
 
   test "GET /", %{conn: conn} do
     conn = get conn, "/"

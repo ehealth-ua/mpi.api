@@ -1,3 +1,3 @@
-defmodule MpiApi.Web.LayoutViewTest do
-  use MpiApi.Web.ConnCase, async: true
+defmodule Mpi.Web.LayoutViewTest do
+  use Mpi.Web.ConnCase, async: true
 end

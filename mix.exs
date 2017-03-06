@@ -1,8 +1,8 @@
-defmodule MpiApi.Mixfile do
+defmodule Mpi.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :mpi_api,
+    [app: :mpi,
      version: "0.0.1",
      elixir: "~> 1.4",
      elixirc_paths: elixirc_paths(Mix.env),
@@ -17,7 +17,7 @@ defmodule MpiApi.Mixfile do
   #
   # Type `mix help compile.app` for more information.
   def application do
-    [mod: {MpiApi.Application, []},
+    [mod: {Mpi.Application, []},
      extra_applications: [:logger]]
   end
 

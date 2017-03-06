@@ -1,16 +1,16 @@
-defmodule :mpi_api_tasks do
+defmodule :mpi_tasks do
   @moduledoc """
   Nice way to apply migrations inside a released application.
 
   Example:
 
-      mpi_api/bin/mpi_api command mpi_api_tasks migrate!
+      mpi/bin/mpi command mpi_tasks migrate!
   """
 
   import Mix.Ecto
 
   @priv_dir "priv"
-  @repo MpiApi.Repo
+  @repo Mpi.Repo
 
   def migrate! do
     # Migrate
@@ -46,7 +46,7 @@ defmodule :mpi_api_tasks do
 
   defp load_app do
     start_applications([:logger, :postgrex, :ecto])
-    :ok = Application.load(:mpi_api)
+    :ok = Application.load(:mpi)
   end
 
   defp start_applications(apps) do

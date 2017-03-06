@@ -2,7 +2,7 @@ use Mix.Config
 
 # We don't run a server during test. If one is required,
 # you can enable the server option below.
-config :mpi_api, MpiApi.Web.Endpoint,
+config :mpi, Mpi.Web.Endpoint,
   http: [port: 4001],
   server: false
 
@@ -10,10 +10,10 @@ config :mpi_api, MpiApi.Web.Endpoint,
 config :logger, level: :warn
 
 # Configure your database
-config :mpi_api, MpiApi.Repo,
+config :mpi, Mpi.Repo,
   adapter: Ecto.Adapters.Postgres,
   username: "postgres",
   password: "postgres",
-  database: "mpi_api_test",
+  database: "mpi_test",
   hostname: "localhost",
   pool: Ecto.Adapters.SQL.Sandbox
