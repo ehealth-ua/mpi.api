@@ -1,6 +1,6 @@
-defmodule MpiApiTest do
+defmodule MpiTest do
   use ExUnit.Case
-  doctest MpiApi
+  doctest Mpi
 
   test "the truth" do
     assert 1 + 1 == 2

@@ -1,4 +1,4 @@
-# MpiApi
+# Mpi
 
 To start your Phoenix server:
 
