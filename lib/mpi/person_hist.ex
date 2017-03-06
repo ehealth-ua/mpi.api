@@ -4,7 +4,7 @@ defmodule Mpi.PersonHist do
   import Ecto.Changeset
 
   @primary_key {:id, Ecto.UUID, autogenerate: true}
-  schema "persons" do
+  schema "persons_hist" do
     field :first_name, :string
     field :last_name, :string
     field :second_name, :string
@@ -15,10 +15,10 @@ defmodule Mpi.PersonHist do
     field :national_id, :string
     field :death_date, :date
     field :is_active, :boolean
-    field :documents, :map
-    field :addresses, :map
-    field :phones, :map
-    field :history, :map
+    field :documents, {:array, :map}
+    field :addresses, {:array, :map}
+    field :phones, {:array, :map}
+    field :history, {:array, :map}
     field :inserted_by, :string
     field :updated_by, :string
 
@@ -44,14 +44,14 @@ defmodule Mpi.PersonHist do
     updated_by
   )
 
-  @required_fields ~W(
-    first_name
-    last_name
-    birth_date
-    gender
-    inserted_by
-    updated_by
-  )
+  @required_fields [
+    :first_name,
+    :last_name,
+    :birth_date,
+    :gender,
+    :inserted_by,
+    :updated_by
+  ]
 
   def changeset(struct, params \\ %{}) do
     struct
