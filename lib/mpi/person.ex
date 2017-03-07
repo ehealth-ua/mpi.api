@@ -4,7 +4,7 @@ defmodule Mpi.Person do
   import Ecto.Changeset
 
   @primary_key {:id, Ecto.UUID, autogenerate: true}
-  schema "persons_hist" do
+  schema "persons" do
     field :first_name, :string
     field :last_name, :string
     field :second_name, :string
@@ -71,8 +71,6 @@ defmodule Mpi.Person do
 
   @address_fields ~W(
     type
-    number
-    type
     country
     area
     region
@@ -102,6 +100,8 @@ defmodule Mpi.Person do
     struct
     |> cast(params, @fields)
     |> cast_embed(:documents, with: &document_changeset/2)
+    |> cast_embed(:addresses, with: &address_changeset/2)
+    |> cast_embed(:phones, with: &phone_changeset/2)
     |> validate_required(@required_fields)
   end
 
