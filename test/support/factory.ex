@@ -59,19 +59,6 @@ defmodule MPI.Factory do
     }
   end
 
-  def build_factory_params_for_query(factory, overrides \\ []) do
-    factory
-    |> build_factory_params(overrides)
-    |> Poison.encode!()
-    |> Poison.decode!()
-  end
-
-  def build_factory_params(factory, overrides \\ []) do
-    factory
-    |> MPI.Factory.build(overrides)
-    |> schema_to_map()
-  end
-
   def schema_to_map(schema) do
     schema
     |> Map.drop([:__struct__, :__meta__])
