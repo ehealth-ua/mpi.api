@@ -9,7 +9,6 @@ defmodule Mpi.Web.Router do
   scope "/", Mpi.Web do
     pipe_through :api
 
-    get "/persons/:id", PersonController, :get_person
-    post "/persons/", PersonController, :create_person
+    resources "/persons/", PersonController
   end
 end

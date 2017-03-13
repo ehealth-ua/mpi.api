@@ -5,7 +5,7 @@ defmodule Mpi.Web.PersonController do
   alias Mpi.Person
   action_fallback Mpi.Web.FallbackController
 
-  def get_person(conn, %{"id" => id}) do
+  def show(conn, %{"id" => id}) do
     with %Mpi.Person{} = person <- Repo.get(Mpi.Person, id) do
       conn
       |> put_status(:ok)
@@ -13,7 +13,7 @@ defmodule Mpi.Web.PersonController do
     end
   end
 
-  def create_person(conn, params) do
+  def create(conn, params) do
     with %Ecto.Changeset{valid?: true} = changeset <- Person.changeset(%Person{}, params),
       {:ok, person} <- Repo.insert(changeset) do
         conn
