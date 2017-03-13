@@ -32,7 +32,7 @@ defmodule Mpi.Web.ConnCase do
     unless tags[:async] do
       Ecto.Adapters.SQL.Sandbox.mode(Mpi.Repo, {:shared, self()})
     end
-    {:ok, conn: Phoenix.ConnTest.build_conn()}
+    {:ok, conn: Phoenix.ConnTest.build_conn() |> Plug.Conn.put_req_header("content-type", "application/json")}
   end
 
 end

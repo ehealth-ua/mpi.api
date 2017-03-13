@@ -4,9 +4,10 @@ defmodule Mpi.Web.PersonControllerTest do
   test "GET /persons/:id OK", %{conn: conn} do
     person = MPI.Factory.insert(:person)
 
-    res = conn
-    |> get("/persons/#{person.id}")
-    |> json_response(200)
+    res =
+      conn
+      |> get("/persons/#{person.id}")
+      |> json_response(200)
 
     assert res["data"]
 
@@ -18,7 +19,47 @@ defmodule Mpi.Web.PersonControllerTest do
 
     assert person == res["data"]
 
+    assert_person(res["data"])
+  end
 
+  test "GET /persons/not_found", %{conn: conn} do
+    response = conn
+    |> get("/persons/9fa323da-37e1-4789-87f1-8776999d5196")
+    |> json_response(404)
+    |> Map.fetch!("error")
+
+    assert response == %{"type" => "not_found"}
+  end
+
+  test "POST /persons/ OK", %{conn: conn} do
+    person_data = MPI.Factory.build_factory_params(:person)
+
+    res =
+      conn
+      |> post("/persons/", person_data)
+      |> json_response(201)
+
+    assert_person(res["data"])
+
+    res =
+      conn
+      |> get("/persons/#{res["data"]["id"]}")
+      |> json_response(200)
+
+    assert_person(res["data"])
+  end
+
+  test "POST /person/ 422", %{conn: conn} do
+    error =
+      conn
+      |> post("/persons/", %{})
+      |> json_response(422)
+      |> Map.fetch!("error")
+
+    assert error["type"] == "validation_failed"
+  end
+
+  defp assert_person(data) do
     assert %{
       "id" => _,
       "first_name" => _,
@@ -69,15 +110,6 @@ defmodule Mpi.Web.PersonControllerTest do
           "type" => _
           }
       ]
-     } = res["data"]
-  end
-
-  test "GET /persons/not_found", %{conn: conn} do
-    response = conn
-    |> get("/persons/9fa323da-37e1-4789-87f1-8776999d5196")
-    |> json_response(404)
-    |> Map.fetch!("error")
-
-    assert response == %{"type" => "not_found"}
+    } = data
   end
 end
