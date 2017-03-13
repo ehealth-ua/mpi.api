@@ -18,8 +18,7 @@ apt:
 env:
   global:
     - MIX_ENV=test
-    - COVERALLS_REPO_TOKEN=PhxtQEeqdL2AChKnsmHshvrdhI3fP8oqi
-    - DOCKER_HUB_ACCOUNT=place_your_account_name_here
+    - DOCKER_HUB_ACCOUNT=nebo15
     - MAIN_BRANCHES="master develop staging" # Branches on which you want version to be incremented
     - RELEASE_BRANCH="master"
     # Docker credentials
@@ -60,28 +59,6 @@ script:
   - "MIX_TEST_HOST=localhost MIX_TEST_PORT=4000 mix test test/acceptance"
 after_failure:
   - docker logs asm_il --details --since 5h
-# after_success:
-
-# Also you can
-# - automatically build images and push them to Docker Hub;
-# - create new git tag with build version and GitHub release on it.
-#
-# To do so you need to encrypt your docker user name and password and add to environment variables:
-#
-#   $ travis encrypt DOCKER_USERNAME=sample_username DOCKER_PASSWORD=strong_password
-#
-# More info: https://docs.travis-ci.com/user/encryption-keys/
-#
-# Additionally should add env "DOCKER_HUB_ACCOUNT=org_name" to set Hub's organization or account that will hold images.
-# Sample:
-#
-#   env:
-#     global:
-#       - DOCKER_HUB_ACCOUNT=org_name # Docker Hub Account or Organization that will hold images
-#       - secure: "encrypeted_credentials" # Encrypted credentials to login into Docker Hub
-#
-# Then uncomment following lines:
-#
-# after_success:
-#   # Submit Docker container to Docker Hub and create GitHub Release by pushing tag with changelog
-#   - ./bin/ci/push.sh
+after_success:
+  # Submit Docker container to Docker Hub and create GitHub Release by pushing tag with changelog
+  - ./bin/ci/push.sh
