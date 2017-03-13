@@ -4,7 +4,8 @@ FROM nebo15/alpine-elixir:latest
 MAINTAINER Nebo#15 support@nebo15.com
 
 # Configure environment variables and other settings
-ENV MIX_ENV=prod \
+ENV TERM=xterm \
+    MIX_ENV=prod \
     APP_NAME=mpi \
     APP_PORT=4000
 
@@ -12,6 +13,7 @@ WORKDIR ${HOME}
 
 # Install and compile project dependencies
 COPY mix.* ./
+COPY config ./config
 RUN mix do deps.get, deps.compile
 
 # Add project sources
@@ -30,7 +32,7 @@ RUN \
     mkdir -p /opt/$APP_NAME/uploads && \
     cp -R $HOME/priv /opt/$APP_NAME/ && \
     cp -R $HOME/bin/hooks /opt/$APP_NAME/ && \
-    APP_TARBALL=$(find $HOME/rel/$APP_NAME/releases -maxdepth 2 -name ${APP_NAME}.tar.gz) && \
+    APP_TARBALL=$(find $HOME/_build/$MIX_ENV/rel/$APP_NAME/releases -maxdepth 2 -name ${APP_NAME}.tar.gz) && \
     cp $APP_TARBALL /opt/$APP_NAME/ && \
     cd /opt/$APP_NAME && \
     tar -xzf $APP_NAME.tar.gz && \
@@ -40,6 +42,8 @@ RUN \
     chmod -R 777 /opt/$APP_NAME && \
     chmod -R 777 /var/log
 
+RUN epmd -daemon
+
 # Change user to "default"
 USER default
 
@@ -47,7 +51,7 @@ USER default
 ENV REPLACE_OS_VARS=true
 
 # Exposes this port from the docker container to the host machine
-# EXPOSE ${APP_PORT}
+EXPOSE ${APP_PORT}
 
 # Change workdir to a released directory
 WORKDIR /opt
@@ -64,4 +68,4 @@ RUN $APP_NAME/hooks/pre-run.sh
 #  Also you can run migrations whenever container starts:
 #    mpi/bin/mpi command mpi_tasks migrate!
 #  Alternatively you can set env APP_MIGRATE=true and APP_RUN_SEED=true when starting container.
-CMD $APP_NAME/bin/$APP_NAME console
+CMD $APP_NAME/bin/$APP_NAME foreground

@@ -12,8 +12,5 @@ config :logger, level: :warn
 # Configure your database
 config :mpi, Mpi.Repo,
   adapter: Ecto.Adapters.Postgres,
-  username: "postgres",
-  password: "postgres",
-  database: "mpi_test",
-  hostname: "localhost",
-  pool: Ecto.Adapters.SQL.Sandbox
+  pool: Ecto.Adapters.SQL.Sandbox,
+  database: "mpi_test"

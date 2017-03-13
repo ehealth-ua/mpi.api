@@ -1,9 +1,11 @@
 defmodule Mpi.Person do
+  @moduledoc false
   use Ecto.Schema
 
   import Ecto.Changeset
 
   @primary_key {:id, Ecto.UUID, autogenerate: true}
+  @derive {Poison.Encoder, except: [:__meta__]}
   schema "persons" do
     field :first_name, :string
     field :last_name, :string
