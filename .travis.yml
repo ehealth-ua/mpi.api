@@ -22,7 +22,8 @@ env:
     - MAIN_BRANCHES="master develop staging" # Branches on which you want version to be incremented
     - RELEASE_BRANCH="master"
     # Docker credentials
-    - secure: "..."
+    - secure: "ajgDo4M+5u3HOapvtUzq1FzIt1d2osHCgiUwmxvLyQ+9oOnSKTyxY/HbhuXdEUTHuP3lbr4qk4iJq+pCWqKq4en/BuQuPn/V+iQREKbQwjDg7EswOCFdvVZWIQ8o60emeMsPHLJ01WMJRUO4oASJX0gY5lyYA+rw6j+LkBmlmmRL3m55R/TXORPxVlyi8iJ7IJ5Rrt37BtLW9n1dRqQGyB5hKZvf6hodgOv/NE0CUT0ylfdF0aWZWuo5iL1+DCT45s5CbWMmaN2s/CO2h/osV3nylnbqS5vaB/KQrrlV0S/liBftZRDVPQ7yam/i3V55EIiMFeQc9mtwMyYaTexyhK8QApCCnbPQMZgzzb/w3vqyxwWGIB1GSP7rk2xNYd/bm0aorzP9IhIUmkXbgmH5IHVBa87FanzVmuX64DsTme9oKJmzrIdMr9efPB7E7uKXXFQFNJ/0EN5tvNxzQOv45YrXgvVJVvE14mrzAy/bHv/HDomy7maFw+0QzPP51iWODwK15ZcIDCgE8L1EZmFeDOyJxEn2bc/Ez7aH+yUfxuZuu+bAYHwfWGXv/s+tYDFS2BXqmyJYrGEM84a1PxKxFR4fgLB5VTi2YCm4T+zOQ7AzQWr9TKPdkR/8Fj/i087AfjmpBpCk5joweZe3MAHMUvDwKBOEYq9VCCChU5cumoI="
+    - secure: "YGV+T96+RFD3qayuaFDCwffCEErLbauneDICKBpFm9Cpfos0YBhxENSwA3zuH4e7HRZ2W+JOmM5VS6G+1Smc0NJ4t2oD6RvXNLs8VnSmvyqb74P3rfAzB0/Dyl/60LJ463vhxQj+Pgsf/CvBrYYMkVwa/YJP4OEKTtCxdX0FZuPRQsUfZyknTplEv1siBD72kVXkh+skwIMYdxpzPPm8/OaUprCLJytD1Eg8xNGObzEFuVqtkxluBFUi9LZUIvJOPfA1oYicJ1rcHyvrta1XyDJw5i5kOltw6VmFu7go1EQwFXCHSNJnl6avDApqtmFZ5IeMsPV1Wh684jEiaKnRLZYXJ6213b0p+9Wl0i4bxlOdSDkE2ec6/aaDUzf89ByGxCf1L0OMD1+E0RjKX+fOJMg8cnmYDccfZ8B/e7xnoEca9PJEut3h5Q3q8gXZp1r3pLg5c9DsF4/fLJyUrDZnxZRO2myPk/98qnvSzYZ+5AYQWrwRI0r+wZR5twYomTWyz/kbUMLrn8nAryr5llTPikPEEQJj3UJpKMJ1AACja88wf1mspxjmf0i+TiZAxKATdlY8ZMaE+nbqMWP/zjhL71GaLDaaSIV1+eh2z9trfeRpc78f8yS5Z1e25+3llgTqYaY87Wi/2GkuURsFK+elFJdsqGvSs7etbhVClk8249A="
 branches:
   # Releases are generated automatically, stop infinite build loop
   except:
@@ -32,7 +33,6 @@ before_install:
   - sudo ./bin/ci/init-db.sh
 script:
   # Increment version in mix.exs
-  # Uncomment this if you want to increment patch version on each Travis build.
   - "./bin/version-increment.sh"
   # Install dependencies
   - mix deps.get
