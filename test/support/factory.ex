@@ -88,5 +88,5 @@ defmodule MPI.Factory do
     Enum.map(list, fn(x) -> schema_to_map(x) end)
   end
 
-  def random_date(format \\ "%F"), do: Timex.format!(Timex.now, format, :strftime)
+  def random_date, do: DateTime.utc_now() |> DateTime.to_date()
 end

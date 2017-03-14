@@ -8,7 +8,7 @@ defmodule MPI.Mixfile do
      version: @version,
      elixir: "~> 1.4",
      elixirc_paths: elixirc_paths(Mix.env),
-     compilers: [:phoenix, :gettext] ++ Mix.compilers,
+     compilers: [:phoenix] ++ Mix.compilers,
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      aliases: aliases(),
@@ -34,25 +34,18 @@ defmodule MPI.Mixfile do
   # Type `mix help deps` for examples and options.
   defp deps do
     [{:distillery, ">= 0.0.0"},
+     {:cowboy, "~> 1.0"},
+     {:phoenix, "~> 1.3.0-rc"},
+     {:phoenix_ecto, "~> 3.2"},
      {:confex, ">= 0.0.0"},
      {:httpoison, "~> 0.11.0"},
-     {:poison, "~> 3.0", override: true},
+     {:poison, "~> 3.1", override: true},
      {:eview, ">= 0.0.0"},
-     {:timex, "~> 3.0"},
-     {:benchfella, ">= 0.0.0", only: [:dev, :test]},
-     {:ex_doc, ">= 0.0.0", only: [:dev, :test]},
+     {:postgrex, ">= 0.0.0"},
      {:excoveralls, ">= 0.0.0", only: [:dev, :test]},
      {:dogma, ">= 0.0.0", only: [:dev, :test]},
      {:credo, ">= 0.0.0", only: [:dev, :test]},
-     {:ex_machina, ">= 1.0.0", only: [:test]},
-     {:phoenix, "~> 1.3.0-rc"},
-     {:phoenix_pubsub, "~> 1.0"},
-     {:phoenix_ecto, "~> 3.2"},
-     {:postgrex, ">= 0.0.0"},
-     {:phoenix_html, "~> 2.6"},
-     {:phoenix_live_reload, "~> 1.0", only: :dev},
-     {:gettext, "~> 0.11"},
-     {:cowboy, "~> 1.0"}]
+     {:ex_machina, ">= 1.0.0", only: [:test]}]
   end
 
   # Aliases are shortcuts or tasks specific to the current project.
