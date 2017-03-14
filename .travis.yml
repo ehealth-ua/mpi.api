@@ -2,7 +2,7 @@ language: elixir
 sudo: required
 cache:
   directories:
-  - deps
+    - deps
 services:
   - docker
   - postgresql
@@ -58,7 +58,7 @@ script:
   # Run acceptance tests on Docker container
   - "MIX_TEST_HOST=localhost MIX_TEST_PORT=4000 mix test test/acceptance"
 after_failure:
-  - docker logs asm_il --details --since 5h
+  - docker logs mpi --details --since 5h
 after_success:
   # Submit Docker container to Docker Hub and create GitHub Release by pushing tag with changelog
   - ./bin/ci/push.sh
