@@ -1,8 +1,8 @@
-defmodule Mpi.Web.PersonView do
+defmodule MPI.Web.PersonView do
   @moduledoc false
-  use Mpi.Web, :view
+  use MPI.Web, :view
 
-  def render("person.json", %{person: %Mpi.Person{} = person}) do
+  def render("person.json", %{person: %MPI.Person{} = person}) do
     person
   end
 end

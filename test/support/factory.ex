@@ -3,10 +3,10 @@ defmodule MPI.Factory do
   This module lists factories, a mean suitable
   for tests that involve preparation of DB data
   """
-  use ExMachina.Ecto, repo: Mpi.Repo
+  use ExMachina.Ecto, repo: MPI.Repo
 
   def person_factory do
-    %Mpi.Person{
+    %MPI.Person{
       first_name: sequence(:first_name, &"first_name-#{&1}"),
       last_name: sequence(:last_name, &"last_name-#{&1}"),
       second_name: sequence(:second_name, &"second_name-#{&1}"),
@@ -27,7 +27,7 @@ defmodule MPI.Factory do
   end
 
   def address_factory do
-    %Mpi.Person.Address{
+    %MPI.Person.Address{
       type: sequence(:address_type, &"address-type-#{&1}"),
       country: sequence(:country, &"address-country-#{&1}"),
       area: sequence(:area, &"address-area-#{&1}"),
@@ -43,7 +43,7 @@ defmodule MPI.Factory do
   end
 
   def document_factory do
-    %Mpi.Person.Document{
+    %MPI.Person.Document{
       type: sequence(:document_type, &"document-type-#{&1}"),
       number: sequence(:document_number, &"document-number-#{&1}"),
       issue_date: random_date(),
@@ -53,7 +53,7 @@ defmodule MPI.Factory do
   end
 
   def phone_factory do
-    %Mpi.Person.Phone{
+    %MPI.Person.Phone{
       type: sequence(:phone_type, &"phone-type-#{&1}"),
       number: sequence(:document_number, &"phone-number-#{&1}"),
     }

@@ -1,4 +1,4 @@
-defmodule Mpi.Web.Endpoint do
+defmodule MPI.Web.Endpoint do
   @moduledoc false
   use Phoenix.Endpoint, otp_app: :mpi
 
@@ -22,7 +22,7 @@ defmodule Mpi.Web.Endpoint do
   plug Plug.MethodOverride
   plug Plug.Head
 
-  plug Mpi.Web.Router
+  plug MPI.Web.Router
 
   @doc """
   Dynamically loads configuration from the system environment

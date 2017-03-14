@@ -7,10 +7,10 @@ use Mix.Config
 
 # General application configuration
 config :mpi,
-  ecto_repos: [Mpi.Repo]
+  ecto_repos: [MPI.Repo]
 
 # Configures the endpoint
-config :mpi, Mpi.Web.Endpoint,
+config :mpi, MPI.Web.Endpoint,
   url: [host: "localhost"],
   secret_key_base: "bvzeKHzH8k+qavTDh5NTxFcnPVHIL+Ybi1Bucq2TrJ3I3zqbXEqFr37QbrL0c202",
   render_errors: [view: EView.Views.PhoenixError, accepts: ~w(json)]
@@ -20,7 +20,7 @@ config :logger, :console,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id]
 
-config :mpi, Mpi.Repo,
+config :mpi, MPI.Repo,
   adapter: Ecto.Adapters.Postgres,
   username: "postgres",
   password: "postgres",

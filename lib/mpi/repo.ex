@@ -1,4 +1,4 @@
-defmodule Mpi.Repo do
+defmodule MPI.Repo do
   @moduledoc false
   use Ecto.Repo, otp_app: :mpi
 

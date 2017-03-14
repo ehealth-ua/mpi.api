@@ -1,12 +1,12 @@
-defmodule Mpi.Web do
+defmodule MPI.Web do
   @moduledoc """
   A module that keeps using definitions for controllers,
   views and so on.
 
   This can be used in your application as:
 
-      use Mpi.Web, :controller
-      use Mpi.Web, :view
+      use MPI.Web, :controller
+      use MPI.Web, :view
 
   The definitions below will be executed for every view,
   controller, etc, so keep them short and clean, focused
@@ -18,15 +18,15 @@ defmodule Mpi.Web do
 
   def controller do
     quote do
-      use Phoenix.Controller, namespace: Mpi.Web
+      use Phoenix.Controller, namespace: MPI.Web
       import Plug.Conn
-      import Mpi.Web.Router.Helpers
+      import MPI.Web.Router.Helpers
     end
   end
 
   def view do
     quote do
-      import Mpi.Web.Router.Helpers
+      import MPI.Web.Router.Helpers
     end
   end
 

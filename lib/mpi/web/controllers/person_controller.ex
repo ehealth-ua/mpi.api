@@ -1,11 +1,11 @@
-defmodule Mpi.Web.PersonController do
+defmodule MPI.Web.PersonController do
   @moduledoc false
-  use Mpi.Web, :controller
-  alias Mpi.Repo
-  alias Mpi.Person
+  use MPI.Web, :controller
+  alias MPI.Repo
+  alias MPI.Person
   alias Ecto.Changeset
 
-  action_fallback Mpi.Web.FallbackController
+  action_fallback MPI.Web.FallbackController
 
   def show(conn, %{"id" => id}) do
     with %Person{} = person <- Repo.get(Person, id) do

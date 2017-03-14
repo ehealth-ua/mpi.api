@@ -1,4 +1,4 @@
-defmodule Mpi.Person do
+defmodule MPI.Person do
   @moduledoc false
   use Ecto.Schema
 

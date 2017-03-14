@@ -1,5 +1,5 @@
-defmodule Mpi.Web.PersonControllerTest do
-  use Mpi.Web.ConnCase
+defmodule MPI.Web.PersonControllerTest do
+  use MPI.Web.ConnCase
 
   test "GET /persons/:id OK", %{conn: conn} do
     person = MPI.Factory.insert(:person)

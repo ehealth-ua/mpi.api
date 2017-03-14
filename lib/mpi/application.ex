@@ -1,4 +1,4 @@
-defmodule Mpi.Application do
+defmodule MPI.Application do
   @moduledoc false
   use Application
 
@@ -10,16 +10,16 @@ defmodule Mpi.Application do
     # Define workers and child supervisors to be supervised
     children = [
       # Start the Ecto repository
-      supervisor(Mpi.Repo, []),
+      supervisor(MPI.Repo, []),
       # Start the endpoint when the application starts
-      supervisor(Mpi.Web.Endpoint, []),
-      # Start your own worker by calling: Mpi.Worker.start_link(arg1, arg2, arg3)
-      # worker(Mpi.Worker, [arg1, arg2, arg3]),
+      supervisor(MPI.Web.Endpoint, []),
+      # Start your own worker by calling: MPI.Worker.start_link(arg1, arg2, arg3)
+      # worker(MPI.Worker, [arg1, arg2, arg3]),
     ]
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
     # for other strategies and supported options
-    opts = [strategy: :one_for_one, name: Mpi.Supervisor]
+    opts = [strategy: :one_for_one, name: MPI.Supervisor]
     Supervisor.start_link(children, opts)
   end
 end

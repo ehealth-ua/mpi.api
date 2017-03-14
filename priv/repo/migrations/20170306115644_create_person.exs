@@ -1,4 +1,4 @@
-defmodule Mpi.Repo.Migrations.CreateMpi.Person do
+defmodule MPI.Repo.Migrations.CreateMPI.Person do
   use Ecto.Migration
 
   def change do

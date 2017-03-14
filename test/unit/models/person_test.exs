@@ -1,7 +1,7 @@
-defmodule Mpi.PersonTest do
-  use Mpi.ModelCase, async: true
+defmodule MPI.PersonTest do
+  use MPI.ModelCase, async: true
 
-  alias Mpi.Person
+  alias MPI.Person
 
   describe "Valid record" do
     test "successfully inserted in DB" do

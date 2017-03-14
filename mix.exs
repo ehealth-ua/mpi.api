@@ -1,4 +1,4 @@
-defmodule Mpi.Mixfile do
+defmodule MPI.Mixfile do
   use Mix.Project
 
   @version "0.0.5"
@@ -21,7 +21,7 @@ defmodule Mpi.Mixfile do
   #
   # Type `mix help compile.app` for more information.
   def application do
-    [mod: {Mpi.Application, []},
+    [mod: {MPI.Application, []},
      extra_applications: [:logger]]
   end
 

@@ -1,12 +1,12 @@
-defmodule Mpi.Web.Router do
+defmodule MPI.Web.Router do
   @moduledoc false
-  use Mpi.Web, :router
+  use MPI.Web, :router
 
   pipeline :api do
     plug :accepts, ["json"]
   end
 
-  scope "/", Mpi.Web do
+  scope "/", MPI.Web do
     pipe_through :api
 
     resources "/persons/", PersonController

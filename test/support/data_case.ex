@@ -1,4 +1,4 @@
-defmodule Mpi.DataCase do
+defmodule MPI.DataCase do
   @moduledoc """
   This module defines the setup for tests requiring
   access to the application's data layer.
@@ -16,20 +16,20 @@ defmodule Mpi.DataCase do
 
   using do
     quote do
-      alias Mpi.Repo
+      alias MPI.Repo
 
       import Ecto
       import Ecto.Changeset
       import Ecto.Query
-      import Mpi.DataCase
+      import MPI.DataCase
     end
   end
 
   setup tags do
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Mpi.Repo)
+    :ok = Ecto.Adapters.SQL.Sandbox.checkout(MPI.Repo)
 
     unless tags[:async] do
-      Ecto.Adapters.SQL.Sandbox.mode(Mpi.Repo, {:shared, self()})
+      Ecto.Adapters.SQL.Sandbox.mode(MPI.Repo, {:shared, self()})
     end
 
     :ok

@@ -1,6 +1,6 @@
-defmodule Mpi.Web.FallbackController do
+defmodule MPI.Web.FallbackController do
   @moduledoc false
-  use Mpi.Web, :controller
+  use MPI.Web, :controller
 
   def call(conn, nil) do
     conn

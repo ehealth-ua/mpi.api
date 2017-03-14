@@ -1,4 +1,4 @@
-defmodule Mpi.Web.ConnCase do
+defmodule MPI.Web.ConnCase do
   @moduledoc """
   This module defines the test case to be used by
   tests that require setting up a connection.
@@ -19,18 +19,18 @@ defmodule Mpi.Web.ConnCase do
     quote do
       # Import conveniences for testing with connections
       use Phoenix.ConnTest
-      import Mpi.Web.Router.Helpers
+      import MPI.Web.Router.Helpers
 
       # The default endpoint for testing
-      @endpoint Mpi.Web.Endpoint
+      @endpoint MPI.Web.Endpoint
     end
   end
 
 
   setup tags do
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Mpi.Repo)
+    :ok = Ecto.Adapters.SQL.Sandbox.checkout(MPI.Repo)
     unless tags[:async] do
-      Ecto.Adapters.SQL.Sandbox.mode(Mpi.Repo, {:shared, self()})
+      Ecto.Adapters.SQL.Sandbox.mode(MPI.Repo, {:shared, self()})
     end
     {:ok, conn: Phoenix.ConnTest.build_conn() |> Plug.Conn.put_req_header("content-type", "application/json")}
   end
