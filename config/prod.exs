@@ -24,3 +24,7 @@ config :mpi, MPI.Web.Endpoint,
   secret_key_base: {:system, "APP_SECRET_KEY"},
   debug_errors: false,
   code_reloader: false
+
+# If you are doing OTP releases, you need to instruct Phoenix
+# to start the server for all endpoints:
+config :phoenix, :serve_endpoints, true
