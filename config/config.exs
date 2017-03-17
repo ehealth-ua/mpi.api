@@ -7,7 +7,8 @@ use Mix.Config
 
 # General application configuration
 config :mpi,
-  ecto_repos: [MPI.Repo]
+  ecto_repos: [MPI.Repo],
+  max_persons_result: {:system, :integer, "MAX_PERSONS_RESULT", 15}
 
 # Configures the endpoint
 config :mpi, MPI.Web.Endpoint,

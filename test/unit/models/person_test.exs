@@ -48,6 +48,7 @@ defmodule MPI.PersonTest do
         ],
         history: [],
         inserted_by: "Eugene",
+        signature: "Eugene",
         updated_by: "Eugene"
       }
 

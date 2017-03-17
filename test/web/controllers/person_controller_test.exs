@@ -50,7 +50,7 @@ defmodule MPI.Web.PersonControllerTest do
     assert_person(res["data"])
   end
 
-  test "POST /person/ 422", %{conn: conn} do
+  test "POST /persons/ 422", %{conn: conn} do
     error =
       conn
       |> post("/persons/", %{})
@@ -79,7 +79,7 @@ defmodule MPI.Web.PersonControllerTest do
     assert status == 404
   end
 
-  test "PUT /person/:id OK", %{conn: conn} do
+  test "PUT /persons/:id OK", %{conn: conn} do
     person = MPI.Factory.insert(:person)
     person_data = MPI.Factory.build_factory_params(:person)
 
@@ -92,7 +92,7 @@ defmodule MPI.Web.PersonControllerTest do
     assert_person(res["data"])
   end
 
-  test "PUT /person/not_found", %{conn: conn} do
+  test "PUT /persons/not_found", %{conn: conn} do
     response =
       conn
       |> put("/persons/9fa323da-37e1-4789-87f1-8776999d5196", %{})
@@ -100,6 +100,94 @@ defmodule MPI.Web.PersonControllerTest do
       |> Map.fetch!("error")
 
     assert response == %{"type" => "not_found"}
+  end
+
+  test "GET /persons/ SEARCH 422", %{conn: conn} do
+    error =
+      conn
+      |> get("/persons/")
+      |> json_response(422)
+      |> Map.fetch!("error")
+
+    assert error["type"] == "validation_failed"
+
+    Enum.each(error["invalid"], fn(%{"entry_type" => entry_type}) ->
+      assert entry_type == "query_parameter"
+    end)
+  end
+
+  test "GET /persons/ SEARCH 200", %{conn: conn} do
+    person = MPI.Factory.insert(:person)
+
+    person_response =
+      person
+      |> Poison.encode!()
+      |> Poison.decode!()
+      |> Map.take(["birth_place", "history", "id"])
+
+    link = "/persons/?first_name=#{person.first_name}&last_name=#{person.last_name}&birth_date=#{person.birth_date}"
+
+    res =
+      conn
+      |> get(link)
+      |> json_response(200)
+
+    assert_person_search(res["data"])
+    assert [person_response] == res["data"]
+
+    res =
+      conn
+      |> get("#{link}&second_name=#{person.second_name}&tax_id=#{person.tax_id}&birth_place=#{person.birth_place}")
+      |> json_response(200)
+
+    assert_person_search(res["data"])
+    assert [person_response] == res["data"]
+
+    phone_number =
+      person
+      |> Map.fetch!(:phones)
+      |> List.first
+      |> Map.fetch!(:number)
+      |> String.replace_prefix("+", "%2b")
+
+    res =
+      conn
+      |> get("#{link}&phone_number=#{phone_number}")
+      |> json_response(200)
+
+    assert_person_search(res["data"])
+    assert [person_response] == res["data"]
+
+    res =
+      conn
+      |> get("#{link}&second_name=#{person.second_name}&tax_id=not_found")
+      |> json_response(200)
+
+    assert [] = res["data"]
+
+    conn
+    |> get("#{link}&phone_number=<>''''")
+    |> json_response(422)
+  end
+
+  test "GET /persons/ SEARCH 403", %{conn: conn} do
+    person = MPI.Factory.insert(:person)
+    person_data = %{first_name: person.first_name, last_name: person.last_name, birth_date: person.birth_date}
+    MPI.Factory.insert(:person, person_data)
+    MPI.Factory.insert(:person, person_data)
+
+    link = "/persons/?first_name=#{person.first_name}&last_name=#{person.last_name}&birth_date=#{person.birth_date}"
+
+    error =
+      conn
+      |> get(link)
+      |> json_response(403)
+      |> Map.fetch!("error")
+
+    assert %{
+      "type" => "forbidden",
+      "message" => "This API method returns only exact match results, please retry with more specific search result"}
+        = error
   end
 
   defp assert_person(data) do
@@ -121,6 +209,8 @@ defmodule MPI.Web.PersonControllerTest do
       "type" => "person",
       "updated_at" => _,
       "updated_by" => _,
+      "signature" => _,
+      "birth_place" => _,
       "addresses" => [
         %{
           "apartment" => _,
@@ -154,5 +244,15 @@ defmodule MPI.Web.PersonControllerTest do
           }
       ]
     } = data
+  end
+
+  def assert_person_search(data) do
+    Enum.each(data, fn(person) ->
+      assert %{
+        "id" => _,
+        "birth_place" => _,
+        "history" => [],
+      } = person
+    end)
   end
 end

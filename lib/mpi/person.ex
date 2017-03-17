@@ -3,6 +3,8 @@ defmodule MPI.Person do
   use Ecto.Schema
 
   import Ecto.Changeset
+  import Ecto.Query
+  alias MPI.Repo
 
   @primary_key {:id, Ecto.UUID, autogenerate: true}
   @derive {Poison.Encoder, except: [:__meta__]}
@@ -11,6 +13,7 @@ defmodule MPI.Person do
     field :last_name, :string
     field :second_name, :string
     field :birth_date, :date
+    field :birth_place, :string
     field :gender, :string
     field :email, :string
     field :tax_id, :string
@@ -41,6 +44,7 @@ defmodule MPI.Person do
       field :number, :string
     end
     field :history, {:array, :map}
+    field :signature, :string
     field :inserted_by, :string
     field :updated_by, :string
 
@@ -52,6 +56,7 @@ defmodule MPI.Person do
     last_name
     second_name
     birth_date
+    birth_place
     gender
     email
     tax_id
@@ -59,6 +64,7 @@ defmodule MPI.Person do
     death_date
     is_active
     history
+    signature
     inserted_by
     updated_by
   )
@@ -95,7 +101,8 @@ defmodule MPI.Person do
     :birth_date,
     :gender,
     :inserted_by,
-    :updated_by
+    :updated_by,
+    :signature
   ]
 
   def changeset(struct, params \\ %{}) do
@@ -120,5 +127,29 @@ defmodule MPI.Person do
   def phone_changeset(struct, params) do
     struct
     |> cast(params, @phone_fields)
+  end
+
+  def search(%Ecto.Changeset{changes: parameters}) do
+    {res, next_paging} =
+    parameters
+    |> get_query()
+    |> Repo.page(%Ecto.Paging{limit: Confex.get(:mpi, :max_persons_result)})
+  end
+
+  def get_query(%{phone_number: phone_number} = changes) do
+    params =
+      changes
+      |> Map.delete(:phone_number)
+      |> Map.to_list()
+
+    from s in MPI.Person,
+      where: ^params,
+      where: fragment("? @> ?", s.phones, ~s/[{"number":"#{phone_number}"}]/)
+  end
+
+  def get_query(params) do
+    params = Map.to_list(params)
+    from s in MPI.Person,
+      where: ^params
   end
 end

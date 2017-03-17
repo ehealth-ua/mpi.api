@@ -3,9 +3,19 @@ defmodule MPI.Web.PersonController do
   use MPI.Web, :controller
   alias MPI.Repo
   alias MPI.Person
+  alias MPI.PersonSearchChangeset
   alias Ecto.Changeset
 
   action_fallback MPI.Web.FallbackController
+
+  def index(conn, params) do
+    with %Changeset{valid?: true} = changeset <- PersonSearchChangeset.changeset(params),
+      {persons, %Ecto.Paging{has_more: false} = paging} <- Person.search(changeset) do
+        conn
+        |> put_status(:ok)
+        |> render("persons.json", %{persons: persons, paging: paging})
+    end
+  end
 
   def show(conn, %{"id" => id}) do
     with %Person{} = person <- Repo.get(Person, id) do

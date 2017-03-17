@@ -8,6 +8,7 @@ defmodule MPI.Repo.Migrations.CreateMPI.Person do
       add :last_name, :string, null: false
       add :second_name, :string
       add :birth_date, :date, null: false
+      add :birth_place, :string
       add :gender, :string, null: false
       add :email, :string
       add :tax_id, :string
@@ -18,6 +19,7 @@ defmodule MPI.Repo.Migrations.CreateMPI.Person do
       add :addresses, :map
       add :phones, :map
       add :history, :map
+      add :signature, :string, null: false
       add :inserted_by, :string, null: false
       add :updated_by, :string, null: false
 

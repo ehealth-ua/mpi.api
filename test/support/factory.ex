@@ -12,9 +12,11 @@ defmodule MPI.Factory do
       second_name: sequence(:second_name, &"second_name-#{&1}"),
       birth_date: random_date(),
       gender: sequence(:gender, &"gender-#{&1}"),
+      birth_place: sequence(:birth_place, &"birth_place-#{&1}"),
       email: sequence(:email, &"email-#{&1}"),
       tax_id: sequence(:tax_id, &"tax_id-#{&1}"),
       national_id: sequence(:national_id, &"national_id-#{&1}"),
+      signature: sequence(:signature, &"signature-#{&1}"),
       death_date: random_date(),
       history: [],
       is_active: true,
@@ -55,7 +57,7 @@ defmodule MPI.Factory do
   def phone_factory do
     %MPI.Person.Phone{
       type: sequence(:phone_type, &"phone-type-#{&1}"),
-      number: sequence(:document_number, &"phone-number-#{&1}"),
+      number: "+#{Enum.random(100_000_000..999_999_999)}"
     }
   end
 
