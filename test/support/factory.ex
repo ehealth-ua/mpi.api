@@ -11,7 +11,7 @@ defmodule MPI.Factory do
       last_name: sequence(:last_name, &"last_name-#{&1}"),
       second_name: sequence(:second_name, &"second_name-#{&1}"),
       birth_date: random_date(),
-      gender: sequence(:gender, &"gender-#{&1}"),
+      gender: Enum.random(["MALE", "FEMALE"]),
       birth_place: sequence(:birth_place, &"birth_place-#{&1}"),
       email: sequence(:email, &"email-#{&1}"),
       tax_id: sequence(:tax_id, &"tax_id-#{&1}"),
@@ -30,12 +30,12 @@ defmodule MPI.Factory do
 
   def address_factory do
     %MPI.Person.Address{
-      type: sequence(:address_type, &"address-type-#{&1}"),
-      country: sequence(:country, &"address-country-#{&1}"),
+      type: Enum.random(["RESIDENCE", "REGISTRATION"]),
+      country: Enum.random(["UA"]),
       area: sequence(:area, &"address-area-#{&1}"),
       region: sequence(:region, &"address-region-#{&1}"),
       city: sequence(:city, &"address-city-#{&1}"),
-      city_type: sequence(:city_type, &"address-city_type-#{&1}"),
+      city_type: Enum.random(["CITY"]),
       street: sequence(:street, &"address-street-#{&1}"),
       building: sequence(:building, &"address-building-#{&1}"),
       apartment: sequence(:apartment, &"address-apartment-#{&1}"),
@@ -46,7 +46,7 @@ defmodule MPI.Factory do
 
   def document_factory do
     %MPI.Person.Document{
-      type: sequence(:document_type, &"document-type-#{&1}"),
+      type: Enum.random(["PASSPORT"]),
       number: sequence(:document_number, &"document-number-#{&1}"),
       issue_date: random_date(),
       expiration_date: random_date(),
@@ -56,7 +56,7 @@ defmodule MPI.Factory do
 
   def phone_factory do
     %MPI.Person.Phone{
-      type: sequence(:phone_type, &"phone-type-#{&1}"),
+      type: Enum.random(["MOBILE", "LANDLINE"]),
       number: "+#{Enum.random(100_000_000..999_999_999)}"
     }
   end
@@ -90,5 +90,5 @@ defmodule MPI.Factory do
     Enum.map(list, fn(x) -> schema_to_map(x) end)
   end
 
-  def random_date, do: DateTime.utc_now() |> DateTime.to_date()
+  def random_date, do: DateTime.to_iso8601(DateTime.utc_now())
 end

@@ -7,13 +7,13 @@ defmodule MPI.Repo.Migrations.CreateMPI.Person do
       add :first_name, :string, null: false
       add :last_name, :string, null: false
       add :second_name, :string
-      add :birth_date, :date, null: false
+      add :birth_date, :utc_datetime, null: false
       add :birth_place, :string
       add :gender, :string, null: false
       add :email, :string
       add :tax_id, :string
       add :national_id, :string
-      add :death_date, :date
+      add :death_date, :utc_datetime
       add :is_active, :boolean, default: true
       add :documents, :map
       add :addresses, :map

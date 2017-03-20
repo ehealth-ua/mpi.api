@@ -11,7 +11,7 @@ defmodule MPI.PersonSearchChangeset do
     field :first_name, :string
     field :last_name, :string
     field :second_name, :string
-    field :birth_date, :date
+    field :birth_date, :utc_datetime
     field :tax_id, :string
     field :phone_number, :string
     field :birth_place, :string

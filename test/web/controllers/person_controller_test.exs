@@ -16,6 +16,7 @@ defmodule MPI.Web.PersonControllerTest do
       |> Poison.encode!()
       |> Poison.decode!()
       |> Map.put("type", "person")
+      |> Map.put("confident_persons", [])
 
     assert person == res["data"]
 
@@ -242,7 +243,8 @@ defmodule MPI.Web.PersonControllerTest do
           "number" => _,
           "type" => _
           }
-      ]
+      ],
+      "confident_persons" => []
     } = data
   end
 

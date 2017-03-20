@@ -12,19 +12,19 @@ defmodule MPI.Person do
     field :first_name, :string
     field :last_name, :string
     field :second_name, :string
-    field :birth_date, :date
+    field :birth_date, :utc_datetime
     field :birth_place, :string
     field :gender, :string
     field :email, :string
     field :tax_id, :string
     field :national_id, :string
-    field :death_date, :date
-    field :is_active, :boolean
+    field :death_date, :utc_datetime
+    field :is_active, :boolean, default: true
     embeds_many :documents, Document do
       field :type, :string
       field :number, :string
-      field :issue_date, :date
-      field :expiration_date, :date
+      field :issue_date, :utc_datetime
+      field :expiration_date, :utc_datetime
       field :issued_by, :string
     end
     embeds_many :addresses, Address do
@@ -44,9 +44,9 @@ defmodule MPI.Person do
       field :number, :string
     end
     field :history, {:array, :map}
-    field :signature, :string
-    field :inserted_by, :string
-    field :updated_by, :string
+    field :signature, :string, default: "default"
+    field :inserted_by, :string, default: "default"
+    field :updated_by, :string, default: "default"
 
     timestamps(type: :utc_datetime)
   end
@@ -108,29 +108,34 @@ defmodule MPI.Person do
   def changeset(struct, params \\ %{}) do
     struct
     |> cast(params, @fields)
+    |> validate_required(@required_fields)
+    |> validate_inclusion(:gender, ["MALE", "FEMALE"])
     |> cast_embed(:documents, with: &document_changeset/2)
     |> cast_embed(:addresses, with: &address_changeset/2)
     |> cast_embed(:phones, with: &phone_changeset/2)
-    |> validate_required(@required_fields)
   end
 
   def document_changeset(struct, params) do
     struct
     |> cast(params, @document_fields)
+    |> validate_inclusion(:type, ["PASSPORT"])
   end
 
   def address_changeset(struct, params) do
     struct
     |> cast(params, @address_fields)
+    |> validate_inclusion(:type, ["RESIDENCE", "REGISTRATION"])
+    |> validate_inclusion(:country, ["UA"])
+    |> validate_inclusion(:city_type, ["CITY"])
   end
 
   def phone_changeset(struct, params) do
     struct
     |> cast(params, @phone_fields)
+    |> validate_inclusion(:type, ["MOBILE", "LANDLINE"])
   end
 
   def search(%Ecto.Changeset{changes: parameters}) do
-    {res, next_paging} =
     parameters
     |> get_query()
     |> Repo.page(%Ecto.Paging{limit: Confex.get(:mpi, :max_persons_result)})

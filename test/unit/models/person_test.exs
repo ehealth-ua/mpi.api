@@ -5,55 +5,49 @@ defmodule MPI.PersonTest do
 
   describe "Valid record" do
     test "successfully inserted in DB" do
-      struct = %Person{}
       params = %{
-        first_name: "Georgios",
-        last_name: "Panayiotou",
-        second_name: "Kyriacos",
-        birth_date: "1963-05-25",
-        gender: "male",
-        email: "george@michael.com",
-        tax_id: "123",
-        national_id: "123",
-        death_date: "2016-12-25",
-        is_active: false,
-        documents: [
+        "first_name": "Петро",
+        "last_name": "Іванов",
+        "second_name": "Миколайович",
+        "birth_date": "1991-08-19T00:00:00.000Z",
+        "birth_place": "Вінниця, Україна",
+        "gender": "MALE",
+        "email": "email@example.com",
+        "tax_id": "3126509816",
+        "national_id": "CC7150985243",
+        "death_date": "2015-04-07T00:00:00.000Z",
+        "documents": [
           %{
-            type: "PASSPORT",
-            number: "120518",
-            issue_date: "2015-04-07",
-            expiration_date: "2015-04-07",
-            issued_by: "DMSU"
+            "type": "PASSPORT",
+            "number": "120518",
+            "issue_date": "2015-04-07T00:00:00.000Z",
+            "expiry_date": "2015-04-07T00:00:00.000Z",
+            "issued_by": "DMSU"
           }
         ],
-        addresses: [
+        "addresses": [
           %{
-            type: "RESIDENCE",
-            country: "UA",
-            area: "Житомирська",
-            region: "Бердичівський",
-            city: "Київ",
-            city_type: "CITY",
-            street: "вул. Ніжинська",
-            building: "15",
-            apartment: "23",
-            zip: "02090"
+            "type": "RESIDENCE",
+            "country": "UA",
+            "area": "Житомирська",
+            "region": "Бердичівський",
+            "city": "Київ",
+            "city_type": "CITY",
+            "street": "вул. Ніжинська",
+            "building": "15",
+            "apartment": "23",
+            "zip": "02090"
           }
         ],
-        phones: [
+        "phones": [
           %{
-            type: "MOBILE",
-            number: "+380601234567"
+            "type": "MOBILE",
+            "number": "+380503410870"
           }
-        ],
-        history: [],
-        inserted_by: "Eugene",
-        signature: "Eugene",
-        updated_by: "Eugene"
+        ]
       }
 
-      changeset = Person.changeset(struct, params)
-
+      %Ecto.Changeset{valid?: true} = changeset = Person.changeset(%Person{}, params)
       assert {:ok, _record} = Repo.insert(changeset)
     end
   end
