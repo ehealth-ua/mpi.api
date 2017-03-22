@@ -149,7 +149,7 @@ defmodule MPI.Person do
 
     from s in MPI.Person,
       where: ^params,
-      where: fragment("? @> ?", s.phones, ~s/[{"number":"#{phone_number}"}]/)
+      where: fragment("? @> ?", s.phones, ~s/[{"type":"MOBILE","number":"#{phone_number}"}]/)
   end
 
   def get_query(params) do

@@ -1,8 +1,9 @@
 defmodule MPI.Web.PersonControllerTest do
   use MPI.Web.ConnCase
+  alias MPI.Factory
 
   test "GET /persons/:id OK", %{conn: conn} do
-    person = MPI.Factory.insert(:person)
+    person = Factory.insert(:person)
 
     res =
       conn
@@ -34,7 +35,7 @@ defmodule MPI.Web.PersonControllerTest do
   end
 
   test "POST /persons/ OK", %{conn: conn} do
-    person_data = MPI.Factory.build_factory_params(:person)
+    person_data = Factory.build_factory_params(:person)
 
     res =
       conn
@@ -62,7 +63,7 @@ defmodule MPI.Web.PersonControllerTest do
   end
 
   test "HEAD /persons/:id OK", %{conn: conn} do
-    person = MPI.Factory.insert(:person)
+    person = Factory.insert(:person)
     status =
       conn
       |> head("/persons/#{person.id}")
@@ -81,8 +82,8 @@ defmodule MPI.Web.PersonControllerTest do
   end
 
   test "PUT /persons/:id OK", %{conn: conn} do
-    person = MPI.Factory.insert(:person)
-    person_data = MPI.Factory.build_factory_params(:person)
+    person = Factory.insert(:person)
+    person_data = Factory.build_factory_params(:person)
 
     res =
       conn
@@ -118,13 +119,24 @@ defmodule MPI.Web.PersonControllerTest do
   end
 
   test "GET /persons/ SEARCH 200", %{conn: conn} do
-    person = MPI.Factory.insert(:person)
+    person = Factory.insert(:person,
+      %{phones: [Factory.build(:phone, %{type: "LANDLINE"}), Factory.build(:phone, %{type: "MOBILE"})]}
+    )
+
+    # Getting mobile phone number because search uses just it
+    phone_number =
+      person
+      |> Map.fetch!(:phones)
+      |> Enum.filter(fn(phone) -> phone.type == "MOBILE" end)
+      |> List.first
+      |> Map.fetch!(:number)
 
     person_response =
       person
       |> Poison.encode!()
       |> Poison.decode!()
-      |> Map.take(["birth_place", "history", "id"])
+      |> Map.take(["birth_place", "history", "id", "first_name", "last_name", "second_name", "tax_id"])
+      |> Map.put("phone_number", phone_number)
 
     link = "/persons/?first_name=#{person.first_name}&last_name=#{person.last_name}&birth_date=#{person.birth_date}"
 
@@ -144,13 +156,7 @@ defmodule MPI.Web.PersonControllerTest do
     assert_person_search(res["data"])
     assert [person_response] == res["data"]
 
-    phone_number =
-      person
-      |> Map.fetch!(:phones)
-      |> List.first
-      |> Map.fetch!(:number)
-      |> String.replace_prefix("+", "%2b")
-
+    phone_number = String.replace_prefix(phone_number, "+", "%2b")
     res =
       conn
       |> get("#{link}&phone_number=#{phone_number}")
@@ -172,10 +178,10 @@ defmodule MPI.Web.PersonControllerTest do
   end
 
   test "GET /persons/ SEARCH 403", %{conn: conn} do
-    person = MPI.Factory.insert(:person)
+    person = Factory.insert(:person)
     person_data = %{first_name: person.first_name, last_name: person.last_name, birth_date: person.birth_date}
-    MPI.Factory.insert(:person, person_data)
-    MPI.Factory.insert(:person, person_data)
+    Factory.insert(:person, person_data)
+    Factory.insert(:person, person_data)
 
     link = "/persons/?first_name=#{person.first_name}&last_name=#{person.last_name}&birth_date=#{person.birth_date}"
 

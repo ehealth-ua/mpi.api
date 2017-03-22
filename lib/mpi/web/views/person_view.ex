@@ -8,6 +8,22 @@ defmodule MPI.Web.PersonView do
   end
 
   def render("persons.json", %{persons: persons}) do
-    Enum.map(persons, fn(person) -> Map.take(person, [:id, :birth_place, :history]) end)
+    Enum.map(persons, fn(person) -> person_short(person) end)
   end
+
+  defp person_short(person) do
+    phone_number =
+      person
+      |> Map.fetch!(:phones)
+      |> Enum.filter(fn(phone) -> phone.type == "MOBILE" end)
+      |> get_phone_number()
+
+    person
+    |> Map.take([:id, :birth_place, :history, :first_name, :last_name, :second_name, :tax_id])
+    |> Map.put(:phone_number, phone_number)
+  end
+
+  defp get_phone_number([]), do: nil
+  defp get_phone_number([%{number: number}]), do: number
+
 end
