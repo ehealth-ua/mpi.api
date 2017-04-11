@@ -14,7 +14,6 @@ defmodule MPI.PersonSearchChangeset do
     field :birth_date, :utc_datetime
     field :tax_id, :string
     field :phone_number, :string
-    field :birth_place, :string
   end
 
   @fields ~W(
@@ -24,7 +23,6 @@ defmodule MPI.PersonSearchChangeset do
     birth_date
     tax_id
     phone_number
-    birth_place
   )
 
   @required_fields [

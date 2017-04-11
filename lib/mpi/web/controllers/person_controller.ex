@@ -10,10 +10,10 @@ defmodule MPI.Web.PersonController do
 
   def index(conn, params) do
     with %Changeset{valid?: true} = changeset <- PersonSearchChangeset.changeset(params),
-      {persons, %Ecto.Paging{has_more: false} = paging} <- Person.search(changeset) do
+      {persons, %Ecto.Paging{has_more: false} = paging} <- Person.search(changeset, params) do
         conn
         |> put_status(:ok)
-        |> render("persons.json", %{persons: persons, paging: paging})
+        |> render("persons.json", %{persons: persons, paging: paging, search_params: changeset})
     end
   end
 

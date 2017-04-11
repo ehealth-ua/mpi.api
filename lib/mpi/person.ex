@@ -135,10 +135,18 @@ defmodule MPI.Person do
     |> validate_inclusion(:type, ["MOBILE", "LANDLINE"])
   end
 
-  def search(%Ecto.Changeset{changes: parameters}) do
+  def search(%Ecto.Changeset{changes: parameters}, params) do
+    cursors =
+      %Ecto.Paging.Cursors{
+        starting_after: Map.get(params, "starting_after"),
+        ending_before: Map.get(params, "ending_before", nil)
+      }
+
+    limit = Map.get(params, "limit", Confex.get(:mpi, :max_persons_result))
+
     parameters
     |> get_query()
-    |> Repo.page(%Ecto.Paging{limit: Confex.get(:mpi, :max_persons_result)})
+    |> Repo.page(%Ecto.Paging{limit: limit, cursors: cursors})
   end
 
   def get_query(%{phone_number: phone_number} = changes) do

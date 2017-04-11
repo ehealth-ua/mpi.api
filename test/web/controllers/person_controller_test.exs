@@ -135,7 +135,7 @@ defmodule MPI.Web.PersonControllerTest do
       person
       |> Poison.encode!()
       |> Poison.decode!()
-      |> Map.take(["birth_place", "history", "id", "first_name", "last_name", "second_name", "tax_id"])
+      |> Map.take(["birth_date", "history", "id", "first_name", "last_name", "second_name", "tax_id"])
       |> Map.put("phone_number", phone_number)
 
     link = "/persons/?first_name=#{person.first_name}&last_name=#{person.last_name}&birth_date=#{person.birth_date}"
@@ -146,15 +146,22 @@ defmodule MPI.Web.PersonControllerTest do
       |> json_response(200)
 
     assert_person_search(res["data"])
-    assert [person_response] == res["data"]
+    person_first_response =
+      person_response
+      |> Map.take(["first_name", "last_name", "birth_date", "history", "id"])
+
+    assert [person_first_response] == res["data"]
 
     res =
       conn
-      |> get("#{link}&second_name=#{person.second_name}&tax_id=#{person.tax_id}&birth_place=#{person.birth_place}")
+      |> get("#{link}&second_name=#{person.second_name}&tax_id=#{person.tax_id}")
       |> json_response(200)
 
     assert_person_search(res["data"])
-    assert [person_response] == res["data"]
+    person_second_response =
+      person_response
+      |> Map.take(["first_name", "last_name", "birth_date", "history", "id", "second_name", "tax_id"])
+    assert [person_second_response] == res["data"]
 
     phone_number = String.replace_prefix(phone_number, "+", "%2b")
     res =
@@ -163,7 +170,10 @@ defmodule MPI.Web.PersonControllerTest do
       |> json_response(200)
 
     assert_person_search(res["data"])
-    assert [person_response] == res["data"]
+    person_third_response =
+      person_response
+      |> Map.take(["first_name", "last_name", "birth_date", "history", "id", "phone_number"])
+    assert [person_third_response] == res["data"]
 
     res =
       conn
@@ -258,7 +268,7 @@ defmodule MPI.Web.PersonControllerTest do
     Enum.each(data, fn(person) ->
       assert %{
         "id" => _,
-        "birth_place" => _,
+        "birth_date" => _,
         "history" => [],
       } = person
     end)
