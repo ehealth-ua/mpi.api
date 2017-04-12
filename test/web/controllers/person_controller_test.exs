@@ -52,6 +52,38 @@ defmodule MPI.Web.PersonControllerTest do
     assert_person(res["data"])
   end
 
+  test "Create or update Person", %{conn: conn} do
+    person_data = Factory.build_factory_params(:person)
+
+    person_created =
+      conn
+      |> post("/persons/", person_data)
+      |> json_response(201)
+
+    assert_person(person_created["data"])
+
+    person_data =
+      person_data
+      |> Map.put(:birth_place, "some-changed-birth-place")
+      |> Map.put(:phones, [%{"type" => "MOBILE", "number" => "+#{Enum.random(100_000_000..999_999_999)}"}])
+
+    res =
+      conn
+      |> post("/persons/", person_data)
+      |> json_response(200)
+
+    assert_person(res["data"])
+
+    res =
+      conn
+      |> get("/persons/#{person_created["data"]["id"]}")
+      |> json_response(200)
+
+    assert res["data"]
+
+    assert res["data"]["birth_place"] == "some-changed-birth-place"
+  end
+
   test "POST /persons/ 422", %{conn: conn} do
     error =
       conn

@@ -26,21 +26,42 @@ defmodule MPI.Web.PersonController do
   end
 
   def create(conn, params) do
+    with search_params <- Map.take(params, ["last_name", "first_name", "birth_date", "tax_id", "second_name"]),
+      %Changeset{valid?: true} = changeset <- PersonSearchChangeset.changeset(search_params),
+      {persons, paging} <- Person.search(changeset, params) do
+        create_person_strategy({persons, paging}, conn, params)
+    end
+  end
+
+  def update(conn, %{"id" => id} = params) do
+    with %Person{} = person <- Repo.get(Person, id),
+      %Changeset{valid?: true} = changeset <- Person.changeset(person, params),
+      {:ok, %Person{} = person} <- Repo.update(changeset)  do
+        conn
+        |> put_status(:ok)
+        |> render("person.json", %{person: person})
+      end
+  end
+
+  defp create_person_strategy({[person], _paging}, conn, params) do
+    with %Changeset{valid?: true} = changeset <- Person.changeset(person, params),
+      {:ok, %Person{} = updated_person} <- Repo.update(changeset) do
+        conn
+        |> put_status(:ok)
+        |> render("person.json", %{person: updated_person})
+    end
+  end
+
+  @doc """
+    Case: No records found or found more than one
+    https://edenlab.atlassian.net/wiki/display/EH/Private.Create+or+update+Person
+  """
+  defp create_person_strategy({_persons, _paging}, conn, params) do
     with %Changeset{valid?: true} = changeset <- Person.changeset(%Person{}, params),
       {:ok, person} <- Repo.insert(changeset) do
         conn
         |> put_status(:created)
         |> render("person.json", %{person: person})
     end
-  end
-
-  def update(conn, %{"id" => id} = params) do
-    with %Person{} = person <- Repo.get(Person, id),
-      %Changeset{valid?: true} = changeset <- Changeset.change(person, params),
-      {:ok, %Person{} = person} <- Repo.update(changeset)  do
-        conn
-        |> put_status(:ok)
-        |> render("person.json", %{person: person})
-      end
   end
 end

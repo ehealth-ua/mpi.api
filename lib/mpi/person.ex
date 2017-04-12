@@ -20,14 +20,14 @@ defmodule MPI.Person do
     field :national_id, :string
     field :death_date, :utc_datetime
     field :is_active, :boolean, default: true
-    embeds_many :documents, Document do
+    embeds_many :documents, Document, on_replace: :delete do
       field :type, :string
       field :number, :string
       field :issue_date, :utc_datetime
       field :expiration_date, :utc_datetime
       field :issued_by, :string
     end
-    embeds_many :addresses, Address do
+    embeds_many :addresses, Address, on_replace: :delete do
       field :type, :string
       field :country, :string
       field :area, :string
@@ -39,7 +39,7 @@ defmodule MPI.Person do
       field :apartment, :string
       field :zip, :string
     end
-    embeds_many :phones, Phone do
+    embeds_many :phones, Phone, on_replace: :delete do
       field :type, :string
       field :number, :string
     end
