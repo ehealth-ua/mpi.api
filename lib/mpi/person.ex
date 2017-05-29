@@ -9,16 +9,16 @@ defmodule MPI.Person do
   @primary_key {:id, Ecto.UUID, autogenerate: true}
   @derive {Poison.Encoder, except: [:__meta__]}
   schema "persons" do
+    field :version, :string, default: "default"
     field :first_name, :string
     field :last_name, :string
     field :second_name, :string
-    field :birth_date, :utc_datetime
+    field :birth_date, :date
     field :birth_place, :string
     field :gender, :string
     field :email, :string
     field :tax_id, :string
-    field :national_id, :string
-    field :death_date, :utc_datetime
+    field :death_date, :date
     field :is_active, :boolean, default: true
     embeds_many :documents, Document, on_replace: :delete do
       field :type, :string
@@ -43,15 +43,46 @@ defmodule MPI.Person do
       field :type, :string
       field :number, :string
     end
-    field :history, {:array, :map}
-    field :signature, :string, default: "default"
+    field :secret, :binary
+    embeds_one :emergency_contact, EmergencyContact, on_replace: :delete do
+      field :first_name, :string
+      field :last_name, :string
+      field :second_name, :string
+      embeds_many :phones, Phone, on_replace: :delete do
+        field :type, :string
+        field :number, :string
+      end
+    end
+    embeds_one :confidant_person, ConfidantPerson, on_replace: :delete do
+      field :first_name, :string
+      field :last_name, :string
+      field :second_name, :string
+      field :birth_date, :date
+      field :birth_place, :string
+      field :gender, :string
+      field :tax_id, :string
+      embeds_many :phones, Phone, on_replace: :delete do
+        field :type, :string
+        field :number, :string
+      end
+      embeds_many :documents, Document, on_replace: :delete do
+        field :type, :string
+        field :number, :string
+        field :issue_date, :utc_datetime
+        field :expiration_date, :utc_datetime
+        field :issued_by, :string
+      end
+    end
+    field :status, :string
     field :inserted_by, :string, default: "default"
     field :updated_by, :string, default: "default"
+    field :authentication_methods, :map
 
     timestamps(type: :utc_datetime)
   end
 
   @fields ~W(
+    version
     first_name
     last_name
     second_name
@@ -60,13 +91,13 @@ defmodule MPI.Person do
     gender
     email
     tax_id
-    national_id
     death_date
     is_active
-    history
-    signature
+    secret
+    status
     inserted_by
     updated_by
+    authentication_methods
   )
 
   @document_fields ~W(
@@ -90,19 +121,36 @@ defmodule MPI.Person do
     zip
   )
 
+  @emergency_contact_fields ~W(
+    first_name
+    last_name
+    second_name
+  )
+
+  @confidant_person_fields ~W(
+    first_name
+    last_name
+    second_name
+    birth_date
+    birth_place
+    gender
+    tax_id
+  )
+
   @phone_fields ~W(
     type
     number
   )
 
   @required_fields [
+    :version,
     :first_name,
     :last_name,
     :birth_date,
     :gender,
+    :status,
     :inserted_by,
-    :updated_by,
-    :signature
+    :updated_by
   ]
 
   def changeset(struct, params \\ %{}) do
@@ -110,15 +158,18 @@ defmodule MPI.Person do
     |> cast(params, @fields)
     |> validate_required(@required_fields)
     |> validate_inclusion(:gender, ["MALE", "FEMALE"])
+    |> validate_inclusion(:status, ["ACTIVE"])
     |> cast_embed(:documents, with: &document_changeset/2)
     |> cast_embed(:addresses, with: &address_changeset/2)
     |> cast_embed(:phones, with: &phone_changeset/2)
+    |> cast_embed(:emergency_contact, with: &emergency_contact_changeset/2)
+    |> cast_embed(:confidant_person, with: &confidant_person_changeset/2)
   end
 
   def document_changeset(struct, params) do
     struct
     |> cast(params, @document_fields)
-    |> validate_inclusion(:type, ["PASSPORT"])
+    |> validate_inclusion(:type, ["PASSPORT", "NATIONAL_ID", "BIRTH_CERTIFICATE", "TEMPORARY_CERTIFICATE"])
   end
 
   def address_changeset(struct, params) do
@@ -126,13 +177,27 @@ defmodule MPI.Person do
     |> cast(params, @address_fields)
     |> validate_inclusion(:type, ["RESIDENCE", "REGISTRATION"])
     |> validate_inclusion(:country, ["UA"])
-    |> validate_inclusion(:city_type, ["CITY"])
+    |> validate_inclusion(:city_type, ["CITY", "TOWN", "VILLAGE"])
   end
 
   def phone_changeset(struct, params) do
     struct
     |> cast(params, @phone_fields)
     |> validate_inclusion(:type, ["MOBILE", "LANDLINE"])
+  end
+
+  def emergency_contact_changeset(struct, params) do
+    struct
+    |> cast(params, @emergency_contact_fields)
+    |> cast_embed(:phones, with: &phone_changeset/2)
+  end
+
+  def confidant_person_changeset(struct, params) do
+    struct
+    |> cast(params, @confidant_person_fields)
+    |> validate_inclusion(:gender, ["MALE", "FEMALE"])
+    |> cast_embed(:phones, with: &phone_changeset/2)
+    |> cast_embed(:documents, with: &document_changeset/2)
   end
 
   def search(%Ecto.Changeset{changes: parameters}, params) do

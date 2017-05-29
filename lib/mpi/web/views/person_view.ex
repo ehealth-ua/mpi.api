@@ -3,8 +3,7 @@ defmodule MPI.Web.PersonView do
   use MPI.Web, :view
 
   def render("person.json", %{person: %MPI.Person{} = person}) do
-    # Temporary solution for BETA.
-    Map.put(person, :confident_persons, [])
+    person
   end
 
   def render("persons.json", %{persons: persons, search_params: search}) do

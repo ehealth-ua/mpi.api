@@ -9,13 +9,14 @@ defmodule MPI.PersonTest do
         "first_name": "Петро",
         "last_name": "Іванов",
         "second_name": "Миколайович",
-        "birth_date": "1991-08-19T00:00:00.000Z",
+        "birth_date": "1991-08-19",
         "birth_place": "Вінниця, Україна",
         "gender": "MALE",
         "email": "email@example.com",
         "tax_id": "3126509816",
         "national_id": "CC7150985243",
-        "death_date": "2015-04-07T00:00:00.000Z",
+        "death_date": "2015-04-07",
+        "status": "ACTIVE",
         "documents": [
           %{
             "type": "PASSPORT",

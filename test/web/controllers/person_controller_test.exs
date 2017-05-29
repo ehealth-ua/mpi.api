@@ -17,7 +17,6 @@ defmodule MPI.Web.PersonControllerTest do
       |> Poison.encode!()
       |> Poison.decode!()
       |> Map.put("type", "person")
-      |> Map.put("confident_persons", [])
 
     assert person == res["data"]
 
@@ -242,23 +241,21 @@ defmodule MPI.Web.PersonControllerTest do
   defp assert_person(data) do
     assert %{
       "id" => _,
+      "version" => _,
       "first_name" => _,
       "last_name" => _,
       "second_name" => _,
       "email" => _,
       "gender" => _,
-      "history" => [],
       "inserted_at" => _,
       "inserted_by" => _,
       "is_active" => true,
-      "national_id" => _,
       "birth_date" => _,
       "death_date" => _,
       "tax_id" => _,
       "type" => "person",
       "updated_at" => _,
       "updated_by" => _,
-      "signature" => _,
       "birth_place" => _,
       "addresses" => [
         %{
@@ -292,7 +289,11 @@ defmodule MPI.Web.PersonControllerTest do
           "type" => _
           }
       ],
-      "confident_persons" => []
+      "secret" => _,
+      "emergency_contact" => _,
+      "confidant_person" => _,
+      "status" => _,
+      "authentication_methods" => _
     } = data
   end
 
@@ -301,7 +302,6 @@ defmodule MPI.Web.PersonControllerTest do
       assert %{
         "id" => _,
         "birth_date" => _,
-        "history" => [],
       } = person
     end)
   end

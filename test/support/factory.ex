@@ -7,24 +7,50 @@ defmodule MPI.Factory do
 
   def person_factory do
     %MPI.Person{
+      version: sequence(:version, &"version-#{&1}"),
       first_name: sequence(:first_name, &"first_name-#{&1}"),
       last_name: sequence(:last_name, &"last_name-#{&1}"),
       second_name: sequence(:second_name, &"second_name-#{&1}"),
-      birth_date: random_date(),
-      gender: Enum.random(["MALE", "FEMALE"]),
+      birth_date: "1996-12-12",
       birth_place: sequence(:birth_place, &"birth_place-#{&1}"),
+      gender: Enum.random(["MALE", "FEMALE"]),
       email: sequence(:email, &"email-#{&1}"),
       tax_id: sequence(:tax_id, &"tax_id-#{&1}"),
-      national_id: sequence(:national_id, &"national_id-#{&1}"),
-      signature: sequence(:signature, &"signature-#{&1}"),
-      death_date: random_date(),
-      history: [],
+      death_date: "1997-12-12",
       is_active: true,
-      phones: build_list(1, :phone),
       documents: build_list(2, :document),
       addresses: build_list(2, :address),
+      phones: build_list(1, :phone),
+      secret: sequence(:secret, &"updated_by-#{&1}"),
+      emergency_contact: build(:emergency_contact),
+#      confidant_person: build(:confidant_person),
+      status: Enum.random(["ACTIVE"]),
       inserted_by: sequence(:inserted_by, &"inserted_by-#{&1}"),
       updated_by: sequence(:updated_by, &"updated_by-#{&1}"),
+      authentication_methods: %{}
+    }
+  end
+
+  def emergency_contact_factory do
+    %MPI.Person.EmergencyContact{
+      first_name: sequence(:emergency_contact_first_name, &"first_name-#{&1}"),
+      last_name: sequence(:emergency_contact_last_name, &"last_name-#{&1}"),
+      second_name: sequence(:emergency_contact_second_name, &"second_name-#{&1}"),
+      phones: build_list(1, :phone_emergency_contact),
+    }
+  end
+
+  def confidant_person_factory do
+    %MPI.Person.ConfidantPerson{
+      first_name: sequence(:confidant_person_first_name, &"first_name-#{&1}"),
+      last_name: sequence(:confidant_person_last_name, &"last_name-#{&1}"),
+      second_name: sequence(:confidant_person_second_name, &"second_name-#{&1}"),
+      birth_date: "1996-12-12",
+      birth_place: sequence(:confidant_person_birth_place, &"birth_place-#{&1}"),
+      gender: Enum.random(["MALE", "FEMALE"]),
+      tax_id: sequence(:confidant_person_tax_id, &"tax_id-#{&1}"),
+      phones: build_list(1, :phone),
+      documents: build_list(2, :document),
     }
   end
 
@@ -56,6 +82,20 @@ defmodule MPI.Factory do
 
   def phone_factory do
     %MPI.Person.Phone{
+      type: Enum.random(["MOBILE", "LANDLINE"]),
+      number: "+#{Enum.random(100_000_000..999_999_999)}"
+    }
+  end
+
+  def phone_emergency_contact_factory do
+    %MPI.Person.EmergencyContact.Phone{
+      type: Enum.random(["MOBILE", "LANDLINE"]),
+      number: "+#{Enum.random(100_000_000..999_999_999)}"
+    }
+  end
+
+  def phone_confidant_person_factory do
+    %MPI.Person.ConfidantPerson.Phone{
       type: Enum.random(["MOBILE", "LANDLINE"]),
       number: "+#{Enum.random(100_000_000..999_999_999)}"
     }
