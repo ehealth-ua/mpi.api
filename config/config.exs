@@ -7,6 +7,7 @@ use Mix.Config
 
 # General application configuration
 config :mpi,
+  namespace: MPI,
   ecto_repos: [MPI.Repo],
   max_persons_result: {:system, :integer, "MAX_PERSONS_RESULT", 15}
 
@@ -20,6 +21,12 @@ config :mpi, MPI.Web.Endpoint,
 config :logger, :console,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id]
+
+# Configure JSON Logger back-end
+config :logger_json, :backend,
+  on_init: {MPI, :load_from_system_env, []},
+  json_encoder: Poison,
+  metadata: :all
 
 config :mpi, MPI.Repo,
   adapter: Ecto.Adapters.Postgres,

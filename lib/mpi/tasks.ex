@@ -7,7 +7,6 @@ defmodule :mpi_tasks do
       mpi/bin/mpi command mpi_tasks migrate!
   """
 
-  import Mix.Ecto
   alias Ecto.Migrator
 
   @priv_dir "priv"

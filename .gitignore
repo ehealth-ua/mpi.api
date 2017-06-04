@@ -41,6 +41,7 @@ GitHub.sublime-settings
 # Ignore released binaries
 rel/*/
 !rel/config.exs
+!rel/templates/vm.args.eex
 .deliver
 
 # Don't commit file uploads
