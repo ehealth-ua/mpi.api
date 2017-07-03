@@ -9,6 +9,8 @@ ENV TERM=xterm \
     APP_NAME=mpi \
     APP_PORT=4000
 
+RUN apk add --update make
+
 WORKDIR ${HOME}
 
 # Install and compile project dependencies
@@ -41,6 +43,8 @@ RUN \
     chmod -R 777 $HOME && \
     chmod -R 777 /opt/$APP_NAME && \
     chmod -R 777 /var/log
+
+RUN apk del make
 
 RUN epmd -daemon
 

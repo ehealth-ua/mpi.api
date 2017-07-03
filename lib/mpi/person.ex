@@ -76,7 +76,7 @@ defmodule MPI.Person do
     field :status, :string
     field :inserted_by, :string, default: "default"
     field :updated_by, :string, default: "default"
-    field :authentication_methods, :map
+    field :authentication_methods, {:array, :map}
 
     timestamps(type: :utc_datetime)
   end

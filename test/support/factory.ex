@@ -27,7 +27,7 @@ defmodule MPI.Factory do
       status: Enum.random(["ACTIVE"]),
       inserted_by: sequence(:inserted_by, &"inserted_by-#{&1}"),
       updated_by: sequence(:updated_by, &"updated_by-#{&1}"),
-      authentication_methods: %{}
+      authentication_methods: []
     }
   end
 

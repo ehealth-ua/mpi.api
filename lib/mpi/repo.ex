@@ -1,7 +1,7 @@
 defmodule MPI.Repo do
   @moduledoc false
   use Ecto.Repo, otp_app: :mpi
-  use Ecto.Pagging.Repo
+  use Ecto.Paging.Repo
 
   @doc """
   Dynamically loads the repository url from the
