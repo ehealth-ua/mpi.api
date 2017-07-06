@@ -53,7 +53,7 @@ defmodule MPI.Person do
         field :number, :string
       end
     end
-    embeds_one :confidant_person, ConfidantPerson, on_replace: :delete do
+    embeds_many :confidant_person, ConfidantPerson, on_replace: :delete do
       field :first_name, :string
       field :last_name, :string
       field :second_name, :string
@@ -73,7 +73,7 @@ defmodule MPI.Person do
         field :issued_by, :string
       end
     end
-    field :status, :string
+    field :status, :string, default: "active" # TODO: change this logic in future
     field :inserted_by, :string, default: "default"
     field :updated_by, :string, default: "default"
     field :authentication_methods, {:array, :map}
