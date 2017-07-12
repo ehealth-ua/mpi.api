@@ -5,99 +5,94 @@ defmodule MPI.Factory do
   """
   use ExMachina.Ecto, repo: MPI.Repo
 
-  def person_factory do
-    %MPI.Person{
-      version: sequence(:version, &"version-#{&1}"),
+  def person_factory, do: struct(MPI.Person, person_params_factory())
+
+  def person_params_factory do
+    %{
       first_name: sequence(:first_name, &"first_name-#{&1}"),
       last_name: sequence(:last_name, &"last_name-#{&1}"),
       second_name: sequence(:second_name, &"second_name-#{&1}"),
       birth_date: "1996-12-12",
-      birth_place: sequence(:birth_place, &"birth_place-#{&1}"),
+      birth_country: sequence(:birth_country, &"birth_country-#{&1}"),
+      birth_settlement: sequence(:birth_settlement, &"birth_settlement-#{&1}"),
       gender: Enum.random(["MALE", "FEMALE"]),
-      email: sequence(:email, &"email-#{&1}"),
+      email: sequence(:email, &"email#{&1}@mail.com"),
       tax_id: sequence(:tax_id, &"tax_id-#{&1}"),
-      death_date: "1997-12-12",
-      is_active: true,
       documents: build_list(2, :document),
       addresses: build_list(2, :address),
       phones: build_list(1, :phone),
-      secret: sequence(:secret, &"updated_by-#{&1}"),
+      secret: sequence(:secret, &"secret-#{&1}"),
       emergency_contact: build(:emergency_contact),
-#      confidant_person: build(:confidant_person),
-      status: Enum.random(["ACTIVE"]),
-      inserted_by: sequence(:inserted_by, &"inserted_by-#{&1}"),
-      updated_by: sequence(:updated_by, &"updated_by-#{&1}"),
-      authentication_methods: []
+      confidant_person: build_list(1, :confidant_person),
+      secret: sequence(:secret, &"secret-#{&1}"),
+      patient_signed: true,
+      process_disclosure_data_consent: true,
+      authentication_methods: build_list(2, :authentication_method)
     }
   end
 
   def emergency_contact_factory do
-    %MPI.Person.EmergencyContact{
+    %{
       first_name: sequence(:emergency_contact_first_name, &"first_name-#{&1}"),
       last_name: sequence(:emergency_contact_last_name, &"last_name-#{&1}"),
       second_name: sequence(:emergency_contact_second_name, &"second_name-#{&1}"),
-      phones: build_list(1, :phone_emergency_contact),
+      phones: build_list(1, :phone)
     }
   end
 
   def confidant_person_factory do
-    %MPI.Person.ConfidantPerson{
+    %{
+      relation_type: Enum.random(["PRIMARY", "SECONDARY"]),
       first_name: sequence(:confidant_person_first_name, &"first_name-#{&1}"),
       last_name: sequence(:confidant_person_last_name, &"last_name-#{&1}"),
       second_name: sequence(:confidant_person_second_name, &"second_name-#{&1}"),
       birth_date: "1996-12-12",
-      birth_place: sequence(:confidant_person_birth_place, &"birth_place-#{&1}"),
+      birth_country: sequence(:confidant_person_birth_country, &"birth_country-#{&1}"),
+      birth_settlement: sequence(:confidant_person_birth_settlement, &"birth_settlement-#{&1}"),
       gender: Enum.random(["MALE", "FEMALE"]),
       tax_id: sequence(:confidant_person_tax_id, &"tax_id-#{&1}"),
+      secret: sequence(:confidant_person_secret, &"secret-#{&1}"),
       phones: build_list(1, :phone),
-      documents: build_list(2, :document),
+      documents_person: build_list(2, :document),
+      documents_relationship: build_list(2, :document)
     }
   end
 
   def address_factory do
-    %MPI.Person.Address{
+    %{
       type: Enum.random(["RESIDENCE", "REGISTRATION"]),
       country: Enum.random(["UA"]),
       area: sequence(:area, &"address-area-#{&1}"),
       region: sequence(:region, &"address-region-#{&1}"),
-      city: sequence(:city, &"address-city-#{&1}"),
-      city_type: Enum.random(["CITY"]),
+      settlement: sequence(:settlement, &"address-settlement-#{&1}"),
+      settlement_type: Enum.random(["CITY"]),
+      settlement_id: Ecto.UUID.generate(),
+      street_type: Enum.random(["STREET"]),
       street: sequence(:street, &"address-street-#{&1}"),
-      building: sequence(:building, &"address-building-#{&1}"),
+      building: sequence(:building, &"#{&1 + 1}а"),
       apartment: sequence(:apartment, &"address-apartment-#{&1}"),
-      zip: sequence(:zip, &"address-zip-#{&1}"),
-
+      zip: to_string(Enum.random(10000..99999))
     }
   end
 
   def document_factory do
-    %MPI.Person.Document{
-      type: Enum.random(["PASSPORT"]),
-      number: sequence(:document_number, &"document-number-#{&1}"),
-      issue_date: random_date(),
-      expiration_date: random_date(),
-      issued_by: sequence(:issued_by, &"document-issued_by-#{&1}"),
+    %{
+      type: Enum.random(["PASSPORT", "NATIONAL_ID"]),
+      number: sequence(:document_number, &"document-number-#{&1}")
     }
   end
 
   def phone_factory do
-    %MPI.Person.Phone{
+    %{
       type: Enum.random(["MOBILE", "LANDLINE"]),
-      number: "+#{Enum.random(100_000_000..999_999_999)}"
+      number: "+38#{Enum.random(1_000_000_000..9_999_999_999)}"
     }
   end
 
-  def phone_emergency_contact_factory do
-    %MPI.Person.EmergencyContact.Phone{
-      type: Enum.random(["MOBILE", "LANDLINE"]),
-      number: "+#{Enum.random(100_000_000..999_999_999)}"
-    }
-  end
-
-  def phone_confidant_person_factory do
-    %MPI.Person.ConfidantPerson.Phone{
-      type: Enum.random(["MOBILE", "LANDLINE"]),
-      number: "+#{Enum.random(100_000_000..999_999_999)}"
+  def authentication_method_factory do
+    %{
+      type: Enum.random(["OTP", "OFFLINE"]),
+      phone_number: "+38#{Enum.random(1_000_000_000..9_999_999_999)}"
     }
   end
 

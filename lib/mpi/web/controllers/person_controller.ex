@@ -1,12 +1,15 @@
 defmodule MPI.Web.PersonController do
   @moduledoc false
   use MPI.Web, :controller
+  use JValid
   alias MPI.Repo
   alias MPI.Person
   alias MPI.PersonSearchChangeset
   alias Ecto.Changeset
 
   action_fallback MPI.Web.FallbackController
+
+  use_schema :person, "specs/json_schemas/person_schema.json"
 
   def index(conn, params) do
     with %Changeset{valid?: true} = changeset <- PersonSearchChangeset.changeset(params),
@@ -26,10 +29,13 @@ defmodule MPI.Web.PersonController do
   end
 
   def create(conn, params) do
-    with search_params <- Map.take(params, ["last_name", "first_name", "birth_date", "tax_id", "second_name"]),
-      %Changeset{valid?: true} = changeset <- PersonSearchChangeset.changeset(search_params),
-      {persons, paging} <- Person.search(changeset, params) do
-        create_person_strategy({persons, paging}, conn, params)
+    case validate_schema(:person, params) do
+      :ok -> with search_params <- Map.take(params, ["last_name", "first_name", "birth_date", "tax_id", "second_name"]),
+        %Changeset{valid?: true} = changeset <- PersonSearchChangeset.changeset(search_params),
+        {persons, paging} <- Person.search(changeset, params) do
+          create_person_strategy({persons, paging}, conn, params)
+      end
+      {:error, errors} -> {:validation_error, errors}
     end
   end
 

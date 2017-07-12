@@ -33,7 +33,7 @@ defmodule MPI.Web.PersonControllerTest do
   end
 
   test "POST /persons/ OK", %{conn: conn} do
-    person_data = Factory.build_factory_params(:person)
+    person_data = Factory.build_factory_params(:person_params)
 
     res =
       conn
@@ -51,7 +51,7 @@ defmodule MPI.Web.PersonControllerTest do
   end
 
   test "Create or update Person", %{conn: conn} do
-    person_data = Factory.build_factory_params(:person)
+    person_data = Factory.build_factory_params(:person_params)
 
     person_created =
       conn
@@ -62,8 +62,8 @@ defmodule MPI.Web.PersonControllerTest do
 
     person_data =
       person_data
-      |> Map.put(:birth_place, "some-changed-birth-place")
-      |> Map.put(:phones, [%{"type" => "MOBILE", "number" => "+#{Enum.random(100_000_000..999_999_999)}"}])
+      |> Map.put(:birth_country, "some-changed-birth-country")
+      |> Map.put(:phones, [%{"type" => "MOBILE", "number" => "+38#{Enum.random(1_000_000_000..9_999_999_999)}"}])
 
     res =
       conn
@@ -79,7 +79,7 @@ defmodule MPI.Web.PersonControllerTest do
 
     assert res["data"]
 
-    assert res["data"]["birth_place"] == "some-changed-birth-place"
+    assert res["data"]["birth_country"] == "some-changed-birth-country"
   end
 
   test "POST /persons/ 422", %{conn: conn} do
@@ -113,7 +113,7 @@ defmodule MPI.Web.PersonControllerTest do
 
   test "PUT /persons/:id OK", %{conn: conn} do
     person = Factory.insert(:person)
-    person_data = Factory.build_factory_params(:person)
+    person_data = Factory.build_factory_params(:person_params)
 
     res =
       conn
@@ -250,48 +250,24 @@ defmodule MPI.Web.PersonControllerTest do
       "inserted_by" => _,
       "is_active" => true,
       "birth_date" => _,
+      "national_id" => _,
       "death_date" => _,
       "tax_id" => _,
       "updated_at" => _,
       "updated_by" => _,
-      "birth_place" => _,
-      "addresses" => [
-        %{
-          "apartment" => _,
-          "area" => _,
-          "building" => _,
-          "city" => _,
-          "city_type" => _,
-          "country" => _,
-          "id" => _,
-          "region" => _,
-          "street" => _,
-          "type" => _,
-          "zip" => _
-        }, _
-      ],
-      "documents" => [
-        %{
-          "expiration_date" => _,
-          "id" => _,
-          "issue_date" => _,
-          "issued_by" => _,
-          "number" => _,
-          "type" => _
-        }, _
-      ],
-      "phones" => [
-        %{
-          "id" => _,
-          "number" => _,
-          "type" => _
-          }
-      ],
+      "birth_country" => _,
+      "birth_settlement" => _,
+      "addresses" => _,
+      "documents" => _,
+      "phones" => _,
       "secret" => _,
       "emergency_contact" => _,
       "confidant_person" => _,
       "status" => _,
-      "authentication_methods" => _
+      "patient_signed" => _,
+      "process_disclosure_data_consent" => _,
+      "authentication_methods" => _,
+      "merged_ids" => _
     } = data
   end
 

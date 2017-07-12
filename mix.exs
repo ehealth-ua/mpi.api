@@ -22,7 +22,7 @@ defmodule MPI.Mixfile do
   # Type `mix help compile.app` for more information.
   def application do
     [mod: {MPI.Application, []},
-     extra_applications: [:logger, :logger_json, :runtime_tools]]
+     extra_applications: [:logger, :logger_json, :runtime_tools, :jvalid]]
   end
 
   # Specifies which paths to compile per environment.
@@ -39,6 +39,7 @@ defmodule MPI.Mixfile do
      {:phoenix, "~> 1.3.0-rc"},
      {:phoenix_ecto, "~> 3.2"},
      {:confex, ">= 0.0.0"},
+     {:jvalid, "~> 0.6.0"},
      {:ecto_paging, ">= 0.0.0"},
      {:httpoison, ">= 0.0.0"},
      {:poison, "~> 3.1", override: true},

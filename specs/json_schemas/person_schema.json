@@ -1,0 +1,390 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "definitions": {
+    "phone": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "MOBILE",
+            "LANDLINE"
+          ]
+        },
+        "number": {
+          "type": "string",
+          "pattern": "^\\+38[0-9]{10}$"
+        }
+      },
+      "required": [
+        "type",
+        "number"
+      ],
+      "additionalProperties": false
+    },
+    "name": {
+      "type": "string",
+      "pattern": "^(?!.*[ЫЪЭЁыъэё@%&$^#])[a-zA-ZА-ЯҐЇІЄа-яґїіє0-9№\\\"!\\^\\*)\\]\\[(._-].*$"
+    },
+    "tax_id": {
+      "type": "string",
+      "pattern": "^[1-9]([0-9]{7}|[0-9]{9})$",
+      "minLength": 10
+    },
+    "address": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Dictionary: ADDRESS_TYPE"
+        },
+        "country": {
+          "type": "string"
+        },
+        "area": {
+          "$ref": "#/definitions/name"
+        },
+        "region": {
+          "$ref": "#/definitions/name"
+        },
+        "settlement": {
+          "$ref": "#/definitions/name"
+        },
+        "settlement_type": {
+          "type": "string"
+        },
+        "settlement_id": {
+          "type": "string"
+        },
+        "street_type": {
+          "type": "string"
+        },
+        "street": {
+          "$ref": "#/definitions/name"
+        },
+        "building": {
+          "type": "string",
+          "pattern": "^[1-9]([0-9]{1,2})?(([ \\-]{1})?(?![ЫЪЭЁыъэё])[А-ЯҐЇЄа-яґїє]{1})?((\\s)?(\\\\|\/)(\\s)?[1-9]([0-9]{1,2})?(([ \\-]{1})?(?![ЫЪЭЁыъэё])[А-ЯҐЇЄа-яґїє]{1})?)?$"
+        },
+        "apartment": {
+          "type": "string"
+        },
+        "zip": {
+          "type": "string",
+          "pattern": "^[0-9]{5}$"
+        }
+      },
+      "required": [
+        "type",
+        "country",
+        "area",
+        "settlement",
+        "settlement_type",
+        "settlement_id",
+        "building"
+      ],
+      "additionalProperties": false
+    },
+    "document": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "PASSPORT",
+            "NATIONAL_ID",
+            "BIRTH_CERTIFICATE",
+            "TEMPORARY_CERTIFICATE",
+            "COURT_DECISION"
+          ]
+        },
+        "number": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "number"
+      ],
+      "additionalProperties": false
+    },
+    "authentication_method": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "OTP",
+            "OFFLINE"
+          ]
+        },
+        "phone_number": {
+          "type": "string",
+          "pattern": "^\\+38[0-9]{10}$"
+        }
+      },
+      "required": [
+        "type",
+        "phone_number"
+      ],
+      "additionalProperties": false
+    }
+  },
+    "type": "object",
+    "properties": {
+      "first_name": {
+        "type": "string",
+        "items": {
+          "$ref": "#/definitions/name"
+        },
+        "minLength": 1
+      },
+      "last_name": {
+        "type": "string",
+        "items": {
+          "$ref": "#/definitions/name"
+        },
+        "minLength": 1
+      },
+      "second_name": {
+        "type": "string",
+        "items": {
+          "$ref": "#/definitions/name"
+        },
+        "minLength": 1
+      },
+      "birth_date": {
+        "type": "string",
+        "format": "date"
+      },
+      "birth_country": {
+        "type": "string",
+        "minLength": 1
+      },
+      "birth_settlement": {
+        "type": "string",
+        "items": {
+          "$ref": "#/definitions/name"
+        },
+        "minLength": 1
+      },
+      "gender": {
+        "type": "string",
+        "enum": [
+          "MALE",
+          "FEMALE"
+        ]
+      },
+      "email": {
+        "type": "string",
+        "format": "email"
+      },
+      "tax_id": {
+        "type": "string",
+        "items": {
+          "$ref": "#/definitions/tax_id"
+        }
+      },
+      "secret": {
+        "type": "string",
+        "items": {
+          "$ref": "#/definitions/name"
+        },
+        "minLength": 6
+      },
+      "documents": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "$ref": "#/definitions/document"
+        }
+      },
+      "addresses": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/address"
+        },
+        "minItems": 2
+      },
+      "phones": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/phone"
+        }
+      },
+      "authentication_methods": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/authentication_method"
+        }
+      },
+      "emergency_contact": {
+        "type": "object",
+        "properties": {
+          "first_name": {
+            "type": "string",
+            "items": {
+              "$ref": "#/definitions/name"
+            },
+            "minLength": 1
+          },
+          "last_name": {
+            "type": "string",
+            "items": {
+              "$ref": "#/definitions/name"
+            },
+            "minLength": 1
+          },
+          "second_name": {
+            "type": "string",
+            "items": {
+              "$ref": "#/definitions/name"
+            },
+            "minLength": 1
+          },
+          "phones": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/phone"
+            }
+          }
+        },
+        "required": [
+          "first_name",
+          "last_name",
+          "phones"
+        ],
+        "additionalProperties": false
+      },
+      "confidant_person": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "relation_type": {
+              "type": "string",
+              "enum": [
+                "PRIMARY",
+                "SECONDARY"
+              ]
+            },
+            "first_name": {
+              "type": "string",
+              "items": {
+                "$ref": "#/definitions/name"
+              },
+              "minLength": 1
+            },
+            "last_name": {
+              "type": "string",
+              "items": {
+                "$ref": "#/definitions/name"
+              },
+              "minLength": 1
+            },
+            "second_name": {
+              "type": "string"
+            },
+            "birth_date": {
+              "type": "string",
+              "format": "date"
+            },
+            "birth_country": {
+              "type": "string",
+              "minLength": 1
+            },
+            "birth_settlement": {
+              "type": "string",
+              "items": {
+                "$ref": "#/definitions/name"
+              },
+              "minLength": 1
+            },
+            "gender": {
+              "type": "string",
+              "enum": [
+                "MALE",
+                "FEMALE"
+              ]
+            },
+            "tax_id": {
+              "type": "string",
+              "items": {
+                "$ref": "#/definitions/tax_id"
+              }
+            },
+            "secret": {
+              "type": "string",
+              "items": {
+                "$ref": "#/definitions/name"
+              },
+              "minLength": 6
+            },
+            "documents_person": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/definitions/document"
+              }
+            },
+            "documents_relationship": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/definitions/document"
+              }
+            },
+            "phones": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/phone"
+              }
+            }
+          },
+          "required": [
+            "relation_type",
+            "first_name",
+            "last_name",
+            "birth_date",
+            "birth_country",
+            "birth_settlement",
+            "gender",
+            "secret",
+            "documents_person",
+            "documents_relationship"
+          ],
+          "additionalProperties": false
+        },
+        "description": "Should be set if this Person is disabled, underage, etc."
+      },
+      "patient_signed": {
+        "type": "boolean",
+        "enum": [
+          true
+        ]
+      },
+      "process_disclosure_data_consent": {
+        "type": "boolean",
+        "enum": [
+          true
+        ]
+      }
+    },
+    "required": [
+      "first_name",
+      "last_name",
+      "birth_date",
+      "birth_country",
+      "birth_settlement",
+      "gender",
+      "secret",
+      "documents",
+      "addresses",
+      "authentication_methods",
+      "emergency_contact",
+      "patient_signed",
+      "process_disclosure_data_consent"
+    ],
+    "additionalProperties": false,
+    "description": "Object that described a Patient. Confidant person should be set for disabled persons, underage persons, etc."
+}

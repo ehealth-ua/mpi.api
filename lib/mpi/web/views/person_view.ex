@@ -14,7 +14,7 @@ defmodule MPI.Web.PersonView do
     phone_number =
       person
       |> Map.fetch!(:phones)
-      |> Enum.filter(fn(phone) -> phone.type == "MOBILE" end)
+      |> Enum.filter(fn(phone) -> phone["type"] == "MOBILE" end)
       |> get_phone_number()
 
     take_fields =
@@ -27,7 +27,7 @@ defmodule MPI.Web.PersonView do
   end
 
   defp get_phone_number([]), do: nil
-  defp get_phone_number([%{number: number}]), do: number
+  defp get_phone_number([%{"number" => number}]), do: number
 
   defp add_phone_number_to_map(map, phone_number, take_fields) do
     case Enum.member?(take_fields, :phone_number) do
