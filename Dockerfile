@@ -4,8 +4,7 @@ FROM nebo15/alpine-elixir:latest
 MAINTAINER Nebo#15 support@nebo15.com
 
 # Configure environment variables and other settings
-ENV TERM=xterm \
-    MIX_ENV=prod \
+ENV MIX_ENV=prod \
     APP_NAME=mpi \
     APP_PORT=4000
 
@@ -15,7 +14,6 @@ WORKDIR ${HOME}
 
 # Install and compile project dependencies
 COPY mix.* ./
-COPY config ./config
 RUN mix do deps.get, deps.compile
 
 # Add project sources
@@ -44,7 +42,7 @@ RUN \
     chmod -R 777 /opt/$APP_NAME && \
     chmod -R 777 /var/log
 
-RUN apk del make
+RUN apk del --no-cache make
 
 RUN epmd -daemon
 

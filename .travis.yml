@@ -21,9 +21,10 @@ env:
     - DOCKER_HUB_ACCOUNT=nebo15
     - MAIN_BRANCHES="master develop staging" # Branches on which you want version to be incremented
     - RELEASE_BRANCH="master"
-    # Docker credentials
-    - secure: "ajgDo4M+5u3HOapvtUzq1FzIt1d2osHCgiUwmxvLyQ+9oOnSKTyxY/HbhuXdEUTHuP3lbr4qk4iJq+pCWqKq4en/BuQuPn/V+iQREKbQwjDg7EswOCFdvVZWIQ8o60emeMsPHLJ01WMJRUO4oASJX0gY5lyYA+rw6j+LkBmlmmRL3m55R/TXORPxVlyi8iJ7IJ5Rrt37BtLW9n1dRqQGyB5hKZvf6hodgOv/NE0CUT0ylfdF0aWZWuo5iL1+DCT45s5CbWMmaN2s/CO2h/osV3nylnbqS5vaB/KQrrlV0S/liBftZRDVPQ7yam/i3V55EIiMFeQc9mtwMyYaTexyhK8QApCCnbPQMZgzzb/w3vqyxwWGIB1GSP7rk2xNYd/bm0aorzP9IhIUmkXbgmH5IHVBa87FanzVmuX64DsTme9oKJmzrIdMr9efPB7E7uKXXFQFNJ/0EN5tvNxzQOv45YrXgvVJVvE14mrzAy/bHv/HDomy7maFw+0QzPP51iWODwK15ZcIDCgE8L1EZmFeDOyJxEn2bc/Ez7aH+yUfxuZuu+bAYHwfWGXv/s+tYDFS2BXqmyJYrGEM84a1PxKxFR4fgLB5VTi2YCm4T+zOQ7AzQWr9TKPdkR/8Fj/i087AfjmpBpCk5joweZe3MAHMUvDwKBOEYq9VCCChU5cumoI="
-    - secure: "YGV+T96+RFD3qayuaFDCwffCEErLbauneDICKBpFm9Cpfos0YBhxENSwA3zuH4e7HRZ2W+JOmM5VS6G+1Smc0NJ4t2oD6RvXNLs8VnSmvyqb74P3rfAzB0/Dyl/60LJ463vhxQj+Pgsf/CvBrYYMkVwa/YJP4OEKTtCxdX0FZuPRQsUfZyknTplEv1siBD72kVXkh+skwIMYdxpzPPm8/OaUprCLJytD1Eg8xNGObzEFuVqtkxluBFUi9LZUIvJOPfA1oYicJ1rcHyvrta1XyDJw5i5kOltw6VmFu7go1EQwFXCHSNJnl6avDApqtmFZ5IeMsPV1Wh684jEiaKnRLZYXJ6213b0p+9Wl0i4bxlOdSDkE2ec6/aaDUzf89ByGxCf1L0OMD1+E0RjKX+fOJMg8cnmYDccfZ8B/e7xnoEca9PJEut3h5Q3q8gXZp1r3pLg5c9DsF4/fLJyUrDZnxZRO2myPk/98qnvSzYZ+5AYQWrwRI0r+wZR5twYomTWyz/kbUMLrn8nAryr5llTPikPEEQJj3UJpKMJ1AACja88wf1mspxjmf0i+TiZAxKATdlY8ZMaE+nbqMWP/zjhL71GaLDaaSIV1+eh2z9trfeRpc78f8yS5Z1e25+3llgTqYaY87Wi/2GkuURsFK+elFJdsqGvSs7etbhVClk8249A="
+    # Docker Credentials
+    - secure: "M22GW56dMtXNJzMwekxmvS6sPaG8KbiihftBsLXSak6U254YUsuiw0Nos+5xHkmgiEllKFSHcii/oLyLV67sUwysMpu+NlcHrx/6aJXAiU8EsUF9V7mHbuC7nLbwGkrjFu6xIqc/xrVI0RIb1FK2PV2fvIxy3uNlFGnCDuctuQoBv47ksSkmitrUiwV3+3BUUsylHZ5NyVmeQsU4/t32onT2YmycHxDqcmopr9R1QTbsipuEnAd4ulhtc9QiZsW+MUKsx9jeKDy36MEfGZF7d4duy9esLT1TVisUapbPIcO8gFFXqkJTgQF8J8eG4u1cTs258Zoy7B7EpNZqbUFlYvrlfpksAJLP4MxGONWYNcoGagAJxrW14U59mp3JIEfohZ76zG3bLwTIneUoA5BWXIluT8LrRAhya1jF8nQpbRTymzSDWhg5orq+qxxS3j94nPTACCjhv+JpGTCOM5EQfyVm3S1hSQhkUA6HZZbyJlHUAsROJ/mCiXtmjmpZjOLVYkFfEW36IJVstUy/Wyxhy3ntiENPeQl4ArfUclp5TpoT1MJzl+ByesjwL5BxQHUOPgh+J8dHUE4N5MzrIHzyqFA7RxzsJJcLsVx6AbijwqySavWFymo+nmjOPjbzlKIutZYW0BP2AQcWn4kVyR3JCTbmcnqG7Q7H1Ex0wRqzrzA="
+    # GitHub Credentials
+    - secure: "Yxg9Rh0O83SmaRbtRZVg/9bhBLfvCbDk2ZgwN+wXmUlOneCMNQ9ZXLeiAfUj03pAuMXskRCOnvG6Qajd1VOIhNWtvc8Gckp5T5dtUYlSDbHPQE0xsdfDHKNU6BISt0A7AkFF6U147ooH2/n73azbz58eeW0y0yfzMNdIf3Qpw6jUU6es6EAGW4RJI5HU+mE53E3VI97lVWOJD2r9auYk+0VeYccCBvVxyxePDZTr7wtuHxKgA4ZpJLsXbSazQjSHyxXumYyOX4L6m2i+fzOH6g0hBJc/9J8Gqvc1sIkNrDysW3g6m773l1S4bSfptF//5cAhg723s4tJyVhuDcwAmjjLnXcTXR01cXer4XfuCp6FNUu8ZHE3GIJ57MrxvU6mHCLIwZ9qtqmEepW/m+XwyVApf8PIt8R5aAOEQniAbBIcHanKEQZ3cG1vH7mvPOi8CvRA3HexsXk/i1e90oFMFp1GQnPX0g8D6GAZUqMbKkBr5NV90iAKwuuaOfmGyCfYS+uyzDZc+uZffnlEM4VkAWEH7+Nnhw+4kq0IMlhCT4nRdSuG3wAkuMDg75WZbVG4QxBFO5YGZivT9r91YT92DaCWwu39f/nUdZXcp4ZAyvT8E+PMpZmbjqJ0mb43qg7hGb9kzdXuDAvqP9Ngg9Gkx/4/bZbSuAWGtCmpCmXiSCE="
 branches:
   # Releases are generated automatically, stop infinite build loop
   except:
@@ -33,22 +34,22 @@ before_install:
   - sudo ./bin/ci/init-db.sh
 script:
   # Increment version in mix.exs
-  - "./bin/version-increment.sh"
+  - ./bin/version-increment.sh
   # Install dependencies
   - mix deps.get
   # Run all tests except pending ones
   - mix test --exclude pending --trace
   # Submit code coverage report to Coveralls
   # Add --pro if you using private repo.
-  - mix coveralls.travis
+  - mix coveralls.travis --exclude pending
   # Run static code analysis
   - mix credo --strict
   # Check code style
   - mix dogma
   # Build Docker container
-  - "./bin/build.sh"
+  - ./bin/build.sh
   # Initialize DB for Docker container
-  - "MIX_ENV=dev mix ecto.setup"
+  - MIX_ENV=dev mix ecto.setup
   # Run Docker container
   - sudo ./bin/start.sh
   - sleep 5

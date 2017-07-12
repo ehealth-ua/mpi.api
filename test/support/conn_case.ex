@@ -26,13 +26,13 @@ defmodule MPI.Web.ConnCase do
     end
   end
 
-
   setup tags do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(MPI.Repo)
+
     unless tags[:async] do
       Ecto.Adapters.SQL.Sandbox.mode(MPI.Repo, {:shared, self()})
     end
+
     {:ok, conn: Phoenix.ConnTest.build_conn() |> Plug.Conn.put_req_header("content-type", "application/json")}
   end
-
 end
