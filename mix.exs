@@ -21,7 +21,7 @@ defmodule MPI.Mixfile do
   #
   # Type `mix help compile.app` for more information.
   def application do
-    [mod: {MPI.Application, []},
+    [mod: {MPI, []},
      extra_applications: [:logger, :logger_json, :runtime_tools]]
   end
 

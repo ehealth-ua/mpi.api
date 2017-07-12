@@ -1,12 +1,16 @@
-defmodule MPI.Application do
-  @moduledoc false
+defmodule MPI do
+  @moduledoc """
+  This is an entry point of mpi application.
+  """
   use Application
+  alias MPI.Web.Endpoint
 
   # See http://elixir-lang.org/docs/stable/elixir/Application.html
   # for more information on OTP Applications
   def start(_type, _args) do
-    import Supervisor.Spec
+    import Supervisor.Spec, warn: false
 
+    # Configure Logger severity at runtime
     configure_log_level()
 
     # Define workers and child supervisors to be supervised
@@ -15,7 +19,7 @@ defmodule MPI.Application do
       supervisor(MPI.Repo, []),
       # Start the endpoint when the application starts
       supervisor(MPI.Web.Endpoint, []),
-      # Start your own worker by calling: MPI.Worker.start_link(arg1, arg2, arg3)
+      # Starts a worker by calling: MPI.Worker.start_link(arg1, arg2, arg3)
       # worker(MPI.Worker, [arg1, arg2, arg3]),
     ]
 
@@ -23,6 +27,13 @@ defmodule MPI.Application do
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: MPI.Supervisor]
     Supervisor.start_link(children, opts)
+  end
+
+  # Tell Phoenix to update the endpoint configuration
+  # whenever the application is updated.
+  def config_change(changed, _new, removed) do
+    Endpoint.config_change(changed, removed)
+    :ok
   end
 
   # Configures Logger level via LOG_LEVEL environment variable.
@@ -36,5 +47,11 @@ defmodule MPI.Application do
         raise ArgumentError, "LOG_LEVEL environment should have one of 'debug', 'info', 'warn', 'error' values," <>
                              "got: #{inspect level}"
     end
+  end
+
+  # Loads configuration in `:on_init` callbacks and replaces `{:system, ..}` tuples via Confex
+  @doc false
+  def load_from_system_env(config) do
+    {:ok, Confex.process_env(config)}
   end
 end

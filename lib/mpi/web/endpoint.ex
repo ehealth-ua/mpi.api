@@ -1,14 +1,16 @@
 defmodule MPI.Web.Endpoint do
-  @moduledoc false
+  @moduledoc """
+  Phoenix Endpoint for mpi application.
+  """
   use Phoenix.Endpoint, otp_app: :mpi
 
-  # Code reloading can be explicitly enabled under the
-  # :code_reloader configuration of your endpoint.
-  if code_reloading? do
-    plug Phoenix.CodeReloader
+  # Allow acceptance tests to run in concurrent mode
+  if Application.get_env(:mpi, :sql_sandbox) do
+    plug Phoenix.Ecto.SQL.Sandbox
   end
 
   plug Plug.RequestId
+  plug EView.Plugs.Idempotency
   plug Plug.Logger
 
   plug EView
@@ -31,7 +33,12 @@ defmodule MPI.Web.Endpoint do
   and must return the updated configuration.
   """
   def load_from_system_env(config) do
-    port = System.get_env("APP_PORT") || raise "expected the PORT environment variable to be set"
-    {:ok, Keyword.put(config, :http, [:inet6, port: port])}
+    config = Confex.process_env(config)
+
+    unless config[:secret_key_base] do
+      raise "Set SECRET_KEY environment variable!"
+    end
+
+    {:ok, config}
   end
 end
