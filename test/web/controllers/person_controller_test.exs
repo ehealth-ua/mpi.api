@@ -148,6 +148,24 @@ defmodule MPI.Web.PersonControllerTest do
     end)
   end
 
+  test "GET /persons/ SEARCH by ids 200", %{conn: conn} do
+    Factory.insert(:person)
+    %{id: id_1} = Factory.insert(:person)
+    %{id: id_2} = Factory.insert(:person)
+
+    ids = [id_1, id_2]
+
+    conn = get conn, person_path(conn, :index, [ids: Enum.join(ids, ","), limit: 3])
+    data = json_response(conn, 200)["data"]
+    assert 2 == length(data)
+    Enum.each(data, fn (person) ->
+      assert person["id"] in [id_1, id_2]
+      assert Map.has_key?(person, "first_name")
+      assert Map.has_key?(person, "second_name")
+      assert Map.has_key?(person, "last_name")
+    end)
+  end
+
   test "GET /persons/ SEARCH 200", %{conn: conn} do
     person = Factory.insert(:person,
       %{phones: [Factory.build(:phone, %{type: "LANDLINE"}), Factory.build(:phone, %{type: "MOBILE"})]}
@@ -233,8 +251,9 @@ defmodule MPI.Web.PersonControllerTest do
 
     assert %{
       "type" => "forbidden",
-      "message" => "This API method returns only exact match results, please retry with more specific search result"}
-        = error
+      "message" => "This API method returns only exact match results, " <>
+                   "please retry with more specific search parameters"
+    } = error
   end
 
   defp assert_person(data) do

@@ -2,10 +2,6 @@ defmodule MPI.Person do
   @moduledoc false
   use Ecto.Schema
 
-  import Ecto.Changeset
-  import Ecto.Query
-  alias MPI.Repo
-
   @primary_key {:id, Ecto.UUID, autogenerate: true}
   @derive {Poison.Encoder, except: [:__meta__]}
   schema "persons" do
@@ -68,7 +64,7 @@ defmodule MPI.Person do
     merged_ids
   )
 
-  @required_fields [
+  @fields_required [
     :version,
     :first_name,
     :last_name,
@@ -88,40 +84,6 @@ defmodule MPI.Person do
     :updated_by
   ]
 
-  def changeset(struct, params \\ %{}) do
-    struct
-    |> cast(params, @fields)
-    |> validate_required(@required_fields)
-  end
-
-  def search(%Ecto.Changeset{changes: parameters}, params) do
-    cursors =
-      %Ecto.Paging.Cursors{
-        starting_after: Map.get(params, "starting_after"),
-        ending_before: Map.get(params, "ending_before", nil)
-      }
-
-    limit = Map.get(params, "limit", Confex.get(:mpi, :max_persons_result))
-
-    parameters
-    |> get_query()
-    |> Repo.page(%Ecto.Paging{limit: limit, cursors: cursors})
-  end
-
-  def get_query(%{phone_number: phone_number} = changes) do
-    params =
-      changes
-      |> Map.delete(:phone_number)
-      |> Map.to_list()
-
-    from s in MPI.Person,
-      where: ^params,
-      where: fragment("? @> ?", s.phones, ~s/[{"type":"MOBILE","number":"#{phone_number}"}]/)
-  end
-
-  def get_query(params) do
-    params = Map.to_list(params)
-    from s in MPI.Person,
-      where: ^params
-  end
+  def fields, do: @fields
+  def fields_required, do: @fields_required
 end

@@ -2,6 +2,7 @@ defmodule MPI.PersonTest do
   use MPI.ModelCase, async: true
 
   alias MPI.Person
+  alias MPI.Persons.PersonsAPI
 
   describe "Valid record" do
     test "successfully inserted in DB" do
@@ -97,7 +98,7 @@ defmodule MPI.PersonTest do
         ]
       }
 
-      %Ecto.Changeset{valid?: true} = changeset = Person.changeset(%Person{}, params)
+      %Ecto.Changeset{valid?: true} = changeset = PersonsAPI.changeset(%Person{}, params)
       assert {:ok, _record} = Repo.insert(changeset)
     end
   end

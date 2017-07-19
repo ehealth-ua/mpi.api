@@ -1,13 +1,14 @@
-defmodule MPI.PersonSearchChangeset do
+defmodule MPI.Persons.PersonSearch do
   @moduledoc false
   use Ecto.Schema
 
   import Ecto.Changeset
 
   alias EView.Changeset.Validators.PhoneNumber
-  alias MPI.PersonSearchChangeset
+  alias MPI.Persons.PersonSearch
 
   schema "persons" do
+    field :ids, MPI.CommaParamsUUID
     field :first_name, :string
     field :last_name, :string
     field :second_name, :string
@@ -17,6 +18,7 @@ defmodule MPI.PersonSearchChangeset do
   end
 
   @fields ~W(
+    ids
     first_name
     last_name
     second_name
@@ -31,8 +33,14 @@ defmodule MPI.PersonSearchChangeset do
     :birth_date,
   ]
 
-  def changeset(params \\ %{}) do
-    %PersonSearchChangeset{}
+  def changeset(%{"ids" => _} = params) do
+    %PersonSearch{}
+    |> cast(params, @fields)
+    |> PhoneNumber.validate_phone_number(:phone_number)
+  end
+
+  def changeset(params) do
+    %PersonSearch{}
     |> cast(params, @fields)
     |> validate_required(@required_fields)
     |> PhoneNumber.validate_phone_number(:phone_number)
