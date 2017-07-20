@@ -183,7 +183,7 @@ defmodule MPI.Web.PersonControllerTest do
       person
       |> Poison.encode!()
       |> Poison.decode!()
-      |> Map.take(["birth_date", "history", "id", "first_name", "last_name", "second_name", "tax_id"])
+      |> Map.take(["birth_date", "history", "id", "first_name", "last_name", "second_name", "tax_id", "merged_ids"])
       |> Map.put("phone_number", phone_number)
 
     link = "/persons/?first_name=#{person.first_name}&last_name=#{person.last_name}&birth_date=#{person.birth_date}"
@@ -196,7 +196,7 @@ defmodule MPI.Web.PersonControllerTest do
     assert_person_search(res["data"])
     person_first_response =
       person_response
-      |> Map.take(["first_name", "last_name", "birth_date", "history", "id"])
+      |> Map.take(["first_name", "last_name", "birth_date", "history", "id", "merged_ids"])
 
     assert [person_first_response] == res["data"]
 
@@ -208,7 +208,7 @@ defmodule MPI.Web.PersonControllerTest do
     assert_person_search(res["data"])
     person_second_response =
       person_response
-      |> Map.take(["first_name", "last_name", "birth_date", "history", "id", "second_name", "tax_id"])
+      |> Map.take(["first_name", "last_name", "birth_date", "history", "id", "second_name", "tax_id", "merged_ids"])
     assert [person_second_response] == res["data"]
 
     phone_number = String.replace_prefix(phone_number, "+", "%2b")
@@ -220,7 +220,7 @@ defmodule MPI.Web.PersonControllerTest do
     assert_person_search(res["data"])
     person_third_response =
       person_response
-      |> Map.take(["first_name", "last_name", "birth_date", "history", "id", "phone_number"])
+      |> Map.take(["first_name", "last_name", "birth_date", "history", "id", "phone_number", "merged_ids"])
     assert [person_third_response] == res["data"]
 
     res =

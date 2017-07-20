@@ -26,7 +26,7 @@ defmodule MPI.Web.PersonView do
     take_fields = Map.keys(params)
 
     person
-    |> Map.take(take_fields ++ [:id, :history])
+    |> Map.take(take_fields ++ [:id, :history, :merged_ids])
     |> add_phone_number_to_map(phone_number, take_fields)
   end
 
