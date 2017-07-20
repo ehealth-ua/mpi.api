@@ -3,7 +3,7 @@ defmodule MPI.Web.PersonView do
   use MPI.Web, :view
 
   def render("person.json", %{person: %MPI.Person{} = person}) do
-    person
+    convert_merged_ids(person)
   end
 
   def render("persons.json", %{persons: persons, search_params: %{ids: _}}) do
@@ -26,8 +26,9 @@ defmodule MPI.Web.PersonView do
     take_fields = Map.keys(params)
 
     person
-    |> Map.take(take_fields ++ [:id, :history, :merged_ids])
+    |> Map.take(take_fields ++ [:id, :history, :merged_ids, :birth_country, :birth_settlement])
     |> add_phone_number_to_map(phone_number, take_fields)
+    |> convert_merged_ids()
   end
 
   defp get_phone_number([]), do: nil
@@ -39,4 +40,7 @@ defmodule MPI.Web.PersonView do
       true -> Map.put(map, :phone_number, phone_number)
     end
   end
+
+  defp convert_merged_ids(%{merged_ids: nil} = params), do: Map.put(params, :merged_ids, [])
+  defp convert_merged_ids(params), do: params
 end

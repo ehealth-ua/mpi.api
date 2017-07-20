@@ -3,7 +3,7 @@ defmodule MPI.Web.PersonControllerTest do
   alias MPI.Factory
 
   test "GET /persons/:id OK", %{conn: conn} do
-    person = Factory.insert(:person)
+    person = :person |> Factory.insert() |> Map.put(:merged_ids, [])
 
     res =
       conn
@@ -167,10 +167,12 @@ defmodule MPI.Web.PersonControllerTest do
   end
 
   test "GET /persons/ SEARCH 200", %{conn: conn} do
-    person = Factory.insert(:person,
-      %{phones: [Factory.build(:phone, %{type: "LANDLINE"}), Factory.build(:phone, %{type: "MOBILE"})]}
-    )
+    person =
+    :person
+    |> Factory.insert(%{phones: [Factory.build(:phone, %{type: "LANDLINE"}), Factory.build(:phone, %{type: "MOBILE"})]})
+    |> Map.put(:merged_ids, [])
 
+    required_fields = ~W(id history first_name last_name birth_date birth_country birth_settlement merged_ids)
     # Getting mobile phone number because search uses just it
     phone_number =
       person
@@ -183,32 +185,26 @@ defmodule MPI.Web.PersonControllerTest do
       person
       |> Poison.encode!()
       |> Poison.decode!()
-      |> Map.take(["birth_date", "history", "id", "first_name", "last_name", "second_name", "tax_id", "merged_ids"])
+      |> Map.take(required_fields ++ ["second_name" , "tax_id"])
       |> Map.put("phone_number", phone_number)
 
     link = "/persons/?first_name=#{person.first_name}&last_name=#{person.last_name}&birth_date=#{person.birth_date}"
-
     res =
       conn
       |> get(link)
       |> json_response(200)
 
     assert_person_search(res["data"])
-    person_first_response =
-      person_response
-      |> Map.take(["first_name", "last_name", "birth_date", "history", "id", "merged_ids"])
-
+    person_first_response = Map.take(person_response, required_fields)
     assert [person_first_response] == res["data"]
 
     res =
       conn
-      |> get("#{link}&second_name=#{person.second_name}&tax_id=#{person.tax_id}")
+      |> get("#{link}&second_name=#{String.upcase(person.second_name)}&tax_id=#{person.tax_id}")
       |> json_response(200)
 
     assert_person_search(res["data"])
-    person_second_response =
-      person_response
-      |> Map.take(["first_name", "last_name", "birth_date", "history", "id", "second_name", "tax_id", "merged_ids"])
+    person_second_response = Map.take(person_response, required_fields ++ ["second_name" , "tax_id"])
     assert [person_second_response] == res["data"]
 
     phone_number = String.replace_prefix(phone_number, "+", "%2b")
@@ -218,9 +214,7 @@ defmodule MPI.Web.PersonControllerTest do
       |> json_response(200)
 
     assert_person_search(res["data"])
-    person_third_response =
-      person_response
-      |> Map.take(["first_name", "last_name", "birth_date", "history", "id", "phone_number", "merged_ids"])
+    person_third_response = Map.take(person_response, required_fields ++ ["phone_number"])
     assert [person_third_response] == res["data"]
 
     res =
@@ -288,6 +282,7 @@ defmodule MPI.Web.PersonControllerTest do
       "authentication_methods" => _,
       "merged_ids" => _
     } = data
+    assert is_list(data["merged_ids"])
   end
 
   def assert_person_search(data) do
