@@ -12,7 +12,7 @@ defmodule MPI.Factory do
       first_name: sequence(:first_name, &"first_name-#{&1}"),
       last_name: sequence(:last_name, &"last_name-#{&1}"),
       second_name: sequence(:second_name, &"second_name-#{&1}"),
-      birth_date: "1996-12-12",
+      birth_date: ~D[1996-12-12],
       birth_country: sequence(:birth_country, &"birth_country-#{&1}"),
       birth_settlement: sequence(:birth_settlement, &"birth_settlement-#{&1}"),
       gender: Enum.random(["MALE", "FEMALE"]),

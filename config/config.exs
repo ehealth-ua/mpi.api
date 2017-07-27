@@ -28,6 +28,26 @@ config :logger_json, :backend,
   json_encoder: Poison,
   metadata: :all
 
+config :mpi, MPI.Deduplication.Match,
+  schedule: {:system, "DEDUPLICATION_SCHEDULE", "* 1 * * *"},
+  depth: {:system, :integer, "DEDUPLICATION_DEPTH", 2},
+  score: {:system, "DEDUPLICATION_SCORE", "0.8"},
+  fields: %{
+    tax_id:       [match: 0.1, no_match: -0.1],
+    first_name:   [match: 0.1, no_match: -0.1],
+    last_name:    [match: 0.1, no_match: -0.1],
+    second_name:  [match: 0.1, no_match: -0.1],
+    birth_date:   [match: 0.1, no_match: -0.1],
+    documents:    [match: 0.1, no_match: -0.1],
+    national_id:  [match: 0.1, no_match: -0.1],
+    phones:       [match: 0.1, no_match: -0.1]
+  }
+
+config :mpi, MPI.Deduplication,
+  jobs: [
+    {"* * */2 * *", {MPI.Deduplication.Match, :run, []}},
+  ]
+
 config :mpi, MPI.Repo,
   adapter: Ecto.Adapters.Postgres,
   username: "postgres",

@@ -44,6 +44,8 @@ defmodule MPI.Mixfile do
      {:poison, "~> 3.1", override: true},
      {:eview, ">= 0.0.0"},
      {:postgrex, ">= 0.0.0"},
+     {:timex, "~> 3.1.0"},
+     {:quantum, "~> 2.0.0"},
      {:excoveralls, ">= 0.0.0", only: [:dev, :test]},
      {:dogma, ">= 0.0.0", only: [:dev, :test]},
      {:credo, ">= 0.0.0", only: [:dev, :test]},
