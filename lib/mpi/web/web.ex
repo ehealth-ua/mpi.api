@@ -26,6 +26,7 @@ defmodule MPI.Web do
 
   def view do
     quote do
+      use Phoenix.View, root: ""
       import MPI.Web.Router.Helpers
     end
   end

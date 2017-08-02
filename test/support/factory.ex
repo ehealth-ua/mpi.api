@@ -5,6 +5,13 @@ defmodule MPI.Factory do
   """
   use ExMachina.Ecto, repo: MPI.Repo
 
+  def merge_candidate_factory do
+    %MPI.MergeCandidate{
+      person: build(:person),
+      master_person: build(:person)
+    }
+  end
+
   def person_factory, do: struct(MPI.Person, person_params_factory())
 
   def person_params_factory do
