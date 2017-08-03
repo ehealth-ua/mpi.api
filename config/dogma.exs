@@ -7,6 +7,7 @@ config :dogma,
     ~r(\Alib/mpi/tasks.ex), # TODO: https://github.com/lpil/dogma/issues/221
     ~r(\Arel/),
     ~r(\Adeps/),
+    ~r(\Alib/mpi/application.ex)
   ],
   override: [
     %Rule.LineLength{ max_length: 120 },
