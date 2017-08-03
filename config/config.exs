@@ -29,6 +29,9 @@ config :logger_json, :backend,
   metadata: :all
 
 config :mpi, MPI.Deduplication.Match,
+  subscribers: [
+    {:system, "DEDUPLICATION_SUBSCRIBER_IL", "http://api-svc.il/internal/deduplication/found_duplicates"}
+  ],
   schedule: {:system, "DEDUPLICATION_SCHEDULE", "* 1 * * *"},
   depth: {:system, :integer, "DEDUPLICATION_DEPTH", 2},
   score: {:system, "DEDUPLICATION_SCORE", "0.8"},
@@ -42,7 +45,6 @@ config :mpi, MPI.Deduplication.Match,
     national_id:  [match: 0.1, no_match: -0.1],
     phones:       [match: 0.1, no_match: -0.1]
   }
-
 
 config :mpi, MPI.Repo,
   adapter: Ecto.Adapters.Postgres,

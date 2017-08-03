@@ -9,6 +9,7 @@ defmodule MPI.Deduplication.Match do
   alias MPI.Person
   alias MPI.MergeCandidate
   alias Ecto.UUID
+  alias Confex.Resolver
 
   use Confex, otp_app: :mpi
 
@@ -59,6 +60,12 @@ defmodule MPI.Deduplication.Match do
       end
 
     Repo.insert_all(MergeCandidate, merge_candidates)
+
+    Enum.each config[:subscribers], fn subscriber ->
+      url = Resolver.resolve!(subscriber)
+
+      HTTPoison.post(url, "", [{"Content-Type", "application/json"}])
+    end
   end
 
   def find_duplicates(candidates, persons, comparison_function) do
