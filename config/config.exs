@@ -29,7 +29,6 @@ config :logger_json, :backend,
   metadata: :all
 
 config :mpi, MPI.Deduplication.Match,
-  schedule: {:system, "DEDUPLICATION_SCHEDULE", "* 1 * * *"},
   depth: {:system, :integer, "DEDUPLICATION_DEPTH", 2},
   score: {:system, "DEDUPLICATION_SCORE", "0.8"},
   fields: %{
