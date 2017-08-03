@@ -43,28 +43,28 @@ defmodule MPI.Deduplication.Match do
 
     if length(pairs) > 0 do
       Logger.info("Found duplicates. Will insert the following {master_person_id, person_id} pairs: #{inspect pairs}")
+
+      merge_candidates =
+        Enum.map pairs, fn {master_person, person} ->
+          %{
+            id: UUID.generate(),
+            master_person_id: master_person.id,
+            person_id: person.id,
+            status: "NEW",
+            inserted_at: DateTime.utc_now(),
+            updated_at: DateTime.utc_now()
+          }
+        end
+
+      Repo.insert_all(MergeCandidate, merge_candidates)
+
+      Enum.each config[:subscribers], fn subscriber ->
+        url = Resolver.resolve!(subscriber)
+
+        HTTPoison.post(url, "", [{"Content-Type", "application/json"}])
+      end
     else
       Logger.info("Found no duplicates.")
-    end
-
-    merge_candidates =
-      Enum.map pairs, fn {master_person, person} ->
-        %{
-          id: UUID.generate(),
-          master_person_id: master_person.id,
-          person_id: person.id,
-          status: "NEW",
-          inserted_at: DateTime.utc_now(),
-          updated_at: DateTime.utc_now()
-        }
-      end
-
-    Repo.insert_all(MergeCandidate, merge_candidates)
-
-    Enum.each config[:subscribers], fn subscriber ->
-      url = Resolver.resolve!(subscriber)
-
-      HTTPoison.post(url, "", [{"Content-Type", "application/json"}])
     end
   end
 
