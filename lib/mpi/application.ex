@@ -5,6 +5,7 @@ defmodule MPI do
   use Application
   alias MPI.Web.Endpoint
   alias Confex.Resolver
+  alias MPI.Deduplication.Scheduler
 
   # See http://elixir-lang.org/docs/stable/elixir/Application.html
   # for more information on OTP Applications
@@ -64,6 +65,6 @@ defmodule MPI do
 
     schedule = Confex.get_env(:mpi,  MPI.Deduplication.Match)[:schedule]
 
-    MPI.Deduplication.Scheduler.add_job({~e[#{schedule}], fn -> nil end})
+    Scheduler.add_job({~e[#{schedule}], fn -> nil end})
   end
 end
