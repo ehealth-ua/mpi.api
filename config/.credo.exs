@@ -4,7 +4,7 @@
       name: "default",
       files: %{
         included: ["lib/", "www/"],
-        excluded: ["lib/mpi/tasks.ex"]
+        excluded: ["lib/mpi/tasks.ex", "lib/mpi/application.ex"]
       },
       checks: [
         {Credo.Check.Design.TagTODO, exit_status: 0},
