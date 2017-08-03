@@ -20,7 +20,7 @@ defmodule MPI do
       supervisor(MPI.Repo, []),
       # Start the endpoint when the application starts
       supervisor(MPI.Web.Endpoint, []),
-      worker(MPI.Deduplication.Scheduler, [])
+      worker(MPI.Deduplication.Scheduler, []),
       # Starts a worker by calling: MPI.Worker.start_link(arg1, arg2, arg3)
       # worker(MPI.Worker, [arg1, arg2, arg3]),
     ]
@@ -28,7 +28,9 @@ defmodule MPI do
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: MPI.Supervisor]
-    Supervisor.start_link(children, opts)
+    started_app = Supervisor.start_link(children, opts)
+    run_scheduler()
+    started_app
   end
 
   # Tell Phoenix to update the endpoint configuration
@@ -55,5 +57,13 @@ defmodule MPI do
   @doc false
   def load_from_system_env(config) do
     {:ok, Resolver.resolve!(config)}
+  end
+
+  defp run_scheduler do
+    import Crontab.CronExpression
+
+    schedule = Confex.get_env(:mpi,  MPI.Deduplication.Match)[:schedule]
+
+    MPI.Deduplication.Scheduler.add_job({~e[#{schedule}], fn -> nil end})
   end
 end
