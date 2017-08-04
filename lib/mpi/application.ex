@@ -6,6 +6,7 @@ defmodule MPI do
   alias MPI.Web.Endpoint
   alias Confex.Resolver
   alias MPI.Deduplication.Scheduler
+  alias MPI.Deduplication.Match
 
   # See http://elixir-lang.org/docs/stable/elixir/Application.html
   # for more information on OTP Applications
@@ -63,8 +64,8 @@ defmodule MPI do
   defp run_scheduler do
     import Crontab.CronExpression
 
-    schedule = Confex.get_env(:mpi,  MPI.Deduplication.Match)[:schedule]
+    schedule = Confex.get_env(:mpi, Match)[:schedule]
 
-    Scheduler.add_job({~e[#{schedule}], fn -> nil end})
+    Scheduler.add_job({~e[#{schedule}], &Match.run/0})
   end
 end
