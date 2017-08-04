@@ -32,7 +32,7 @@ config :mpi, MPI.Deduplication.Match,
   subscribers: [
     {:system, "DEDUPLICATION_SUBSCRIBER_IL", "http://api-svc.il/internal/deduplication/found_duplicates"}
   ],
-  schedule: {:system, "DEDUPLICATION_SCHEDULE", "* 1 * * *"},
+  schedule: {:system, "DEDUPLICATION_SCHEDULE", "* * * * *"},
   depth: {:system, :integer, "DEDUPLICATION_DEPTH", 20},
   score: {:system, "DEDUPLICATION_SCORE", "0.8"},
   fields: %{
