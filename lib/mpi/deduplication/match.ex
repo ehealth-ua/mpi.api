@@ -62,7 +62,7 @@ defmodule MPI.Deduplication.Match do
       Enum.each config[:subscribers], fn subscriber ->
         url = Resolver.resolve!(subscriber)
 
-        HTTPoison.post(url, "", [{"Content-Type", "application/json"}])
+        HTTPoison.post!(url, "", [{"Content-Type", "application/json"}])
       end
     else
       Logger.info("Found no duplicates.")
