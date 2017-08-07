@@ -14,6 +14,11 @@ config :mpi, MPI.Web.Endpoint,
   check_origin: false,
   watchers: []
 
+config :mpi, MPI.Deduplication.Match,
+  subscribers: [
+    {:system, "DEDUPLICATION_SUBSCRIBER_IL", "http://localhost:4000/internal/deduplication/found_duplicates"}
+  ]
+
 # ## SSL Support
 #
 # In order to use HTTPS in development, a self-signed
