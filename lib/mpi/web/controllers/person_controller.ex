@@ -36,7 +36,7 @@ defmodule MPI.Web.PersonController do
 
   def update(conn, %{"id" => id} = params) do
     with %Person{} = person <- Repo.get(Person, id),
-      %Changeset{valid?: true} = changeset <- PersonsAPI.changeset(person, params),
+      %Changeset{valid?: true} = changeset <- PersonsAPI.changeset(person, preprocess_params(person, params)),
       {:ok, %Person{} = person} <- Repo.update(changeset)  do
         conn
         |> put_status(:ok)
@@ -62,5 +62,12 @@ defmodule MPI.Web.PersonController do
         |> put_status(:created)
         |> render("person.json", %{person: person})
     end
+  end
+
+  defp preprocess_params(person, params) do
+    existing_merged_ids = person.merged_ids || []
+    new_merged_ids = Map.get(params, "merged_ids", [])
+
+    Map.merge(params, %{"merged_ids" => existing_merged_ids ++ new_merged_ids})
   end
 end
