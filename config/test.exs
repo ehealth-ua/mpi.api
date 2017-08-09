@@ -17,3 +17,6 @@ config :mpi, MPI.Repo,
   adapter: Ecto.Adapters.Postgres,
   pool: Ecto.Adapters.SQL.Sandbox,
   database: "mpi_test"
+
+config :mpi, MPI.Deduplication.Match,
+  subscribers: []
