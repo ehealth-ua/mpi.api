@@ -30,7 +30,7 @@ defmodule MPI.Person do
     field :inserted_by, :string, default: "default"
     field :updated_by, :string, default: "default"
     field :authentication_methods, {:array, :map}
-    field :merged_ids, {:array, :uuid}
+    field :merged_ids, {:array, :string}
 
     timestamps(type: :utc_datetime)
   end

@@ -148,6 +148,16 @@ defmodule MPI.Web.PersonControllerTest do
     end)
   end
 
+  test "PATCH /persons/:id", %{conn: conn} do
+    merged_id1 = "cbe38ac6-a258-4b5d-b684-db53a4f54192"
+    merged_id2 = "1190cd3a-18f0-4e0a-98d6-186cd6da145c"
+    person = Factory.insert(:person, merged_ids: [merged_id1])
+
+    patch conn, "/persons/#{person.id}", Poison.encode!(%{merged_ids: [merged_id2]})
+
+    assert [^merged_id1, ^merged_id2] = MPI.Repo.get(MPI.Person, person.id).merged_ids
+  end
+
   test "GET /persons/ SEARCH by ids 200", %{conn: conn} do
     Factory.insert(:person)
     %{id: id_1} = Factory.insert(:person)
