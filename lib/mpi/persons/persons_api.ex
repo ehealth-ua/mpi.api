@@ -6,6 +6,8 @@ defmodule MPI.Persons.PersonsAPI do
   alias MPI.Repo
   alias MPI.Person
 
+  @inactive_statuses ["INACTIVE", "MERGED"]
+
   def changeset(struct, params \\ %{}) do
     struct
     |> cast(params, Person.fields())
@@ -38,7 +40,9 @@ defmodule MPI.Persons.PersonsAPI do
     params = Enum.filter(changes, fn({_key, value}) -> !is_tuple(value) end)
 
     q = from s in MPI.Person,
-      where: ^params
+      where: ^params,
+      where: s.is_active,
+      where: not s.status in ^@inactive_statuses
 
     Enum.reduce(changes, q, fn({key, val}, query) ->
       case val do

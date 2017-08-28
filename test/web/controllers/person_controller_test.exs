@@ -162,8 +162,11 @@ defmodule MPI.Web.PersonControllerTest do
     Factory.insert(:person)
     %{id: id_1} = Factory.insert(:person)
     %{id: id_2} = Factory.insert(:person)
+    %{id: id_3} = Factory.insert(:person, %{is_active: false})
+    %{id: id_4} = Factory.insert(:person, %{status: "INACTIVE"})
+    %{id: id_5} = Factory.insert(:person, %{status: "MERGED"})
 
-    ids = [id_1, id_2]
+    ids = [id_1, id_2, id_3, id_4, id_5]
 
     conn = get conn, person_path(conn, :index, [ids: Enum.join(ids, ","), limit: 3])
     data = json_response(conn, 200)["data"]
