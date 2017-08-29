@@ -1,5 +1,4 @@
 #!/bin/bash
-
 # This script starts a local Docker container with created image.
 
 # Find mix.exs inside project tree.
@@ -19,10 +18,26 @@ HOST_NAME="travis"
 echo "[I] Starting a Docker container '${PROJECT_NAME}' (version '${PROJECT_VERSION}') from path '${PROJECT_DIR}'.."
 echo "[I] Assigning parent host '${HOST_NAME}' with IP '${HOST_IP}'."
 
+# Allow to pass -i option to start container in interactive mode
+OPTS="-d"
+while getopts "i" opt; do
+  case "$opt" in
+    i)  OPTS="-it --rm"
+        ;;
+  esac
+done
+
 docker run -p 4000:4000 \
        --env-file .env \
-       -d \
+       ${OPTS} \
        --add-host=$HOST_NAME:$HOST_IP \
        --name ${PROJECT_NAME} \
        "${PROJECT_NAME}:${PROJECT_VERSION}"
-
+sleep 5
+docker ps
+RUNNING_CONTAINERS=`docker ps | wc -l`;
+    if [ "${RUNNING_CONTAINERS//[[:space:]]/}" == "1" ]; then
+      echo "[E] Container is not started\!";
+      docker logs ops --details --since 5h;
+      exit 1;
+    fi;
