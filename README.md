@@ -25,5 +25,5 @@ You can use official Docker container to deploy this service, it can be found on
 See [ENVIRONMENT.md](docs/ENVIRONMENT.md).
 
 ## License
-
+ 
 See [LICENSE.md](LICENSE.md).
