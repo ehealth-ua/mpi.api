@@ -158,6 +158,20 @@ defmodule MPI.Web.PersonControllerTest do
     assert [^merged_id1, ^merged_id2] = MPI.Repo.get(MPI.Person, person.id).merged_ids
   end
 
+  test "GET /persons/ SEARCH by last_name 200", %{conn: conn} do
+    person = Factory.insert(:person, phones: nil)
+    conn = get conn, person_path(conn, :index, [
+      last_name: person.last_name,
+      first_name: person.first_name,
+      birth_date: to_string(person.birth_date)
+    ])
+    data = json_response(conn, 200)["data"]
+    assert 1 == length(data)
+    Enum.each(data, fn (person) ->
+      refute Map.has_key?(person, "phone_number")
+    end)
+  end
+
   test "GET /persons/ SEARCH by ids 200", %{conn: conn} do
     Factory.insert(:person)
     %{id: id_1} = Factory.insert(:person)
@@ -181,9 +195,14 @@ defmodule MPI.Web.PersonControllerTest do
 
   test "GET /persons/ SEARCH 200", %{conn: conn} do
     person =
-    :person
-    |> Factory.insert(%{phones: [Factory.build(:phone, %{type: "LANDLINE"}), Factory.build(:phone, %{type: "MOBILE"})]})
-    |> Map.put(:merged_ids, [])
+      :person
+      |> Factory.insert(%{
+          phones: [
+            Factory.build(:phone, %{type: "LANDLINE"}),
+            Factory.build(:phone, %{type: "MOBILE"})
+          ]
+      })
+      |> Map.put(:merged_ids, [])
 
     required_fields = ~W(id history first_name last_name birth_date birth_country birth_settlement merged_ids)
     # Getting mobile phone number because search uses just it

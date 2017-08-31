@@ -17,9 +17,9 @@ defmodule MPI.Web.PersonView do
   end
 
   defp person_short(person, params) do
+    phones = Map.fetch!(person, :phones) || []
     phone_number =
-      person
-      |> Map.fetch!(:phones)
+      phones
       |> Enum.filter(fn(phone) -> phone["type"] == "MOBILE" end)
       |> get_phone_number()
 
