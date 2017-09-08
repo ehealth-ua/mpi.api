@@ -69,5 +69,5 @@ RUN $APP_NAME/hooks/pre-run.sh
 #    Daemon: mpi/bin/mpi start
 #  Also you can run migrations whenever container starts:
 #    mpi/bin/mpi command mpi_tasks migrate!
-#  Alternatively you can set env APP_MIGRATE=true and APP_RUN_SEED=true when starting container.
+#  Alternatively you can set env DB_MIGRATE=true and APP_RUN_SEED=true when starting container.
 CMD $APP_NAME/bin/$APP_NAME foreground
