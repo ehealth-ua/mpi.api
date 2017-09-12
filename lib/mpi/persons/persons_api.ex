@@ -14,7 +14,7 @@ defmodule MPI.Persons.PersonsAPI do
     |> validate_required(Person.fields_required())
   end
 
-  def search(%Ecto.Changeset{changes: parameters}, params) do
+  def search(%Ecto.Changeset{changes: parameters}, params, all \\ false) do
     cursors =
       %Ecto.Paging.Cursors{
         starting_after: Map.get(params, "starting_after"),
@@ -25,24 +25,24 @@ defmodule MPI.Persons.PersonsAPI do
     parameters
     |> prepare_ids()
     |> prepare_case_insensitive_fields()
-    |> get_query()
+    |> get_query(all)
     |> Repo.page(%Ecto.Paging{limit: limit, cursors: cursors})
   end
 
-  def get_query(%{phone_number: phone_number} = changes) do
+  def get_query(%{phone_number: phone_number} = changes, all) do
     changes
     |> Map.delete(:phone_number)
-    |> get_query()
+    |> get_query(all)
     |> where([p], fragment("? @> ?", p.phones, ~s/[{"type":"MOBILE","number":"#{phone_number}"}]/))
   end
-
-  def get_query(changes) do
+  def get_query(changes, all) do
     params = Enum.filter(changes, fn({_key, value}) -> !is_tuple(value) end)
 
-    q = from s in MPI.Person,
-      where: ^params,
-      where: s.is_active,
-      where: not s.status in ^@inactive_statuses
+    q =
+      Person
+      |> where([p], ^params)
+      |> add_is_active_query(all)
+      |> add_status_query(all)
 
     Enum.reduce(changes, q, fn({key, val}, query) ->
       case val do
@@ -53,6 +53,12 @@ defmodule MPI.Persons.PersonsAPI do
       end
     end)
   end
+
+  defp add_is_active_query(query, true), do: query
+  defp add_is_active_query(query, false), do: where(query, [p], p.is_active == true)
+
+  defp add_status_query(query, true), do: query
+  defp add_status_query(query, false), do: where(query, [p], not p.status in ^@inactive_statuses)
 
   def prepare_ids(%{ids: _} = params) do
     convert_comma_params_to_where_in_clause(params, :ids, :id)

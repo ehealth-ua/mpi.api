@@ -172,6 +172,28 @@ defmodule MPI.Web.PersonControllerTest do
     end)
   end
 
+  test "GET /all-persons SEARCH", %{conn: conn} do
+    person = Factory.insert(:person, is_active: false)
+    conn1 = get conn, person_path(conn, :all,
+      last_name: person.last_name,
+      second_name: person.second_name,
+      first_name: person.first_name,
+      birth_date: "1996-12-12",
+    )
+    data = json_response(conn1, 200)["data"]
+    assert 1 == length(data)
+    assert person.id == hd(data)["id"]
+
+    conn2 = get conn, person_path(conn, :index,
+      last_name: "last_name-0",
+      second_name: "second_name-0",
+      first_name: "first_name-0",
+      birth_date: "1996-12-12",
+    )
+    data = json_response(conn2, 200)["data"]
+    assert 0 == length(data)
+  end
+
   test "GET /persons/ SEARCH by ids 200", %{conn: conn} do
     Factory.insert(:person)
     %{id: id_1} = Factory.insert(:person)

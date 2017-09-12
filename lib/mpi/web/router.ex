@@ -9,6 +9,7 @@ defmodule MPI.Web.Router do
   scope "/", MPI.Web do
     pipe_through :api
 
+    get "/all-persons", PersonController, :all
     resources "/persons/", PersonController
     resources "/merge_candidates", MergeCandidateController, only: [:index, :update]
   end
