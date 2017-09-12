@@ -55,7 +55,7 @@ defmodule MPI.Persons.PersonsAPI do
   end
 
   defp add_is_active_query(query, true), do: query
-  defp add_is_active_query(query, false), do: where(query, [p], p.is_active == true)
+  defp add_is_active_query(query, false), do: where(query, [p], p.is_active)
 
   defp add_status_query(query, true), do: query
   defp add_status_query(query, false), do: where(query, [p], not p.status in ^@inactive_statuses)
