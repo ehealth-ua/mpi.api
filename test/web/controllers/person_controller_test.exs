@@ -194,6 +194,19 @@ defmodule MPI.Web.PersonControllerTest do
     assert 0 == length(data)
   end
 
+  test "GET /all-persons by ids", %{conn: conn} do
+    %{id: id1} = Factory.insert(:person, is_active: false)
+    %{id: id2} = Factory.insert(:person)
+    Factory.insert(:person)
+    conn1 = get conn, person_path(conn, :all,
+      ids: Enum.join([id1, id2], ",")
+    )
+    data = json_response(conn1, 200)["data"]
+    assert 2 == length(data)
+    assert id1 == hd(data)["id"]
+    assert id2 == Enum.at(data, 1)["id"]
+  end
+
   test "GET /persons/ SEARCH by ids 200", %{conn: conn} do
     Factory.insert(:person)
     %{id: id_1} = Factory.insert(:person)
@@ -213,6 +226,11 @@ defmodule MPI.Web.PersonControllerTest do
       assert Map.has_key?(person, "second_name")
       assert Map.has_key?(person, "last_name")
     end)
+  end
+
+  test "GET /persons/ empty search", %{conn: conn} do
+    conn = get conn, person_path(conn, :index, [ids: ""])
+    assert [] == json_response(conn, 200)["data"]
   end
 
   test "GET /persons/ SEARCH 200", %{conn: conn} do

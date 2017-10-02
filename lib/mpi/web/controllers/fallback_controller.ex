@@ -1,6 +1,8 @@
 defmodule MPI.Web.FallbackController do
   @moduledoc false
+
   use MPI.Web, :controller
+  alias Scrivener.Page
 
   def call(conn, nil) do
     conn
@@ -8,7 +10,7 @@ defmodule MPI.Web.FallbackController do
     |> render(EView.Views.Error, :"404")
   end
 
-  def call(conn, {_data, %Ecto.Paging{has_more: true}}) do
+  def call(conn, %Page{total_pages: pages}) when pages > 1 do
     forbidden_message
       = "This API method returns only exact match results, please retry with more specific search parameters"
     conn

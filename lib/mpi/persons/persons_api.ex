@@ -15,18 +15,12 @@ defmodule MPI.Persons.PersonsAPI do
   end
 
   def search(%Ecto.Changeset{changes: parameters}, params, all \\ false) do
-    cursors =
-      %Ecto.Paging.Cursors{
-        starting_after: Map.get(params, "starting_after"),
-        ending_before: Map.get(params, "ending_before", nil)
-      }
-
-    limit = Map.get(params, "limit", Confex.get_env(:mpi, :max_persons_result))
+    params = Map.merge(%{"page_size" => Confex.get_env(:mpi, :max_persons_result)}, params)
     parameters
     |> prepare_ids()
     |> prepare_case_insensitive_fields()
     |> get_query(all)
-    |> Repo.page(%Ecto.Paging{limit: limit, cursors: cursors})
+    |> Repo.paginate(params)
   end
 
   def get_query(%{phone_number: phone_number} = changes, all) do
