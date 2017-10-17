@@ -7,7 +7,7 @@ use Mix.Config
 # watchers to your application. For example, we use it
 # with brunch.io to recompile .js and .css sources.
 config :mpi, MPI.Web.Endpoint,
-  on_init: {MPI.Web.Endpoint, :load_from_system_env, []},
+  load_from_system_env: true,
   http: [port: {:system, "APP_PORT", 4000}],
   debug_errors: true,
   code_reloader: true,

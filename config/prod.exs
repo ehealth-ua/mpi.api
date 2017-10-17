@@ -1,7 +1,7 @@
 use Mix.Config
 
 config :mpi, MPI.Web.Endpoint,
-  on_init: {MPI.Web.Endpoint, :load_from_system_env, []},
+  load_from_system_env: true,
   http: [port: {:system, "APP_PORT"}],
   url:  [
     host: {:system, "APP_HOST"},

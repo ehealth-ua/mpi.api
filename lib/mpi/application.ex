@@ -55,10 +55,11 @@ defmodule MPI do
     end
   end
 
-  # Loads configuration in `:on_init` callbacks and replaces `{:system, ..}` tuples via Confex
-  @doc false
-  def load_from_system_env(config) do
-    {:ok, Resolver.resolve!(config)}
+  @doc """
+  Loads configuration in `:init` callbacks and replaces `{:system, ..}` tuples via Confex
+  """
+  def init(_key, config) do
+    Resolver.resolve(config)
   end
 
   defp run_scheduler do
