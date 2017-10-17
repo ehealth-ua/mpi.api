@@ -33,7 +33,7 @@ defmodule MPI.Mixfile do
   #
   # Type `mix help deps` for examples and options.
   defp deps do
-    [{:distillery, ">= 0.0.0"},
+    [{:distillery, "~> 1.4.1"},
      {:logger_json, "~> 0.4.0"},
      {:cowboy, "~> 1.0"},
      {:phoenix, "~> 1.3.0-rc"},
@@ -41,6 +41,7 @@ defmodule MPI.Mixfile do
      {:confex, ">= 0.0.0"},
      {:httpoison, ">= 0.0.0"},
      {:scrivener_ecto, "~> 1.2"},
+     {:ecto_trail, "~> 0.2.3"},
      {:poison, "~> 3.1", override: true},
      {:eview, ">= 0.0.0"},
      {:postgrex, ">= 0.0.0"},

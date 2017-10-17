@@ -13,6 +13,8 @@ defmodule MPI.Web.ConnCase do
   of the test unless the test case is marked as async.
   """
 
+  @header_consumer_id "x-consumer-id"
+
   use ExUnit.CaseTemplate
 
   using do
@@ -33,6 +35,11 @@ defmodule MPI.Web.ConnCase do
       Ecto.Adapters.SQL.Sandbox.mode(MPI.Repo, {:shared, self()})
     end
 
-    {:ok, conn: Phoenix.ConnTest.build_conn() |> Plug.Conn.put_req_header("content-type", "application/json")}
+    conn =
+      Phoenix.ConnTest.build_conn()
+      |> Plug.Conn.put_req_header("content-type", "application/json")
+      |> Plug.Conn.put_req_header(@header_consumer_id, Ecto.UUID.generate())
+
+    {:ok, conn: conn}
   end
 end

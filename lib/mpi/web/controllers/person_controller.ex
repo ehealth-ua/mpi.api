@@ -10,6 +10,8 @@ defmodule MPI.Web.PersonController do
 
   action_fallback MPI.Web.FallbackController
 
+  @header_consumer_id "x-consumer-id"
+
   def index(conn, params) do
     with %Changeset{valid?: true} = changeset <- PersonSearch.changeset(params),
       %Page{total_pages: 1} = paging <- PersonsAPI.search(changeset, params) do
@@ -55,7 +57,7 @@ defmodule MPI.Web.PersonController do
   def update(conn, %{"id" => id} = params) do
     with %Person{} = person <- Repo.get(Person, id),
       %Changeset{valid?: true} = changeset <- PersonsAPI.changeset(person, preprocess_params(person, params)),
-      {:ok, %Person{} = person} <- Repo.update(changeset)  do
+      {:ok, %Person{} = person} <- Repo.update_and_log(changeset, get_consumer_id(conn.req_headers))  do
         conn
         |> put_status(:ok)
         |> render("person.json", %{person: person})
@@ -64,7 +66,7 @@ defmodule MPI.Web.PersonController do
 
   defp create_person_strategy(%Page{entries: [person]}, conn, params) do
     with %Changeset{valid?: true} = changeset <- PersonsAPI.changeset(person, params),
-      {:ok, %Person{} = updated_person} <- Repo.update(changeset) do
+      {:ok, %Person{} = updated_person} <- Repo.update_and_log(changeset, get_consumer_id(conn.req_headers)) do
         conn
         |> put_status(:ok)
         |> render("person.json", %{person: updated_person})
@@ -75,7 +77,7 @@ defmodule MPI.Web.PersonController do
   # https://edenlab.atlassian.net/wiki/display/EH/Private.Create+or+update+Person
   defp create_person_strategy(%Page{}, conn, params) do
     with %Changeset{valid?: true} = changeset <- PersonsAPI.changeset(%Person{}, params),
-      {:ok, person} <- Repo.insert(changeset) do
+      {:ok, person} <- Repo.insert_and_log(changeset, get_consumer_id(conn.req_headers)) do
         conn
         |> put_status(:created)
         |> render("person.json", %{person: person})
@@ -87,5 +89,14 @@ defmodule MPI.Web.PersonController do
     new_merged_ids = Map.get(params, "merged_ids", [])
 
     Map.merge(params, %{"merged_ids" => existing_merged_ids ++ new_merged_ids})
+  end
+
+  def get_consumer_id(headers) do
+    get_header(headers, @header_consumer_id)
+  end
+
+  def get_header(headers, header) when is_list(headers) do
+    list = for {k, v} <- headers, k == header, do: v
+    List.first(list)
   end
 end
