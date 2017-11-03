@@ -41,4 +41,10 @@ defmodule MPI.Web.FallbackController do
     |> put_status(:unprocessable_entity)
     |> render(EView.Views.ValidationError, :"422", schema: validation_errors)
   end
+
+  def call(conn, {:error, {:conflict, reason}}) do
+    conn
+    |> put_status(:conflict)
+    |> render(EView.Views.Error, :"409", %{message: reason})
+  end
 end

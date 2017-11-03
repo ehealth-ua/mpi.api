@@ -64,6 +64,22 @@ defmodule MPI.Web.PersonController do
       end
   end
 
+  def reset_auth_method(conn, %{"id" => id}) do
+    params = %{"authentication_methods" => [%{"type" => "NA"}]}
+
+    with %Person{status: "active"} = person <- Repo.get(Person, id),
+      %Changeset{valid?: true} = changeset <- PersonsAPI.changeset(person, params),
+      {:ok, %Person{} = person} <- Repo.update_and_log(changeset, get_consumer_id(conn.req_headers))
+    do
+      conn
+      |> put_status(:ok)
+      |> render("person.json", %{person: person})
+    else
+      %Person{} -> {:error, {:conflict, "Invalid status MPI for this action"}}
+      err -> err
+    end
+  end
+
   defp create_person_strategy(%Page{entries: [person]}, conn, params) do
     with %Changeset{valid?: true} = changeset <- PersonsAPI.changeset(person, params),
       {:ok, %Person{} = updated_person} <- Repo.update_and_log(changeset, get_consumer_id(conn.req_headers)) do

@@ -124,6 +124,29 @@ defmodule MPI.Web.PersonControllerTest do
     assert_person(res["data"])
   end
 
+  describe "reset auth method" do
+    test "success", %{conn: conn} do
+      person = Factory.insert(:person)
+
+      res =
+        conn
+        |> patch("/persons/#{person.id}/actions/reset_auth_method")
+        |> json_response(200)
+
+      assert res["data"]
+      assert_person(res["data"])
+      assert [%{"type" => "NA"}] == res["data"]["authentication_methods"]
+    end
+
+    test "invalid status", %{conn: conn} do
+      person = Factory.insert(:person, status: "INACTIVE")
+
+      conn
+      |> patch("/persons/#{person.id}/actions/reset_auth_method")
+      |> json_response(409)
+    end
+  end
+
   test "PUT /persons/not_found", %{conn: conn} do
     response =
       conn

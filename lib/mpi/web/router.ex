@@ -11,6 +11,7 @@ defmodule MPI.Web.Router do
 
     get "/all-persons", PersonController, :all
     resources "/persons/", PersonController
+    patch "/persons/:id/actions/reset_auth_method", PersonController, :reset_auth_method
     resources "/merge_candidates", MergeCandidateController, only: [:index, :update]
   end
 end

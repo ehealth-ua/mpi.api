@@ -34,6 +34,7 @@ defmodule MPI.Factory do
       secret: sequence(:secret, &"secret-#{&1}"),
       patient_signed: true,
       process_disclosure_data_consent: true,
+      status: "active",
       authentication_methods: build_list(2, :authentication_method)
     }
   end
