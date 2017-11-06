@@ -6,7 +6,7 @@ defmodule MPI.Mixfile do
   def project do
     [app: :mpi,
      version: @version,
-     elixir: "~> 1.4",
+     elixir: "~> 1.5.1",
      elixirc_paths: elixirc_paths(Mix.env),
      compilers: [:phoenix] ++ Mix.compilers,
      build_embedded: Mix.env == :prod,
@@ -41,7 +41,7 @@ defmodule MPI.Mixfile do
      {:confex, ">= 0.0.0"},
      {:httpoison, ">= 0.0.0"},
      {:scrivener_ecto, "~> 1.2"},
-     {:ecto_trail, "~> 0.2.3"},
+     {:ecto_trail, "~> 0.2.4"},
      {:poison, "~> 3.1", override: true},
      {:eview, ">= 0.0.0"},
      {:postgrex, ">= 0.0.0"},

@@ -14,7 +14,7 @@ WORKDIR ${HOME}
 
 # Install and compile project dependencies
 COPY mix.* ./
-RUN mix do deps.get, deps.compile
+RUN mix do deps.get
 
 # Add project sources
 COPY . .
