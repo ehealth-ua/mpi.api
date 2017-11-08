@@ -12,10 +12,10 @@ defmodule MPI.Deduplication.MatchTest do
     test "subsequent runs skip found duplicates" do
       person_attrs      = Factory.person_factory
       person_attrs_dup1 = build_duplicate(person_attrs, %{
-        "first_name" => "Egor", "last_name" => "Letov", "birth_date" => "2000-01-01"
+        first_name: "Egor", last_name: "Letov", birth_date: ~D[2000-01-01]
       })
       person_attrs_dup2 = build_duplicate(person_attrs, %{
-        "first_name" => "Anna", "last_name" => "Karenina", "birth_date" => "2000-01-01"
+        first_name: "Anna", last_name: "Karenina", birth_date: ~D[2000-01-01]
       })
 
       insert(person_attrs, %{inserted_at: within_hours(49)})
@@ -32,10 +32,10 @@ defmodule MPI.Deduplication.MatchTest do
     test "multiple diplicates of same records were created during depth window" do
       person_attrs      = Factory.person_factory
       person_attrs_dup1 = build_duplicate(person_attrs, %{
-        "first_name" => "Egor", "last_name" => "Letov", "birth_date" => "2000-01-01"
+        first_name: "Egor", last_name: "Letov", birth_date: ~D[2000-01-01]
       })
       person_attrs_dup2 = build_duplicate(person_attrs, %{
-        "first_name" => "Anna", "last_name" => "Karenina", "birth_date" => "2000-01-01"
+        first_name: "Anna", last_name: "Karenina", birth_date: ~D[2000-01-01]
       })
 
       person      = insert(person_attrs, %{inserted_at: within_hours(49)})
@@ -62,14 +62,14 @@ defmodule MPI.Deduplication.MatchTest do
     test "pulls candidates and runs them through score matching" do
       person1_attrs     = Factory.person_factory
       person1_attrs_dup = build_duplicate(person1_attrs, %{
-        "first_name" => "Egor", "last_name" => "Letov", "birth_date" => "2000-01-01"
+        first_name: "Egor", last_name: "Letov", birth_date: ~D[2000-01-01]
       })
       person1           = insert(person1_attrs, %{inserted_at: within_hours(13)})
       person1_dup       = insert(person1_attrs_dup, %{inserted_at: within_hours(3 * 24 + 5)})
 
       person2_attrs     = Factory.person_factory
       person2_attrs_dup = build_duplicate(person2_attrs, %{
-        "first_name" => "Egor", "last_name" => "Letov", "birth_date" => "2000-01-01"
+        first_name: "Egor", last_name: "Letov", birth_date: ~D[2000-01-01]
       })
       person2           = insert(person2_attrs, %{inserted_at: within_hours(41)})
       person2_dup       = insert(person2_attrs_dup, %{inserted_at: within_hours(73)})
