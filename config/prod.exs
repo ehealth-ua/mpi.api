@@ -15,9 +15,7 @@ config :mpi, MPI.Web.Endpoint,
 # Do not print debug messages in production
 # and handle all other reports by Elixir Logger with JSON back-end
 # SASL reports turned off because of their verbosity.
-config :logger,
-  backends: [LoggerJSON],
-  level: :info,
+config :logger, level: :info,
   # handle_sasl_reports: true,
   handle_otp_reports: true
 

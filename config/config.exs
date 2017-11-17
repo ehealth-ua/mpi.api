@@ -17,16 +17,7 @@ config :mpi, MPI.Web.Endpoint,
   secret_key_base: "bvzeKHzH8k+qavTDh5NTxFcnPVHIL+Ybi1Bucq2TrJ3I3zqbXEqFr37QbrL0c202",
   render_errors: [view: EView.Views.PhoenixError, accepts: ~w(json)]
 
-# Configures Elixir's Logger
-config :logger, :console,
-  format: "$time $metadata[$level] $message\n",
-  metadata: [:request_id]
-
-# Configure JSON Logger back-end
-config :logger_json, :backend,
-  load_from_system_env: true,
-  json_encoder: Poison,
-  metadata: :all
+config :logger, :console, format: "$message\n", level: :info
 
 config :mpi, MPI.Deduplication.Match,
   subscribers: [
@@ -52,7 +43,8 @@ config :mpi, MPI.Repo,
   password: "postgres",
   database: "mpi_dev",
   hostname: "localhost",
-  pool_size: 10
+  pool_size: 10,
+  loggers: [{Ecto.LoggerJSON, :log, [:info]}]
 
 config :ecto_trail,
   table_name: "audit_log_mpi"

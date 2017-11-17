@@ -22,7 +22,7 @@ defmodule MPI.Mixfile do
   # Type `mix help compile.app` for more information.
   def application do
     [mod: {MPI, []},
-     extra_applications: [:logger, :logger_json, :runtime_tools]]
+     extra_applications: [:logger, :runtime_tools]]
   end
 
   # Specifies which paths to compile per environment.
@@ -34,7 +34,6 @@ defmodule MPI.Mixfile do
   # Type `mix help deps` for examples and options.
   defp deps do
     [{:distillery, "~> 1.4.1"},
-     {:logger_json, "~> 0.4.0"},
      {:cowboy, "~> 1.0"},
      {:phoenix, "~> 1.3.0-rc"},
      {:phoenix_ecto, "~> 3.2"},
@@ -47,6 +46,8 @@ defmodule MPI.Mixfile do
      {:postgrex, ">= 0.0.0"},
      {:timex, "~> 3.1.0"},
      {:quantum, "~> 2.0.0"},
+     {:plug_logger_json, "~> 0.5"},
+     {:ecto_logger_json, "~> 0.1"},
      {:excoveralls, ">= 0.0.0", only: [:dev, :test]},
      {:dogma, ">= 0.0.0", only: [:dev, :test]},
      {:credo, ">= 0.0.0", only: [:dev, :test]},
