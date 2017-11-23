@@ -7,7 +7,6 @@ defmodule MPI.Web.PersonController do
   alias MPI.Persons.PersonSearch
   alias Ecto.Changeset
   alias Scrivener.Page
-  alias MPI.ConnUtil
   alias MPI.ConnUtils
 
   action_fallback MPI.Web.FallbackController

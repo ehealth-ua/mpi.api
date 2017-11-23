@@ -10,6 +10,8 @@ defmodule MPI.Deduplication.Match do
   alias MPI.MergeCandidate
   alias Ecto.UUID
   alias Confex.Resolver
+  alias Ecto.Multi
+  import MPI.AuditLogs, only: [create_audit_logs: 1]
 
   use Confex, otp_app: :mpi
 
@@ -59,7 +61,12 @@ defmodule MPI.Deduplication.Match do
           }
         end
 
-      Repo.insert_all(MergeCandidate, merge_candidates)
+      Multi.new()
+      |> Multi.insert_all(:insert_candidates, MergeCandidate, merge_candidates, returning: true)
+      |> Multi.run(:log_inserts, &log_insert(&1.insert_candidates))
+      |> Repo.transaction()
+
+      #Repo.insert_all(MergeCandidate, merge_candidates)
 
       Enum.each config[:subscribers], fn subscriber ->
         url = Resolver.resolve!(subscriber)
@@ -127,5 +134,26 @@ defmodule MPI.Deduplication.Match do
       end
 
     Float.round(result, 2)
+  end
+
+  defp log_insert({_, merge_candidates}) do
+    changes =
+      Enum.map(merge_candidates, fn mc ->
+        %{
+            actor_id: mc.master_person_id,
+            resource: "merge_candidates",
+            resource_id: mc.id,
+            changeset: sanitize_changeset(mc)
+        }
+      end)
+
+    create_audit_logs(changes)
+    {:ok, changes}
+  end
+
+  defp sanitize_changeset(merge_candidate) do
+    merge_candidate
+    |> Map.from_struct()
+    |> Map.drop([:__meta__, :inserted_at, :updated_at, :master_person, :person])
   end
 end
