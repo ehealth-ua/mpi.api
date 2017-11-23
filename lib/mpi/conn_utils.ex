@@ -1,5 +1,7 @@
 defmodule MPI.ConnUtils do
-   @header_consumer_id "x-consumer-id"
+  @moduledoc false
+
+  @header_consumer_id "x-consumer-id"
 
   def get_consumer_id(%Plug.Conn{req_headers: req_headers}) do
     get_header(req_headers, @header_consumer_id)
