@@ -9,7 +9,8 @@ use Mix.Config
 config :mpi,
   namespace: MPI,
   ecto_repos: [MPI.Repo],
-  max_persons_result: {:system, :integer, "MAX_PERSONS_RESULT", 15}
+  max_persons_result: {:system, :integer, "MAX_PERSONS_RESULT", 15},
+  system_user: {:system, "EHEALTH_SYSTEM_USER", "4261eacf-8008-4e62-899f-de1e2f7065f0"}
 
 # Configures the endpoint
 config :mpi, MPI.Web.Endpoint,

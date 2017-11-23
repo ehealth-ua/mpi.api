@@ -61,12 +61,12 @@ defmodule MPI.Deduplication.Match do
           }
         end
 
-      Multi.new()
-      |> Multi.insert_all(:insert_candidates, MergeCandidate, merge_candidates, returning: true)
-      |> Multi.run(:log_inserts, &log_insert(&1.insert_candidates))
-      |> Repo.transaction()
+      system_user_id = Confex.fetch_env!(:mpi, :system_user)
 
-      #Repo.insert_all(MergeCandidate, merge_candidates)
+      {:ok, _} = Multi.new()
+        |> Multi.insert_all(:insert_candidates, MergeCandidate, merge_candidates, returning: true)
+        |> Multi.run(:log_inserts, &log_insert(&1.insert_candidates, system_user_id))
+        |> Repo.transaction()
 
       Enum.each config[:subscribers], fn subscriber ->
         url = Resolver.resolve!(subscriber)
@@ -136,11 +136,11 @@ defmodule MPI.Deduplication.Match do
     Float.round(result, 2)
   end
 
-  defp log_insert({_, merge_candidates}) do
+  defp log_insert({_, merge_candidates}, system_user_id) do
     changes =
       Enum.map(merge_candidates, fn mc ->
         %{
-            actor_id: mc.master_person_id,
+            actor_id: system_user_id,
             resource: "merge_candidates",
             resource_id: mc.id,
             changeset: sanitize_changeset(mc)
