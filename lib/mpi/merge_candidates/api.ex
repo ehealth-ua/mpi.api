@@ -15,10 +15,10 @@ defmodule MPI.MergeCandidates.API do
     Repo.get(MergeCandidate, id)
   end
 
-  def update_merge_candidate(%MergeCandidate{} = merge_candidate, params) do
+  def update_merge_candidate(%MergeCandidate{} = merge_candidate, params, consumer_id) do
     merge_candidate
     |> changeset(params)
-    |> Repo.update
+    |> Repo.update_and_log(consumer_id)
   end
 
   def changeset(struct, params \\ %{}) do

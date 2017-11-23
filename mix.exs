@@ -6,7 +6,7 @@ defmodule MPI.Mixfile do
   def project do
     [app: :mpi,
      version: @version,
-     elixir: "~> 1.5.1",
+     elixir: "~> 1.5",
      elixirc_paths: elixirc_paths(Mix.env),
      compilers: [:phoenix] ++ Mix.compilers,
      build_embedded: Mix.env == :prod,

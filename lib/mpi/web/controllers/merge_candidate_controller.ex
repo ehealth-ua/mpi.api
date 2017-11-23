@@ -5,6 +5,7 @@ defmodule MPI.Web.MergeCandidateController do
 
   alias MPI.MergeCandidate
   alias MPI.MergeCandidates.API
+  alias MPI.ConnUtils
 
   action_fallback MPI.Web.FallbackController
 
@@ -14,8 +15,10 @@ defmodule MPI.Web.MergeCandidateController do
   end
 
   def update(conn, %{"id" => id, "merge_candidate" => attrs}) do
-    with %MergeCandidate{} = merge_candidate <- API.get_by_id(id) do
-      {:ok, updated_merge_candidate} = API.update_merge_candidate(merge_candidate, attrs)
+    consumer_id = ConnUtils.get_consumer_id(conn)
+    with %MergeCandidate{} = merge_candidate <- API.get_by_id(id),
+        {:ok, updated_merge_candidate} <- API.update_merge_candidate(merge_candidate, attrs, consumer_id)
+    do
       render(conn, %{merge_candidate: updated_merge_candidate})
     end
   end

@@ -112,7 +112,7 @@ defmodule MPI.Deduplication.Match do
                 phone1["number"] == phone2["number"],
             do: true
 
-          if length(common_phones), do: :match, else: :no_match
+          if List.first(common_phones) == true, do: :match, else: :no_match
         _ ->
           if candidate_field == person_field, do: :match, else: :no_match
       end
