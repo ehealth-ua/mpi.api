@@ -1,73 +1,40 @@
-FROM nebo15/alpine-elixir:latest
+FROM edenlabllc/elixir:1.5.2 as builder
 
-# Maintainers
-MAINTAINER Nebo#15 support@nebo15.com
+ARG APP_NAME
+ARG APP_VERSION
 
-# Configure environment variables and other settings
-ENV MIX_ENV=prod \
-    APP_NAME=mpi \
-    APP_PORT=4000
+ADD . /app
 
-RUN apk add --update make
+WORKDIR /app
 
-WORKDIR ${HOME}
+ENV MIX_ENV=prod
 
-# Install and compile project dependencies
-COPY mix.* ./
-RUN mix do deps.get
+RUN mix do \
+      local.hex --force, \
+      local.rebar --force, \
+      deps.get, \
+      deps.compile, \
+      release
 
-# Add project sources
-COPY . .
+FROM alpine:edge
 
-# Compile project for Erlang VM
-RUN mix do compile, release --verbose
+ARG APP_NAME
+ARG APP_VERSION
 
-# Move release to /opt/$APP_NAME
-RUN \
-    mkdir -p $HOME/priv && \
-    mkdir -p /opt/$APP_NAME/log && \
-    mkdir -p /var/log && \
-    mkdir -p /opt/$APP_NAME/priv && \
-    mkdir -p /opt/$APP_NAME/hooks && \
-    mkdir -p /opt/$APP_NAME/uploads && \
-    cp -R $HOME/priv /opt/$APP_NAME/ && \
-    cp -R $HOME/bin/hooks /opt/$APP_NAME/ && \
-    APP_TARBALL=$(find $HOME/_build/$MIX_ENV/rel/$APP_NAME/releases -maxdepth 2 -name ${APP_NAME}.tar.gz) && \
-    cp $APP_TARBALL /opt/$APP_NAME/ && \
-    cd /opt/$APP_NAME && \
-    tar -xzf $APP_NAME.tar.gz && \
-    rm $APP_NAME.tar.gz && \
-    rm -rf /opt/app/* && \
-    chmod -R 777 $HOME && \
-    chmod -R 777 /opt/$APP_NAME && \
-    chmod -R 777 /var/log
+RUN apk add --no-cache \
+      ncurses-libs \
+      zlib \
+      ca-certificates \
+      openssl \
+      bash
 
-RUN apk del --no-cache make
+WORKDIR /app
 
-RUN epmd -daemon
+COPY --from=builder /app/_build/prod/rel/${APP_NAME}/releases/${APP_VERSION}/${APP_NAME}.tar.gz /app
 
-# Change user to "default"
-USER default
+RUN tar -xzf ${APP_NAME}.tar.gz; rm ${APP_NAME}.tar.gz
 
-# Allow to read ENV vars for mix configs
-ENV REPLACE_OS_VARS=true
+ENV REPLACE_OS_VARS=true \
+    APP=${APP_NAME}
 
-# Exposes this port from the docker container to the host machine
-EXPOSE ${APP_PORT}
-
-# Change workdir to a released directory
-WORKDIR /opt
-
-# Pre-run hook that allows you to add initialization scripts.
-# All Docker hooks should be located in bin/hooks directory.
-RUN $APP_NAME/hooks/pre-run.sh
-
-# The command to run when this image starts up
-#  You can run it in one of the following ways:
-#    Interactive: mpi/bin/mpi console
-#    Foreground: mpi/bin/mpi foreground
-#    Daemon: mpi/bin/mpi start
-#  Also you can run migrations whenever container starts:
-#    mpi/bin/mpi command mpi_tasks migrate!
-#  Alternatively you can set env DB_MIGRATE=true and APP_RUN_SEED=true when starting container.
-CMD $APP_NAME/bin/$APP_NAME foreground
+CMD ./bin/${APP} foreground

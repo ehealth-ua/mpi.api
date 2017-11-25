@@ -8,6 +8,9 @@ services:
   - postgresql
 addons:
   postgresql: "9.5"
+  apt:
+    packages:
+      - docker-ce
 elixir:
   - 1.5.1
 otp_release:
