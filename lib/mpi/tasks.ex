@@ -14,7 +14,7 @@ defmodule :mpi_tasks do
 
   def migrate! do
     # Migrate
-    migrations_dir = Path.join([@priv_dir, "repo", "migrations"])
+    migrations_dir = Application.app_dir(:mpi, "priv/repo/migrations")
 
     # Run migrations
     @repo
