@@ -147,6 +147,11 @@ defmodule MPI.Deduplication.MatchTest do
         ]
       }
 
+      person3 = %Person{person1 | phones: nil}
+      person4 = %Person{person2 | phones: nil}
+      person5 = %{person1 | phones: nil}
+      person6 = %{person1 | phones: 0}
+
       comparison_fields = %{
         tax_id:       [match: 0.1, no_match: -0.1],
         first_name:   [match: 0.1, no_match: -0.1],
@@ -159,6 +164,9 @@ defmodule MPI.Deduplication.MatchTest do
       }
 
       assert 0.2 = Deduplication.match_score(person1, person2, comparison_fields)
+      assert 0.2 = Deduplication.match_score(person3, person4, comparison_fields)
+      assert 0.0 = Deduplication.match_score(person5, person2, comparison_fields)
+      assert 0.0 = Deduplication.match_score(person6, person2, comparison_fields)
     end
   end
 

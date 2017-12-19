@@ -113,13 +113,7 @@ defmodule MPI.Deduplication.Match do
 
           if passport1 == passport2, do: :match, else: :no_match
         :phones ->
-          common_phones =
-            for phone1 <- candidate_field,
-                phone2 <- person_field,
-                phone1["number"] == phone2["number"],
-            do: true
-
-          if List.first(common_phones), do: :match, else: :no_match
+          check_phones(candidate_field, person_field)
         _ ->
           if candidate_field == person_field, do: :match, else: :no_match
       end
@@ -135,6 +129,18 @@ defmodule MPI.Deduplication.Match do
 
     Float.round(result, 2)
   end
+
+  defp check_phones(candidate_field, person_field) when is_list(candidate_field) and is_list(person_field) do
+    common_phones =
+      for phone1 <- candidate_field,
+          phone2 <- person_field,
+          phone1["number"] == phone2["number"],
+      do: true
+    if List.first(common_phones), do: :match, else: :no_match
+  end
+  defp check_phones(nil, nil), do: :match
+  defp check_phones(field, field), do: :match
+  defp check_phones(_, _), do: :no_match
 
   defp log_insert({_, merge_candidates}, system_user_id) do
     changes =

@@ -201,7 +201,7 @@ defmodule MPI.Web.PersonControllerTest do
       last_name: person.last_name,
       second_name: person.second_name,
       first_name: person.first_name,
-      birth_date: "1996-12-12",
+      birth_date: "1996-12-12"
     )
     data = json_response(conn1, 200)["data"]
     assert 1 == length(data)
@@ -211,7 +211,7 @@ defmodule MPI.Web.PersonControllerTest do
       last_name: "last_name-0",
       second_name: "second_name-0",
       first_name: "first_name-0",
-      birth_date: "1996-12-12",
+      birth_date: "1996-12-12"
     )
     data = json_response(conn2, 200)["data"]
     assert 0 == length(data)
