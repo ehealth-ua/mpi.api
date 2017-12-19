@@ -126,7 +126,7 @@ defmodule MPI.Deduplication.Match do
     end
 
     result =
-      Enum.reduce comparison_fields, 0, fn {field_name, coeficients}, score ->
+      Enum.reduce comparison_fields, 0.0, fn {field_name, coeficients}, score ->
         candidate_field = Map.get(candidate, field_name)
         person_field = Map.get(person, field_name)
 
