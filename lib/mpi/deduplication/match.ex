@@ -104,18 +104,10 @@ defmodule MPI.Deduplication.Match do
 
   def match_score(candidate, person, comparison_fields) do
     matched? = fn field_name, candidate_field, person_field ->
-      case field_name do
-        :documents ->
-          find_passport = &(&1["type"] == "PASSPORT")
-
-          passport1 = Enum.find(candidate_field, find_passport)
-          passport2 = Enum.find(person_field, find_passport)
-
-          if passport1 == passport2, do: :match, else: :no_match
-        :phones ->
-          check_phones(candidate_field, person_field)
-        _ ->
-          if candidate_field == person_field, do: :match, else: :no_match
+      if field_name == :documents || field_name == :phones do
+        compare_lists(candidate_field, person_field)
+      else
+        if candidate_field == person_field, do: :match, else: :no_match
       end
     end
 
@@ -130,17 +122,19 @@ defmodule MPI.Deduplication.Match do
     Float.round(result, 2)
   end
 
-  defp check_phones(candidate_field, person_field) when is_list(candidate_field) and is_list(person_field) do
-    common_phones =
-      for phone1 <- candidate_field,
-          phone2 <- person_field,
-          phone1["number"] == phone2["number"],
+  defp compare_lists(candidate_field, person_field) when is_list(candidate_field) and is_list(person_field) do
+    common_items =
+      for item1 <- candidate_field,
+          item2 <- person_field,
+          item1["number"] == item2["number"],
+          item1["type"] == item2["type"],
       do: true
-    if List.first(common_phones), do: :match, else: :no_match
+
+    if List.first(common_items), do: :match, else: :no_match
   end
-  defp check_phones(nil, nil), do: :match
-  defp check_phones(field, field), do: :match
-  defp check_phones(_, _), do: :no_match
+  defp compare_lists(nil, nil), do: :match
+  defp compare_lists(field, field), do: :match
+  defp compare_lists(_, _), do: :no_match
 
   defp log_insert({_, merge_candidates}, system_user_id) do
     changes =

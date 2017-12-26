@@ -168,6 +168,63 @@ defmodule MPI.Deduplication.MatchTest do
       assert 0.0 = Deduplication.match_score(person5, person2, comparison_fields)
       assert 0.0 = Deduplication.match_score(person6, person2, comparison_fields)
     end
+
+    test "match score is correct (#1674)" do
+      person1 = %Person{
+        tax_id:       "",
+        first_name:   "Сергій",
+        last_name:    "Закусило",
+        second_name:  "Євгенович",
+        birth_date:   "2007-12-18",
+        documents:    [
+          %{
+            "type" => "BIRTH_CERTIFICATE",
+            "number" => "11111111111"
+          }
+        ],
+        national_id:  "",
+        phones: [
+          %{
+            "type" => "MOBILE",
+            "number" => "+380965992121"
+          }
+        ]
+      }
+
+      person2 = %Person{
+        tax_id:       "",
+        first_name:   "Діана",
+        last_name:    "Закусило",
+        second_name:  "Петрівна",
+        birth_date:   "2017-11-11",
+        documents:    [
+          %{
+            "type" => "BIRTH_CERTIFICATE",
+            "number" => "456789"
+          }
+        ],
+        national_id:  "",
+        phones: [
+          %{
+            "type" => "MOBILE",
+            "number" => "+380639368040"
+          }
+        ]
+      }
+
+      comparison_fields = %{
+        tax_id:       [match: 0.5, no_match: -0.1],
+        first_name:   [match: 0.1, no_match: -0.1],
+        last_name:    [match: 0.2, no_match: -0.1],
+        second_name:  [match: 0.1, no_match: -0.1],
+        birth_date:   [match: 0.5, no_match: -0.1],
+        documents:    [match: 0.3, no_match: -0.1],
+        national_id:  [match: 0.4, no_match: -0.1],
+        phones:       [match: 0.3, no_match: -0.1]
+      }
+
+      assert 0.6 = Deduplication.match_score(person1, person2, comparison_fields)
+    end
   end
 
   defp insert(struct, attrs) do
