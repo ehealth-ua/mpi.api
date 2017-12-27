@@ -61,10 +61,15 @@ defmodule MPI.Deduplication.Match do
           }
         end
 
+      stale_persons_query =
+        from p in Person,
+          where: p.id in ^Enum.map(pairs, fn {_master_person, person} -> person.id end)
+
       system_user_id = Confex.fetch_env!(:mpi, :system_user)
 
       {:ok, _} = Multi.new()
         |> Multi.insert_all(:insert_candidates, MergeCandidate, merge_candidates, returning: true)
+        |> Multi.update_all(:update_stale_persons, stale_persons_query, set: [status: "inactive"])
         |> Multi.run(:log_inserts, &log_insert(&1.insert_candidates, system_user_id))
         |> Repo.transaction()
 

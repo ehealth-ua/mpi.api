@@ -88,6 +88,8 @@ defmodule MPI.Deduplication.MatchTest do
             where: mc.person_id == ^older.id
 
         assert Repo.one(query)
+        assert "active" == Repo.get(Person, newer.id).status
+        assert "inactive" == Repo.get(Person, older.id).status
       end
     end
   end
