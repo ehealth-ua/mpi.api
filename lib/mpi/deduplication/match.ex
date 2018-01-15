@@ -40,17 +40,18 @@ defmodule MPI.Deduplication.Match do
     persons = Repo.all(persons_query)
 
     pairs = find_duplicates candidates, persons, fn candidate, person ->
-      match_score(candidate, person, comparison_fields) >= deduplication_score
+      {score, details} = match_score(candidate, person, comparison_fields)
+      {score >= deduplication_score, details}
     end
 
     if length(pairs) > 0 do
-      short_pairs = Enum.map(pairs, &{elem(&1, 0).id, elem(&1, 0).id})
+      short_pairs = Enum.map(pairs, &{elem(&1, 1).id, elem(&1, 1).id})
       Logger.info(
         "Found duplicates. Will insert the following {master_person_id, person_id} pairs: #{inspect short_pairs}"
       )
 
       merge_candidates =
-        Enum.map pairs, fn {master_person, person} ->
+        Enum.map pairs, fn {_, master_person, person} ->
           %{
             id: UUID.generate(),
             master_person_id: master_person.id,
@@ -63,7 +64,7 @@ defmodule MPI.Deduplication.Match do
 
       stale_persons_query =
         from p in Person,
-          where: p.id in ^Enum.map(pairs, fn {_master_person, person} -> person.id end)
+          where: p.id in ^Enum.map(pairs, fn {_, _master_person, person} -> person.id end)
 
       system_user_id = Confex.fetch_env!(:mpi, :system_user)
 
@@ -85,11 +86,11 @@ defmodule MPI.Deduplication.Match do
 
   def find_duplicates(candidates, persons, comparison_function) do
     candidate_is_duplicate? = fn person, acc ->
-      Enum.any? acc, fn {_master_person, dup_person} -> dup_person == person end
+      Enum.any? acc, fn {_, _master_person, dup_person} -> dup_person == person end
     end
 
     pair_already_exists? = fn person1, person2, acc ->
-      Enum.any? acc, &(&1 == {person1, person2})
+      Enum.any? acc, fn {_, p1, p2} -> {p1, p2} == {person1, person2} end
     end
 
     Enum.reduce candidates, [], fn candidate, acc ->
@@ -100,8 +101,8 @@ defmodule MPI.Deduplication.Match do
              candidate_is_duplicate?.(person, acc) ||
              pair_already_exists?.(person, candidate, acc)
            end)
-        |> Enum.filter(fn person -> comparison_function.(candidate, person) end)
-        |> Enum.map(fn person -> {candidate, person} end)
+        |> Enum.map(fn person -> {comparison_function.(candidate, person), candidate, person} end)
+        |> Enum.filter(fn {{a, _}, _, _} -> a end)
 
       matching_persons ++ acc
     end
@@ -116,15 +117,23 @@ defmodule MPI.Deduplication.Match do
       end
     end
 
-    result =
-      Enum.reduce comparison_fields, 0.0, fn {field_name, coeficients}, score ->
+    {score, details} =
+      Enum.reduce comparison_fields, {0.0, []}, fn {field_name, coeficients}, {score, details} ->
         candidate_field = Map.get(candidate, field_name)
         person_field = Map.get(person, field_name)
 
-        score + coeficients[matched?.(field_name, candidate_field, person_field)]
+        weight = coeficients[matched?.(field_name, candidate_field, person_field)]
+
+        details = Keyword.put_new(details, field_name, [
+          candidate: candidate_field,
+          person: person_field,
+          weight: weight
+        ])
+
+        {score + weight, details}
       end
 
-    Float.round(result, 2)
+    {Float.round(score, 2), details}
   end
 
   defp compare_lists(candidate_field, person_field) when is_list(candidate_field) and is_list(person_field) do

@@ -99,11 +99,11 @@ defmodule MPI.Deduplication.MatchTest do
       persons = [{"a", 3}, {"a", 2}, {"a", 1}]
       candidates = [{"a", 3}, {"a", 2}]
 
-      expected_result = [{{"a", 3}, {"a", 2}}, {{"a", 3}, {"a", 1}}]
+      expected_result = [{{true, nil}, {"a", 3}, {"a", 2}}, {{true, nil}, {"a", 3}, {"a", 1}}]
 
       result =
         Deduplication.find_duplicates(candidates, persons, fn candidate, person ->
-          elem(candidate, 0) == elem(person, 0)
+          {elem(candidate, 0) == elem(person, 0), nil}
         end)
 
       assert expected_result == result
@@ -165,10 +165,10 @@ defmodule MPI.Deduplication.MatchTest do
         phones:       [match: 0.1, no_match: -0.1]
       }
 
-      assert 0.2 = Deduplication.match_score(person1, person2, comparison_fields)
-      assert 0.2 = Deduplication.match_score(person3, person4, comparison_fields)
-      assert 0.0 = Deduplication.match_score(person5, person2, comparison_fields)
-      assert 0.0 = Deduplication.match_score(person6, person2, comparison_fields)
+      assert {0.2, _} = Deduplication.match_score(person1, person2, comparison_fields)
+      assert {0.2, _} = Deduplication.match_score(person3, person4, comparison_fields)
+      assert {0.0, _} = Deduplication.match_score(person5, person2, comparison_fields)
+      assert {0.0, _} = Deduplication.match_score(person6, person2, comparison_fields)
     end
 
     test "match score is correct (#1674)" do
@@ -225,7 +225,25 @@ defmodule MPI.Deduplication.MatchTest do
         phones:       [match: 0.3, no_match: -0.1]
       }
 
-      assert 0.6 = Deduplication.match_score(person1, person2, comparison_fields)
+      assert {0.6,
+       [tax_id: [candidate: "", person: "", weight: 0.5],
+        second_name: [candidate: "Євгенович",
+         person: "Петрівна", weight: -0.1],
+        phones: [candidate: [%{"number" => "+380965992121",
+            "type" => "MOBILE"}],
+         person: [%{"number" => "+380639368040", "type" => "MOBILE"}],
+         weight: -0.1],
+        national_id: [candidate: "", person: "", weight: 0.4],
+        last_name: [candidate: "Закусило",
+         person: "Закусило", weight: 0.2],
+        first_name: [candidate: "Сергій", person: "Діана",
+         weight: -0.1],
+        documents: [candidate: [%{"number" => "11111111111",
+            "type" => "BIRTH_CERTIFICATE"}],
+         person: [%{"number" => "456789", "type" => "BIRTH_CERTIFICATE"}],
+         weight: -0.1],
+        birth_date: [candidate: "2007-12-18", person: "2017-11-11",
+         weight: -0.1]]} = Deduplication.match_score(person1, person2, comparison_fields)
     end
   end
 
