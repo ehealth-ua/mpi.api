@@ -32,14 +32,14 @@ config :mpi, MPI.Deduplication.Match,
   depth: {:system, :integer, "DEDUPLICATION_DEPTH", 20},
   score: {:system, "DEDUPLICATION_SCORE", "0.8"},
   fields: %{
-    tax_id:       [match: 0.5, no_match: -0.1],
-    first_name:   [match: 0.1, no_match: -0.1],
-    last_name:    [match: 0.2, no_match: -0.1],
-    second_name:  [match: 0.1, no_match: -0.1],
-    birth_date:   [match: 0.5, no_match: -0.1],
-    documents:    [match: 0.3, no_match: -0.1],
-    national_id:  [match: 0.4, no_match: -0.1],
-    phones:       [match: 0.3, no_match: -0.1]
+    tax_id:       %{match: 0.5, no_match: -0.1},
+    first_name:   %{match: 0.1, no_match: -0.1},
+    last_name:    %{match: 0.2, no_match: -0.1},
+    second_name:  %{match: 0.1, no_match: -0.1},
+    birth_date:   %{match: 0.5, no_match: -0.1},
+    documents:    %{match: 0.3, no_match: -0.1},
+    national_id:  %{match: 0.4, no_match: -0.1},
+    phones:       %{match: 0.3, no_match: -0.1}
   }
 
 config :mpi, MPI.Repo,

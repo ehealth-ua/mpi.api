@@ -51,12 +51,14 @@ defmodule MPI.Deduplication.Match do
       )
 
       merge_candidates =
-        Enum.map pairs, fn {_, master_person, person} ->
+        Enum.map pairs, fn {{_, details}, master_person, person} ->
           %{
             id: UUID.generate(),
             master_person_id: master_person.id,
             person_id: person.id,
             status: "NEW",
+            config: Map.take(Enum.into(config, %{}), [:fields, :score, :depth]),
+            details: prepare_details(details),
             inserted_at: DateTime.utc_now(),
             updated_at: DateTime.utc_now()
           }
@@ -118,17 +120,17 @@ defmodule MPI.Deduplication.Match do
     end
 
     {score, details} =
-      Enum.reduce comparison_fields, {0.0, []}, fn {field_name, coeficients}, {score, details} ->
+      Enum.reduce comparison_fields, {0.0, %{}}, fn {field_name, coeficients}, {score, details} ->
         candidate_field = Map.get(candidate, field_name)
         person_field = Map.get(person, field_name)
 
         weight = coeficients[matched?.(field_name, candidate_field, person_field)]
 
-        details = Keyword.put_new(details, field_name, [
+        details = Map.put_new(details, field_name, %{
           candidate: candidate_field,
           person: person_field,
           weight: weight
-        ])
+        })
 
         {score + weight, details}
       end
@@ -169,5 +171,17 @@ defmodule MPI.Deduplication.Match do
     merge_candidate
     |> Map.from_struct()
     |> Map.drop([:__meta__, :inserted_at, :updated_at, :master_person, :person])
+  end
+
+  defp prepare_details(details) do
+    score =
+      details
+      |> Enum.reduce(0.0, fn({_a, b}, sum) -> sum + b[:weight] end)
+      |> Float.round(2)
+
+    %{
+      weights: details,
+      score: score
+    }
   end
 end

@@ -87,7 +87,22 @@ defmodule MPI.Deduplication.MatchTest do
             where: mc.master_person_id == ^newer.id,
             where: mc.person_id == ^older.id
 
-        assert Repo.one(query)
+        duplicate_record = Repo.one(query)
+
+        assert %{
+          "score" => 1.3,
+          "weights" => _
+        } = duplicate_record.details
+        assert %{"depth" => 20,
+          "fields" => %{"birth_date" => %{"match" => 0.5, "no_match" => -0.1},
+            "documents" => %{"match" => 0.3, "no_match" => -0.1},
+            "first_name" => %{"match" => 0.1, "no_match" => -0.1},
+            "last_name" => %{"match" => 0.2, "no_match" => -0.1},
+            "national_id" => %{"match" => 0.4, "no_match" => -0.1},
+            "phones" => %{"match" => 0.3, "no_match" => -0.1},
+            "second_name" => %{"match" => 0.1, "no_match" => -0.1},
+            "tax_id" => %{"match" => 0.5, "no_match" => -0.1}},
+          "score" => "0.8"} = duplicate_record.config
         assert "active" == Repo.get(Person, newer.id).status
         assert "inactive" == Repo.get(Person, older.id).status
       end
@@ -226,24 +241,25 @@ defmodule MPI.Deduplication.MatchTest do
       }
 
       assert {0.6,
-       [tax_id: [candidate: "", person: "", weight: 0.5],
-        second_name: [candidate: "Євгенович",
-         person: "Петрівна", weight: -0.1],
-        phones: [candidate: [%{"number" => "+380965992121",
-            "type" => "MOBILE"}],
-         person: [%{"number" => "+380639368040", "type" => "MOBILE"}],
-         weight: -0.1],
-        national_id: [candidate: "", person: "", weight: 0.4],
-        last_name: [candidate: "Закусило",
-         person: "Закусило", weight: 0.2],
-        first_name: [candidate: "Сергій", person: "Діана",
-         weight: -0.1],
-        documents: [candidate: [%{"number" => "11111111111",
-            "type" => "BIRTH_CERTIFICATE"}],
-         person: [%{"number" => "456789", "type" => "BIRTH_CERTIFICATE"}],
-         weight: -0.1],
-        birth_date: [candidate: "2007-12-18", person: "2017-11-11",
-         weight: -0.1]]} = Deduplication.match_score(person1, person2, comparison_fields)
+        %{birth_date: %{candidate: "2007-12-18", person: "2017-11-11",
+            weight: -0.1},
+          documents: %{candidate: [%{"number" => "11111111111",
+               "type" => "BIRTH_CERTIFICATE"}],
+            person: [%{"number" => "456789",
+               "type" => "BIRTH_CERTIFICATE"}], weight: -0.1},
+          first_name: %{candidate: "Сергій", person: "Діана",
+            weight: -0.1},
+          last_name: %{candidate: "Закусило",
+            person: "Закусило", weight: 0.2},
+          national_id: %{candidate: "", person: "", weight: 0.4},
+          phones: %{candidate: [%{"number" => "+380965992121",
+               "type" => "MOBILE"}],
+            person: [%{"number" => "+380639368040", "type" => "MOBILE"}],
+            weight: -0.1},
+          second_name: %{candidate: "Євгенович",
+            person: "Петрівна", weight: -0.1},
+          tax_id: %{candidate: "", person: "", weight: 0.5}}}
+          = Deduplication.match_score(person1, person2, comparison_fields)
     end
   end
 
