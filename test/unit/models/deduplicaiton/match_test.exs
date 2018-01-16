@@ -59,6 +59,32 @@ defmodule MPI.Deduplication.MatchTest do
       end
     end
 
+    test "compare_lists/2" do
+      list1 = [%{"NUMBER" => "111115", "type" => "BIRTH_CERTIFICATE"}]
+      list2 = [%{"number" => "111111", "TYPE" => "BIRTH_CERTIFICATE"}]
+      assert :no_match = Deduplication.compare_lists(list1, list2)
+
+      list1 = [%{"NUMBER" => "111111", "type" => "BIRTH_CERTIFICATE"}]
+      list2 = [%{"number" => "111111", "TYPE" => "BIRTH_CERTIFICATE"}]
+      assert :match = Deduplication.compare_lists(list1, list2)
+
+      list1 = nil
+      list2 = [%{"number" => "111111", "TYPE" => "BIRTH_CERTIFICATE"}]
+      assert :no_match = Deduplication.compare_lists(list1, list2)
+
+      list1 = [%{"NUMBER" => "111115", "type" => "BIRTH_CERTIFICATE"}]
+      list2 = nil
+      assert :no_match = Deduplication.compare_lists(list1, list2)
+
+      list1 = nil
+      list2 = nil
+      assert :match = Deduplication.compare_lists(list1, list2)
+
+      list1 = []
+      list2 = []
+      assert :match = Deduplication.compare_lists(list1, list2)
+    end
+
     test "pulls candidates and runs them through score matching" do
       person1_attrs     = Factory.person_factory
       person1_attrs_dup = build_duplicate(person1_attrs, %{

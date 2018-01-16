@@ -138,7 +138,15 @@ defmodule MPI.Deduplication.Match do
     {Float.round(score, 2), details}
   end
 
-  defp compare_lists(candidate_field, person_field) when is_list(candidate_field) and is_list(person_field) do
+  defp normalize_keys(map) do
+    for {key, value} <- map, into: %{}, do: {String.downcase(key), value}
+  end
+
+  def compare_lists([], []), do: :match
+  def compare_lists(candidate_field, person_field) when is_list(candidate_field) and is_list(person_field) do
+    candidate_field = Enum.map candidate_field, &normalize_keys(&1)
+    person_field = Enum.map person_field, &normalize_keys(&1)
+
     common_items =
       for item1 <- candidate_field,
           item2 <- person_field,
@@ -148,9 +156,9 @@ defmodule MPI.Deduplication.Match do
 
     if List.first(common_items), do: :match, else: :no_match
   end
-  defp compare_lists(nil, nil), do: :match
-  defp compare_lists(field, field), do: :match
-  defp compare_lists(_, _), do: :no_match
+  def compare_lists(nil, nil), do: :match
+  def compare_lists(field, field), do: :match
+  def compare_lists(_, _), do: :no_match
 
   defp log_insert({_, merge_candidates}, system_user_id) do
     changes =
