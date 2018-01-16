@@ -45,7 +45,7 @@ defmodule MPI.Deduplication.Match do
     end
 
     if length(pairs) > 0 do
-      short_pairs = Enum.map(pairs, &{elem(&1, 1).id, elem(&1, 1).id})
+      short_pairs = Enum.map(pairs, &{elem(&1, 1).id, elem(&1, 2).id})
       Logger.info(
         "Found duplicates. Will insert the following {master_person_id, person_id} pairs: #{inspect short_pairs}"
       )
