@@ -11,8 +11,9 @@ defmodule MPI.Web.FallbackController do
   end
 
   def call(conn, %Page{total_pages: pages}) when pages > 1 do
-    forbidden_message
-      = "This API method returns only exact match results, please retry with more specific search parameters"
+    forbidden_message =
+      "This API method returns only exact match results, please retry with more specific search parameters"
+
     conn
     |> put_status(:forbidden)
     |> render(EView.Views.PhoenixError, :"403", %{message: forbidden_message})

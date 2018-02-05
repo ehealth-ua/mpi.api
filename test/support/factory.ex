@@ -28,7 +28,6 @@ defmodule MPI.Factory do
       documents: build_list(2, :document),
       addresses: build_list(2, :address),
       phones: build_list(1, :phone),
-      secret: sequence(:secret, &"secret-#{&1}"),
       emergency_contact: build(:emergency_contact),
       confidant_person: build_list(1, :confidant_person),
       secret: sequence(:secret, &"secret-#{&1}"),
@@ -117,12 +116,15 @@ defmodule MPI.Factory do
       {key, %Ecto.Association.NotLoaded{}}, acc ->
         acc
         |> Map.put(key, %{})
+
       {key, %{__struct__: _} = map}, acc ->
         acc
         |> Map.put(key, schema_to_map(map))
-      {key, [%{__struct__: _}|_] = list}, acc ->
-          acc
-          |> Map.put(key, list_schemas_to_map(list))
+
+      {key, [%{__struct__: _} | _] = list}, acc ->
+        acc
+        |> Map.put(key, list_schemas_to_map(list))
+
       {key, val}, acc ->
         acc
         |> Map.put(key, val)
@@ -130,7 +132,7 @@ defmodule MPI.Factory do
   end
 
   def list_schemas_to_map(list) do
-    Enum.map(list, fn(x) -> schema_to_map(x) end)
+    Enum.map(list, fn x -> schema_to_map(x) end)
   end
 
   def random_date, do: DateTime.to_iso8601(DateTime.utc_now())

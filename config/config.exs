@@ -32,14 +32,14 @@ config :mpi, MPI.Deduplication.Match,
   depth: {:system, :integer, "DEDUPLICATION_DEPTH", 20},
   score: {:system, "DEDUPLICATION_SCORE", "0.8"},
   fields: %{
-    tax_id:       %{match: 0.5, no_match: -0.1},
-    first_name:   %{match: 0.1, no_match: -0.1},
-    last_name:    %{match: 0.2, no_match: -0.1},
-    second_name:  %{match: 0.1, no_match: -0.1},
-    birth_date:   %{match: 0.5, no_match: -0.1},
-    documents:    %{match: 0.3, no_match: -0.1},
-    national_id:  %{match: 0.4, no_match: -0.1},
-    phones:       %{match: 0.3, no_match: -0.1}
+    tax_id: %{match: 0.5, no_match: -0.1},
+    first_name: %{match: 0.1, no_match: -0.1},
+    last_name: %{match: 0.2, no_match: -0.1},
+    second_name: %{match: 0.1, no_match: -0.1},
+    birth_date: %{match: 0.5, no_match: -0.1},
+    documents: %{match: 0.3, no_match: -0.1},
+    national_id: %{match: 0.4, no_match: -0.1},
+    phones: %{match: 0.3, no_match: -0.1}
   }
 
 config :mpi, MPI.Repo,
@@ -51,9 +51,8 @@ config :mpi, MPI.Repo,
   pool_size: 10,
   loggers: [{Ecto.LoggerJSON, :log, [:info]}]
 
-config :ecto_trail,
-  table_name: "audit_log_mpi"
+config :ecto_trail, table_name: "audit_log_mpi"
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
-import_config "#{Mix.env}.exs"
+import_config "#{Mix.env()}.exs"

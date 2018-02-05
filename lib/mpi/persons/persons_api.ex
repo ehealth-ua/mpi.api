@@ -16,6 +16,7 @@ defmodule MPI.Persons.PersonsAPI do
 
   def search(%Ecto.Changeset{changes: parameters}, params, all \\ false) do
     params = Map.merge(%{"page_size" => Confex.get_env(:mpi, :max_persons_result)}, params)
+
     parameters
     |> prepare_ids()
     |> prepare_case_insensitive_fields()
@@ -29,8 +30,9 @@ defmodule MPI.Persons.PersonsAPI do
     |> get_query(all)
     |> where([p], fragment("? @> ?", p.phones, ~s/[{"type":"MOBILE","number":"#{phone_number}"}]/))
   end
+
   def get_query(changes, all) do
-    params = Enum.filter(changes, fn({_key, value}) -> !is_tuple(value) end)
+    params = Enum.filter(changes, fn {_key, value} -> !is_tuple(value) end)
 
     q =
       Person
@@ -38,7 +40,7 @@ defmodule MPI.Persons.PersonsAPI do
       |> add_is_active_query(all)
       |> add_status_query(all)
 
-    Enum.reduce(changes, q, fn({key, val}, query) ->
+    Enum.reduce(changes, q, fn {key, val}, query ->
       case val do
         {value, :lower} -> where(query, [r], fragment("lower(?)", field(r, ^key)) == ^String.downcase(value))
         {value, :like} -> where(query, [r], ilike(field(r, ^key), ^("%" <> value <> "%")))
@@ -52,11 +54,12 @@ defmodule MPI.Persons.PersonsAPI do
   defp add_is_active_query(query, false), do: where(query, [p], p.is_active)
 
   defp add_status_query(query, true), do: query
-  defp add_status_query(query, false), do: where(query, [p], not p.status in ^@inactive_statuses)
+  defp add_status_query(query, false), do: where(query, [p], p.status not in ^@inactive_statuses)
 
   def prepare_ids(%{ids: _} = params) do
     convert_comma_params_to_where_in_clause(params, :ids, :id)
   end
+
   def prepare_ids(params), do: params
 
   def convert_comma_params_to_where_in_clause(changes, param_name, db_field) do
@@ -67,13 +70,14 @@ defmodule MPI.Persons.PersonsAPI do
 
   def prepare_case_insensitive_fields(params) do
     fields = [:first_name, :last_name, :second_name]
+
     params
-    |> Enum.map(fn ({k, v}) ->
-         case k in fields do
-           true -> {k, {v, :lower}}
-           false -> {k, v}
-         end
-       end)
+    |> Enum.map(fn {k, v} ->
+      case k in fields do
+        true -> {k, {v, :lower}}
+        false -> {k, v}
+      end
+    end)
     |> Enum.into(%{})
   end
 end

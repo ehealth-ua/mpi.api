@@ -14,7 +14,7 @@ defmodule MPI.Web.MergeCandidateControllerTest do
       |> get("/merge_candidates?status=NEW")
       |> json_response(200)
 
-    returned_merged_candidates = Enum.map(response["data"], &(&1["id"]))
+    returned_merged_candidates = Enum.map(response["data"], & &1["id"])
 
     assert merge_candidate_1.id in returned_merged_candidates
     refute merge_candidate_2.id in returned_merged_candidates

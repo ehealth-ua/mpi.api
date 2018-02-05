@@ -19,7 +19,7 @@ defmodule MPI do
       supervisor(MPI.Repo, []),
       # Start the endpoint when the application starts
       supervisor(MPI.Web.Endpoint, []),
-      worker(MPI.Deduplication.Scheduler, []),
+      worker(MPI.Deduplication.Scheduler, [])
       # Starts a worker by calling: MPI.Worker.start_link(arg1, arg2, arg3)
       # worker(MPI.Worker, [arg1, arg2, arg3]),
     ]

@@ -7,20 +7,21 @@ defmodule MPI.Web.PersonView do
   end
 
   def render("persons.json", %{persons: persons, search_params: %{ids: _}}) do
-    Enum.map(persons, fn(person) ->
+    Enum.map(persons, fn person ->
       Map.take(person, ~W(id first_name last_name second_name)a)
     end)
   end
 
   def render("persons.json", %{persons: persons, search_params: search_params}) do
-    Enum.map(persons, fn(person) -> person_short(person, search_params) end)
+    Enum.map(persons, fn person -> person_short(person, search_params) end)
   end
 
   defp person_short(person, params) do
     phones = Map.fetch!(person, :phones) || []
+
     phone_number =
       phones
-      |> Enum.filter(fn(phone) -> phone["type"] == "MOBILE" end)
+      |> Enum.filter(fn phone -> phone["type"] == "MOBILE" end)
       |> get_phone_number()
 
     take_fields = Map.keys(params)

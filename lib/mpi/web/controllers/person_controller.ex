@@ -9,24 +9,24 @@ defmodule MPI.Web.PersonController do
   alias Scrivener.Page
   alias MPI.ConnUtils
 
-  action_fallback MPI.Web.FallbackController
+  action_fallback(MPI.Web.FallbackController)
 
   def index(conn, params) do
     with %Changeset{valid?: true} = changeset <- PersonSearch.changeset(params),
-      %Page{total_pages: 1} = paging <- PersonsAPI.search(changeset, params) do
-        conn
-        |> put_status(:ok)
-        |> render("persons.json", %{
-          persons: paging.entries,
-          paging: paging,
-          search_params: changeset.changes
-        })
+         %Page{total_pages: 1} = paging <- PersonsAPI.search(changeset, params) do
+      conn
+      |> put_status(:ok)
+      |> render("persons.json", %{
+        persons: paging.entries,
+        paging: paging,
+        search_params: changeset.changes
+      })
     end
   end
 
   def all(conn, params) do
     with %Changeset{valid?: true} = changeset <- PersonSearch.changeset(params),
-      %Page{total_pages: 1} = paging <- PersonsAPI.search(changeset, params, true) do
+         %Page{total_pages: 1} = paging <- PersonsAPI.search(changeset, params, true) do
       conn
       |> put_status(:ok)
       |> render("persons.json", %{
@@ -47,9 +47,9 @@ defmodule MPI.Web.PersonController do
 
   def create(conn, params) do
     with search_params <- Map.take(params, ["last_name", "first_name", "birth_date", "tax_id", "second_name"]),
-      %Changeset{valid?: true} = changeset <- PersonSearch.changeset(search_params),
-      %Page{} = paging <- PersonsAPI.search(changeset, params) do
-        create_person_strategy(paging, conn, params)
+         %Changeset{valid?: true} = changeset <- PersonSearch.changeset(search_params),
+         %Page{} = paging <- PersonsAPI.search(changeset, params) do
+      create_person_strategy(paging, conn, params)
     end
   end
 
@@ -57,11 +57,10 @@ defmodule MPI.Web.PersonController do
     with %Person{} = person <- Repo.get(Person, id),
          %Changeset{valid?: true} = changeset <- PersonsAPI.changeset(person, preprocess_params(person, params)),
          consumer_id = ConnUtils.get_consumer_id(conn),
-         {:ok, %Person{} = person} <- Repo.update_and_log(changeset, consumer_id)
-    do
-         conn
-         |> put_status(:ok)
-         |> render("person.json", %{person: person})
+         {:ok, %Person{} = person} <- Repo.update_and_log(changeset, consumer_id) do
+      conn
+      |> put_status(:ok)
+      |> render("person.json", %{person: person})
     end
   end
 
@@ -69,10 +68,9 @@ defmodule MPI.Web.PersonController do
     params = %{"authentication_methods" => [%{"type" => "NA"}]}
 
     with %Person{status: "active"} = person <- Repo.get(Person, id),
-      %Changeset{valid?: true} = changeset <- PersonsAPI.changeset(person, params),
-      consumer_id = ConnUtils.get_consumer_id(conn),
-      {:ok, %Person{} = person} <- Repo.update_and_log(changeset, consumer_id)
-    do
+         %Changeset{valid?: true} = changeset <- PersonsAPI.changeset(person, params),
+         consumer_id = ConnUtils.get_consumer_id(conn),
+         {:ok, %Person{} = person} <- Repo.update_and_log(changeset, consumer_id) do
       conn
       |> put_status(:ok)
       |> render("person.json", %{person: person})
@@ -85,11 +83,10 @@ defmodule MPI.Web.PersonController do
   defp create_person_strategy(%Page{entries: [person]}, conn, params) do
     with %Changeset{valid?: true} = changeset <- PersonsAPI.changeset(person, params),
          consumer_id = ConnUtils.get_consumer_id(conn),
-         {:ok, %Person{} = updated_person} <- Repo.update_and_log(changeset, consumer_id)
-    do
-         conn
-         |> put_status(:ok)
-         |> render("person.json", %{person: updated_person})
+         {:ok, %Person{} = updated_person} <- Repo.update_and_log(changeset, consumer_id) do
+      conn
+      |> put_status(:ok)
+      |> render("person.json", %{person: updated_person})
     end
   end
 
@@ -97,12 +94,11 @@ defmodule MPI.Web.PersonController do
   # https://edenlab.atlassian.net/wiki/display/EH/Private.Create+or+update+Person
   defp create_person_strategy(%Page{}, conn, params) do
     with %Changeset{valid?: true} = changeset <- PersonsAPI.changeset(%Person{}, params),
-      consumer_id = ConnUtils.get_consumer_id(conn),
-      {:ok, person} <- Repo.insert_and_log(changeset, consumer_id)
-      do
-        conn
-        |> put_status(:created)
-        |> render("person.json", %{person: person})
+         consumer_id = ConnUtils.get_consumer_id(conn),
+         {:ok, person} <- Repo.insert_and_log(changeset, consumer_id) do
+      conn
+      |> put_status(:created)
+      |> render("person.json", %{person: person})
     end
   end
 

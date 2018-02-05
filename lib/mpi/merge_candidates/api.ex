@@ -8,7 +8,7 @@ defmodule MPI.MergeCandidates.API do
   alias MPI.MergeCandidate
 
   def get_all(attrs) do
-    Repo.all(from mc in MergeCandidate, where: ^attrs)
+    Repo.all(from(mc in MergeCandidate, where: ^attrs))
   end
 
   def get_by_id(id) do

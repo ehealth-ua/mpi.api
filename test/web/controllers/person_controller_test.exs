@@ -94,6 +94,7 @@ defmodule MPI.Web.PersonControllerTest do
 
   test "HEAD /persons/:id OK", %{conn: conn} do
     person = Factory.insert(:person)
+
     status =
       conn
       |> head("/persons/#{person.id}")
@@ -166,7 +167,7 @@ defmodule MPI.Web.PersonControllerTest do
 
     assert error["type"] == "validation_failed"
 
-    Enum.each(error["invalid"], fn(%{"entry_type" => entry_type}) ->
+    Enum.each(error["invalid"], fn %{"entry_type" => entry_type} ->
       assert entry_type == "query_parameter"
     end)
   end
@@ -176,43 +177,67 @@ defmodule MPI.Web.PersonControllerTest do
     merged_id2 = "1190cd3a-18f0-4e0a-98d6-186cd6da145c"
     person = Factory.insert(:person, merged_ids: [merged_id1])
 
-    patch conn, "/persons/#{person.id}", Poison.encode!(%{merged_ids: [merged_id2]})
+    patch(conn, "/persons/#{person.id}", Poison.encode!(%{merged_ids: [merged_id2]}))
 
     assert [^merged_id1, ^merged_id2] = MPI.Repo.get(MPI.Person, person.id).merged_ids
   end
 
   test "GET /persons/ SEARCH by last_name 200", %{conn: conn} do
     person = Factory.insert(:person, phones: nil)
-    conn = get conn, person_path(conn, :index, [
-      last_name: person.last_name,
-      first_name: person.first_name,
-      birth_date: to_string(person.birth_date)
-    ])
+
+    conn =
+      get(
+        conn,
+        person_path(
+          conn,
+          :index,
+          last_name: person.last_name,
+          first_name: person.first_name,
+          birth_date: to_string(person.birth_date)
+        )
+      )
+
     data = json_response(conn, 200)["data"]
     assert 1 == length(data)
-    Enum.each(data, fn (person) ->
+
+    Enum.each(data, fn person ->
       refute Map.has_key?(person, "phone_number")
     end)
   end
 
   test "GET /all-persons SEARCH", %{conn: conn} do
     person = Factory.insert(:person, is_active: false)
-    conn1 = get conn, person_path(conn, :all,
-      last_name: person.last_name,
-      second_name: person.second_name,
-      first_name: person.first_name,
-      birth_date: "1996-12-12"
-    )
+
+    conn1 =
+      get(
+        conn,
+        person_path(
+          conn,
+          :all,
+          last_name: person.last_name,
+          second_name: person.second_name,
+          first_name: person.first_name,
+          birth_date: "1996-12-12"
+        )
+      )
+
     data = json_response(conn1, 200)["data"]
     assert 1 == length(data)
     assert person.id == hd(data)["id"]
 
-    conn2 = get conn, person_path(conn, :index,
-      last_name: "last_name-0",
-      second_name: "second_name-0",
-      first_name: "first_name-0",
-      birth_date: "1996-12-12"
-    )
+    conn2 =
+      get(
+        conn,
+        person_path(
+          conn,
+          :index,
+          last_name: "last_name-0",
+          second_name: "second_name-0",
+          first_name: "first_name-0",
+          birth_date: "1996-12-12"
+        )
+      )
+
     data = json_response(conn2, 200)["data"]
     assert 0 == length(data)
   end
@@ -221,9 +246,7 @@ defmodule MPI.Web.PersonControllerTest do
     %{id: id1} = Factory.insert(:person, is_active: false)
     %{id: id2} = Factory.insert(:person)
     Factory.insert(:person)
-    conn1 = get conn, person_path(conn, :all,
-      ids: Enum.join([id1, id2], ",")
-    )
+    conn1 = get(conn, person_path(conn, :all, ids: Enum.join([id1, id2], ",")))
     data = json_response(conn1, 200)["data"]
     assert 2 == length(data)
     assert id1 == hd(data)["id"]
@@ -240,10 +263,11 @@ defmodule MPI.Web.PersonControllerTest do
 
     ids = [id_1, id_2, id_3, id_4, id_5]
 
-    conn = get conn, person_path(conn, :index, [ids: Enum.join(ids, ","), limit: 3])
+    conn = get(conn, person_path(conn, :index, ids: Enum.join(ids, ","), limit: 3))
     data = json_response(conn, 200)["data"]
     assert 2 == length(data)
-    Enum.each(data, fn (person) ->
+
+    Enum.each(data, fn person ->
       assert person["id"] in [id_1, id_2]
       assert Map.has_key?(person, "first_name")
       assert Map.has_key?(person, "second_name")
@@ -252,7 +276,7 @@ defmodule MPI.Web.PersonControllerTest do
   end
 
   test "GET /persons/ empty search", %{conn: conn} do
-    conn = get conn, person_path(conn, :index, [ids: ""])
+    conn = get(conn, person_path(conn, :index, ids: ""))
     assert [] == json_response(conn, 200)["data"]
   end
 
@@ -260,10 +284,10 @@ defmodule MPI.Web.PersonControllerTest do
     person =
       :person
       |> Factory.insert(%{
-          phones: [
-            Factory.build(:phone, %{type: "LANDLINE"}),
-            Factory.build(:phone, %{type: "MOBILE"})
-          ]
+        phones: [
+          Factory.build(:phone, %{type: "LANDLINE"}),
+          Factory.build(:phone, %{type: "MOBILE"})
+        ]
       })
       |> Map.put(:merged_ids, [])
 
@@ -272,18 +296,19 @@ defmodule MPI.Web.PersonControllerTest do
     phone_number =
       person
       |> Map.fetch!(:phones)
-      |> Enum.filter(fn(phone) -> phone.type == "MOBILE" end)
-      |> List.first
+      |> Enum.filter(fn phone -> phone.type == "MOBILE" end)
+      |> List.first()
       |> Map.fetch!(:number)
 
     person_response =
       person
       |> Poison.encode!()
       |> Poison.decode!()
-      |> Map.take(required_fields ++ ["second_name" , "tax_id"])
+      |> Map.take(required_fields ++ ["second_name", "tax_id"])
       |> Map.put("phone_number", phone_number)
 
     link = "/persons/?first_name=#{person.first_name}&last_name=#{person.last_name}&birth_date=#{person.birth_date}"
+
     res =
       conn
       |> get(link)
@@ -299,10 +324,11 @@ defmodule MPI.Web.PersonControllerTest do
       |> json_response(200)
 
     assert_person_search(res["data"])
-    person_second_response = Map.take(person_response, required_fields ++ ["second_name" , "tax_id"])
+    person_second_response = Map.take(person_response, required_fields ++ ["second_name", "tax_id"])
     assert [person_second_response] == res["data"]
 
     phone_number = String.replace_prefix(phone_number, "+", "%2b")
+
     res =
       conn
       |> get("#{link}&phone_number=#{phone_number}")
@@ -339,53 +365,55 @@ defmodule MPI.Web.PersonControllerTest do
       |> Map.fetch!("error")
 
     assert %{
-      "type" => "forbidden",
-      "message" => "This API method returns only exact match results, " <>
-                   "please retry with more specific search parameters"
-    } = error
+             "type" => "forbidden",
+             "message" =>
+               "This API method returns only exact match results, " <>
+                 "please retry with more specific search parameters"
+           } = error
   end
 
   defp assert_person(data) do
     assert %{
-      "id" => _,
-      "version" => _,
-      "first_name" => _,
-      "last_name" => _,
-      "second_name" => _,
-      "email" => _,
-      "gender" => _,
-      "inserted_at" => _,
-      "inserted_by" => _,
-      "is_active" => true,
-      "birth_date" => _,
-      "national_id" => _,
-      "death_date" => _,
-      "tax_id" => _,
-      "updated_at" => _,
-      "updated_by" => _,
-      "birth_country" => _,
-      "birth_settlement" => _,
-      "addresses" => _,
-      "documents" => _,
-      "phones" => _,
-      "secret" => _,
-      "emergency_contact" => _,
-      "confidant_person" => _,
-      "status" => _,
-      "patient_signed" => _,
-      "process_disclosure_data_consent" => _,
-      "authentication_methods" => _,
-      "merged_ids" => _
-    } = data
+             "id" => _,
+             "version" => _,
+             "first_name" => _,
+             "last_name" => _,
+             "second_name" => _,
+             "email" => _,
+             "gender" => _,
+             "inserted_at" => _,
+             "inserted_by" => _,
+             "is_active" => true,
+             "birth_date" => _,
+             "national_id" => _,
+             "death_date" => _,
+             "tax_id" => _,
+             "updated_at" => _,
+             "updated_by" => _,
+             "birth_country" => _,
+             "birth_settlement" => _,
+             "addresses" => _,
+             "documents" => _,
+             "phones" => _,
+             "secret" => _,
+             "emergency_contact" => _,
+             "confidant_person" => _,
+             "status" => _,
+             "patient_signed" => _,
+             "process_disclosure_data_consent" => _,
+             "authentication_methods" => _,
+             "merged_ids" => _
+           } = data
+
     assert is_list(data["merged_ids"])
   end
 
   def assert_person_search(data) do
-    Enum.each(data, fn(person) ->
+    Enum.each(data, fn person ->
       assert %{
-        "id" => _,
-        "birth_date" => _,
-      } = person
+               "id" => _,
+               "birth_date" => _
+             } = person
     end)
   end
 end
