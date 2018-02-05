@@ -1,4 +1,4 @@
-mix test
-mix coveralls
-mix credo
-mix dogma
+mix test --exclude pending
+mix coveralls --exclude pending
+mix credo --strict
+mix format --check-formatted

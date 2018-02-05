@@ -39,25 +39,33 @@ branches:
   except:
     - /[0-9]*\.[0-9]*\.[0-9]*/
 before_install:
-  # Expose MQ and DB to Docker container
+  # Expose DB to Docker container
   - sudo ./bin/ci/init-db.sh
+before_script:
+  # Extract project name and version from mix.exs
+  - source ./bin/ci/release/fetch-project-environment.sh
+  # Load information about new version
+  - source ./bin/ci/release/fetch-source-version.sh
+  # Load information about changelog
+  - source ./bin/ci/release/fetch-changelog.sh
 script:
+  # Check for versioning error
+  - ./bin/ci/release/check-version-error.sh || travis_terminate 1
   # Increment version in mix.exs
-  - ./bin/version-increment.sh || travis_terminate 1
-  # Install dependencies
-  - mix deps.get || travis_terminate 1
+  - ./bin/ci/release/put-source-version.sh || travis_terminate 1
+  # Create release notes log for minor version
+  - ./bin/ci/release/put-release-notes.sh
   # Run all tests except pending ones
   - ./bin/mix_tests.sh || travis_terminate 1
   # Build Docker container
-  - ./bin/build.sh || travis_terminate 1
+  - ./bin/ci/release/build-container.sh || travis_terminate 1
   # Initialize DB for Docker container
   - MIX_ENV=dev mix ecto.setup
   # Run Docker container
-  - sudo ./bin/start.sh || travis_terminate 1
-  # Run acceptance tests on Docker container
-  - "MIX_TEST_HOST=localhost MIX_TEST_PORT=4000 mix test test/acceptance"
+  - sudo ./bin/ci/release/start-container.sh
+  - sudo ./bin/ci/release/check-container.sh || travis_terminate
   # Submit Docker container to Docker Hub and create GitHub Release by pushing tag with changelog
-  - ./bin/ci/push.sh || travis_terminate 1
-  # CD to Dev
-  - openssl aes-256-cbc -K $encrypted_c0f7b939d2bc_key -iv $encrypted_c0f7b939d2bc_iv -in eHealth-8110bd102a69.json.enc -out eHealth-8110bd102a69.json -d
+  - ./bin/ci/release/push-changes.sh || travis_terminate 1
+  - echo "Decrypting deploy key..."
+  - openssl aes-256-cbc -K $encrypted_c996ec964e08_key -iv $encrypted_c996ec964e08_iv -in eHealth-8110bd102a69.json.enc -out eHealth-8110bd102a69.json -d
   - sudo ./bin/deploy.sh || travis_terminate 1

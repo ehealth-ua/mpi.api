@@ -1,7 +1,7 @@
 defmodule MPI.Mixfile do
   use Mix.Project
 
-  @version "1.59.3"
+  @version "1.59.4"
 
   def project do
     [
@@ -35,9 +35,9 @@ defmodule MPI.Mixfile do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:distillery, "~> 1.4.1"},
+      {:distillery, "~> 1.5"},
       {:cowboy, "~> 1.0"},
-      {:phoenix, "~> 1.3.0-rc"},
+      {:phoenix, "~> 1.3.0"},
       {:phoenix_ecto, "~> 3.2"},
       {:confex, ">= 0.0.0"},
       {:httpoison, ">= 0.0.0"},
@@ -47,7 +47,7 @@ defmodule MPI.Mixfile do
       {:eview, ">= 0.0.0"},
       {:postgrex, ">= 0.0.0"},
       {:timex, "~> 3.1.0"},
-      {:quantum, "~> 2.0.0"},
+      {:quantum, "~> 2.2.0"},
       {:plug_logger_json, "~> 0.5"},
       {:ecto_logger_json, "~> 0.1"},
       {:excoveralls, ">= 0.0.0", only: [:dev, :test]},

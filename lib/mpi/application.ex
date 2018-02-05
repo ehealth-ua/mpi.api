@@ -39,8 +39,9 @@ defmodule MPI do
     :ok
   end
 
-  # Loads configuration in `:on_init` callbacks and replaces `{:system, ..}` tuples via Confex
-  @doc false
+  @doc """
+  Loads configuration in `:init` callbacks and replaces `{:system, ..}` tuples via Confex
+  """
   def init(_key, config) do
     Resolver.resolve(config)
   end

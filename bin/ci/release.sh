@@ -13,7 +13,7 @@
 
 # Find mix.exs inside project tree.
 # This allows to call bash scripts within any folder inside project.
-PROJECT_DIR=$(git rev-parse --show-toplevel)
+PROJECT_DIR="$(git rev-parse --show-toplevel)"
 if [ ! -f "${PROJECT_DIR}/mix.exs" ]; then
     echo "[E] Can't find '${PROJECT_DIR}/mix.exs'."
     echo "    Check that you run this script inside git repo or init a new one in project root."
@@ -60,10 +60,10 @@ fi
 
 # Get release notes
 PREVIOUS_TAG=$(git describe HEAD^1 --abbrev=0 --tags)
-GIT_HISTORY=$(git log --no-merges --format="- %s" $PREVIOUS_TAG..HEAD)
+GIT_HISTORY=$(git log --no-merges --format="- %s (%an)" $PREVIOUS_TAG..HEAD | grep --invert-match "ci skip" | grep --invert-match "changelog skip")
 
 if [[ $PREVIOUS_TAG == "" ]]; then
-  GIT_HISTORY=$(git log --no-merges --format="- %s")
+  GIT_HISTORY=$(git log --no-merges --format="- %s (%an)" | grep --invert-match "ci skip" | grep --invert-match "changelog skip")
 fi;
 
 # Create git tag that matches release version
