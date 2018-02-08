@@ -17,6 +17,8 @@ defmodule MPI.Person do
     field(:tax_id, :string)
     field(:national_id, :string)
     field(:death_date, :date)
+    field(:archived_at, :date)
+    field(:preferred_way_communication, :string)
     field(:is_active, :boolean, default: true)
     field(:documents, {:array, :map})
     field(:addresses, {:array, :map})
@@ -48,6 +50,8 @@ defmodule MPI.Person do
     tax_id
     national_id
     death_date
+    archived_at
+    preferred_way_communication
     is_active
     documents
     addresses

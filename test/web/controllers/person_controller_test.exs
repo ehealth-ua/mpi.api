@@ -1,10 +1,9 @@
 defmodule MPI.Web.PersonControllerTest do
   use MPI.Web.ConnCase
-  alias MPI.Factory
   import MPI.Factory
 
   test "GET /persons/:id OK", %{conn: conn} do
-    person = :person |> Factory.insert() |> Map.put(:merged_ids, [])
+    person = insert(:person)
 
     res =
       conn
@@ -34,7 +33,7 @@ defmodule MPI.Web.PersonControllerTest do
   end
 
   test "POST /persons/ OK", %{conn: conn} do
-    person_data = Factory.build_factory_params(:person_params)
+    person_data = :person |> build() |> Map.from_struct()
 
     res =
       conn
@@ -52,7 +51,7 @@ defmodule MPI.Web.PersonControllerTest do
   end
 
   test "Create or update Person", %{conn: conn} do
-    person_data = Factory.build_factory_params(:person_params)
+    person_data = :person |> build() |> Map.from_struct()
 
     person_created =
       conn
@@ -94,7 +93,7 @@ defmodule MPI.Web.PersonControllerTest do
   end
 
   test "HEAD /persons/:id OK", %{conn: conn} do
-    person = Factory.insert(:person)
+    person = insert(:person)
 
     status =
       conn
@@ -114,8 +113,8 @@ defmodule MPI.Web.PersonControllerTest do
   end
 
   test "PUT /persons/:id OK", %{conn: conn} do
-    person = Factory.insert(:person)
-    person_data = Factory.build_factory_params(:person_params)
+    person = insert(:person)
+    person_data = :person |> build() |> Map.from_struct()
 
     res =
       conn
@@ -128,7 +127,7 @@ defmodule MPI.Web.PersonControllerTest do
 
   describe "reset auth method" do
     test "success", %{conn: conn} do
-      person = Factory.insert(:person)
+      person = insert(:person)
 
       res =
         conn
@@ -141,7 +140,7 @@ defmodule MPI.Web.PersonControllerTest do
     end
 
     test "invalid status", %{conn: conn} do
-      person = Factory.insert(:person, status: "INACTIVE")
+      person = insert(:person, status: "INACTIVE")
 
       conn
       |> patch("/persons/#{person.id}/actions/reset_auth_method")
@@ -176,7 +175,7 @@ defmodule MPI.Web.PersonControllerTest do
   test "PATCH /persons/:id", %{conn: conn} do
     merged_id1 = "cbe38ac6-a258-4b5d-b684-db53a4f54192"
     merged_id2 = "1190cd3a-18f0-4e0a-98d6-186cd6da145c"
-    person = Factory.insert(:person, merged_ids: [merged_id1])
+    person = insert(:person, merged_ids: [merged_id1])
 
     patch(conn, "/persons/#{person.id}", Poison.encode!(%{merged_ids: [merged_id2]}))
 
@@ -184,7 +183,7 @@ defmodule MPI.Web.PersonControllerTest do
   end
 
   test "GET /persons/ SEARCH by last_name 200", %{conn: conn} do
-    person = Factory.insert(:person, phones: nil)
+    person = insert(:person, phones: nil)
 
     conn =
       get(
@@ -207,7 +206,7 @@ defmodule MPI.Web.PersonControllerTest do
   end
 
   test "GET /all-persons SEARCH", %{conn: conn} do
-    person = Factory.insert(:person, is_active: false)
+    person = insert(:person, is_active: false)
 
     conn1 =
       get(
@@ -244,9 +243,9 @@ defmodule MPI.Web.PersonControllerTest do
   end
 
   test "GET /all-persons by ids", %{conn: conn} do
-    %{id: id1} = Factory.insert(:person, is_active: false)
-    %{id: id2} = Factory.insert(:person)
-    Factory.insert(:person)
+    %{id: id1} = insert(:person, is_active: false)
+    %{id: id2} = insert(:person)
+    insert(:person)
     conn1 = get(conn, person_path(conn, :all, ids: Enum.join([id1, id2], ",")))
     data = json_response(conn1, 200)["data"]
     assert 2 == length(data)
@@ -255,12 +254,12 @@ defmodule MPI.Web.PersonControllerTest do
   end
 
   test "GET /persons/ SEARCH by ids 200", %{conn: conn} do
-    Factory.insert(:person)
-    %{id: id_1} = Factory.insert(:person)
-    %{id: id_2} = Factory.insert(:person)
-    %{id: id_3} = Factory.insert(:person, %{is_active: false})
-    %{id: id_4} = Factory.insert(:person, %{status: "INACTIVE"})
-    %{id: id_5} = Factory.insert(:person, %{status: "MERGED"})
+    insert(:person)
+    %{id: id_1} = insert(:person)
+    %{id: id_2} = insert(:person)
+    %{id: id_3} = insert(:person, is_active: false)
+    %{id: id_4} = insert(:person, status: "INACTIVE")
+    %{id: id_5} = insert(:person, status: "MERGED")
 
     ids = [id_1, id_2, id_3, id_4, id_5]
 
@@ -282,15 +281,7 @@ defmodule MPI.Web.PersonControllerTest do
   end
 
   test "GET /persons/ SEARCH 200", %{conn: conn} do
-    person =
-      :person
-      |> Factory.insert(%{
-        phones: [
-          Factory.build(:phone, %{type: "LANDLINE"}),
-          Factory.build(:phone, %{type: "MOBILE"})
-        ]
-      })
-      |> Map.put(:merged_ids, [])
+    person = insert(:person, phones: [build(:phone, type: "LANDLINE"), build(:phone, type: "MOBILE")])
 
     required_fields = ~W(id history first_name last_name birth_date birth_country birth_settlement merged_ids)
     # Getting mobile phone number because search uses just it
@@ -352,10 +343,10 @@ defmodule MPI.Web.PersonControllerTest do
   end
 
   test "GET /persons/ SEARCH 403", %{conn: conn} do
-    person = Factory.insert(:person)
-    person_data = %{first_name: person.first_name, last_name: person.last_name, birth_date: person.birth_date}
-    Factory.insert(:person, person_data)
-    Factory.insert(:person, person_data)
+    person = insert(:person)
+    person_data = [first_name: person.first_name, last_name: person.last_name, birth_date: person.birth_date]
+    insert(:person, person_data)
+    insert(:person, person_data)
 
     link = "/persons/?first_name=#{person.first_name}&last_name=#{person.last_name}&birth_date=#{person.birth_date}"
 
@@ -435,6 +426,8 @@ defmodule MPI.Web.PersonControllerTest do
              "birth_date" => _,
              "national_id" => _,
              "death_date" => _,
+             "archived_at" => _,
+             "preferred_way_communication" => _,
              "tax_id" => _,
              "updated_at" => _,
              "updated_by" => _,
