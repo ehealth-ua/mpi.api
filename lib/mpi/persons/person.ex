@@ -17,7 +17,6 @@ defmodule MPI.Person do
     field(:tax_id, :string)
     field(:national_id, :string)
     field(:death_date, :date)
-    field(:archived_at, :date)
     field(:preferred_way_communication, :string)
     field(:invalid_tax_id, :boolean, default: false)
     field(:is_active, :boolean, default: true)
@@ -51,7 +50,6 @@ defmodule MPI.Person do
     tax_id
     national_id
     death_date
-    archived_at
     preferred_way_communication
     invalid_tax_id
     is_active

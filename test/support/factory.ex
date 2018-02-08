@@ -28,7 +28,6 @@ defmodule MPI.Factory do
       tax_id: sequence(:tax_id, &"tax_id-#{&1}"),
       national_id: sequence(:national_id, &"national_id-#{&1}"),
       death_date: ~D[2117-11-09],
-      archived_at: ~D[2017-11-09],
       preferred_way_communication: "email",
       is_active: true,
       documents: build_list(2, :document),
