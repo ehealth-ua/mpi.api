@@ -1,6 +1,7 @@
 defmodule MPI.Web.PersonControllerTest do
   use MPI.Web.ConnCase
   alias MPI.Factory
+  import MPI.Factory
 
   test "GET /persons/:id OK", %{conn: conn} do
     person = :person |> Factory.insert() |> Map.put(:merged_ids, [])
@@ -370,6 +371,53 @@ defmodule MPI.Web.PersonControllerTest do
                "This API method returns only exact match results, " <>
                  "please retry with more specific search parameters"
            } = error
+  end
+
+  describe "GET /persons_internal" do
+    setup %{conn: conn} do
+      insert(:person, tax_id: "000111")
+      insert(:person, national_id: "ID200300")
+      insert(:person, documents: [%{"type" => "birth_certificate", "number" => "11/2222"}])
+      insert(:person, documents: [%{"type" => "temporary_certificate", "number" => "OOias"}])
+
+      %{conn: conn}
+    end
+
+    test "search by tax_id", %{conn: conn} do
+      %{id: id} = insert(:person, tax_id: "000112")
+
+      [person] =
+        conn
+        |> get(person_path(conn, :internal), type: "tax_id", number: "000112")
+        |> json_response(200)
+        |> Map.get("data")
+
+      assert id == person["id"]
+    end
+
+    test "search by birth_certificate", %{conn: conn} do
+      %{id: id} = insert(:person, documents: [%{"type" => "temporary_certificate", "number" => "OOias2"}])
+
+      [person] =
+        conn
+        |> get(person_path(conn, :internal), type: "temporary_certificate", number: "OOias2")
+        |> json_response(200)
+        |> Map.get("data")
+
+      assert id == person["id"]
+    end
+
+    test "invalid search param", %{conn: conn} do
+      conn
+      |> get(person_path(conn, :internal), tax_id: "000112")
+      |> json_response(422)
+    end
+
+    test "type no allowed", %{conn: conn} do
+      conn
+      |> get(person_path(conn, :internal), type: "edrpou", number: "100200")
+      |> json_response(422)
+    end
   end
 
   defp assert_person(data) do

@@ -26,7 +26,7 @@ defmodule MPI.Web.Endpoint do
   plug(Plug.MethodOverride)
   plug(Plug.Head)
 
-  plug(MPI.Web.Router)
+  plug(MPIWeb.Router)
 
   @doc """
   Dynamically loads configuration from the system environment

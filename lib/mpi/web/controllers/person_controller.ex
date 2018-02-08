@@ -37,6 +37,15 @@ defmodule MPI.Web.PersonController do
     end
   end
 
+  def internal(conn, params) do
+    with %Ecto.Changeset{valid?: true} = changeset <- PersonsAPI.changeset(:internal, params),
+         %Page{} = paging <- PersonsAPI.search_internal(changeset, params) do
+      conn
+      |> put_status(:ok)
+      |> render("persons.json", %{persons: paging.entries, paging: paging, search_params: changeset.changes})
+    end
+  end
+
   def show(conn, %{"id" => id}) do
     with %Person{} = person <- Repo.get(Person, id) do
       conn

@@ -20,14 +20,14 @@ defmodule MPI.Web do
     quote do
       use Phoenix.Controller, namespace: MPI.Web
       import Plug.Conn
-      import MPI.Web.Router.Helpers
+      import MPIWeb.Router.Helpers
     end
   end
 
   def view do
     quote do
       use Phoenix.View, root: ""
-      import MPI.Web.Router.Helpers
+      import MPIWeb.Router.Helpers
     end
   end
 

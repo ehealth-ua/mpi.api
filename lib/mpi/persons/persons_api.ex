@@ -1,14 +1,22 @@
 defmodule MPI.Persons.PersonsAPI do
   @moduledoc false
 
-  import Ecto.Changeset
-  import Ecto.Query
-  alias MPI.Repo
-  alias MPI.Person
+  import Ecto.{Changeset, Query}
+  alias MPI.{Repo, Person}
 
   @inactive_statuses ["INACTIVE", "MERGED"]
+  @allowed_search_types ~w(tax_id passport national_id birth_certificate temporary_certificate)
 
-  def changeset(struct, params \\ %{}) do
+  def changeset(:internal, params) do
+    types = %{type: :string, number: :string}
+
+    {%{}, types}
+    |> cast(params, Map.keys(types))
+    |> validate_required(Map.keys(types))
+    |> validate_inclusion(:type, @allowed_search_types)
+  end
+
+  def changeset(struct, params) do
     struct
     |> cast(params, Person.fields())
     |> validate_required(Person.fields_required())
@@ -22,6 +30,26 @@ defmodule MPI.Persons.PersonsAPI do
     |> prepare_case_insensitive_fields()
     |> get_query(all)
     |> Repo.paginate(params)
+  end
+
+  def search_internal(%Ecto.Changeset{valid?: true, changes: changes}, params) do
+    changes
+    |> get_query(false)
+    |> Repo.paginate(params)
+  end
+
+  def get_query(%{type: type, number: number} = changes, all) when type in ~w(tax_id national_id) do
+    changes
+    |> Map.drop(~w(type number)a)
+    |> Map.put(String.to_atom(type), number)
+    |> get_query(all)
+  end
+
+  def get_query(%{type: type} = changes, all) do
+    changes
+    |> Map.drop(~w(type number)a)
+    |> get_query(all)
+    |> where([p], fragment("? @> ?", p.documents, ~s/[{"number":"#{changes.number}"}]/))
   end
 
   def get_query(%{phone_number: phone_number} = changes, all) do

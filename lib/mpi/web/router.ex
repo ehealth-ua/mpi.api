@@ -1,4 +1,4 @@
-defmodule MPI.Web.Router do
+defmodule MPIWeb.Router do
   @moduledoc false
   use MPI.Web, :router
   use Plug.ErrorHandler
@@ -15,6 +15,7 @@ defmodule MPI.Web.Router do
     pipe_through(:api)
 
     get("/all-persons", PersonController, :all)
+    get("/persons_internal", PersonController, :internal)
     resources("/persons/", PersonController)
     patch("/persons/:id/actions/reset_auth_method", PersonController, :reset_auth_method)
     resources("/merge_candidates", MergeCandidateController, only: [:index, :update])
