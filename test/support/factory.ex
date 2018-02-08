@@ -7,6 +7,8 @@ defmodule MPI.Factory do
 
   def merge_candidate_factory do
     %MPI.MergeCandidate{
+      status: "NEW",
+      config: %{},
       person: build(:person),
       master_person: build(:person)
     }
@@ -109,38 +111,4 @@ defmodule MPI.Factory do
       phone_number: "+38#{Enum.random(1_000_000_000..9_999_999_999)}"
     }
   end
-
-  def build_factory_params(factory, overrides \\ []) do
-    factory
-    |> MPI.Factory.build(overrides)
-    |> schema_to_map()
-  end
-
-  def schema_to_map(schema) do
-    schema
-    |> Map.drop([:__struct__, :__meta__])
-    |> Enum.reduce(%{}, fn
-      {key, %Ecto.Association.NotLoaded{}}, acc ->
-        acc
-        |> Map.put(key, %{})
-
-      {key, %{__struct__: _} = map}, acc ->
-        acc
-        |> Map.put(key, schema_to_map(map))
-
-      {key, [%{__struct__: _} | _] = list}, acc ->
-        acc
-        |> Map.put(key, list_schemas_to_map(list))
-
-      {key, val}, acc ->
-        acc
-        |> Map.put(key, val)
-    end)
-  end
-
-  def list_schemas_to_map(list) do
-    Enum.map(list, fn x -> schema_to_map(x) end)
-  end
-
-  def random_date, do: DateTime.to_iso8601(DateTime.utc_now())
 end

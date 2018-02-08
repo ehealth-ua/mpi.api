@@ -348,11 +348,15 @@ defmodule MPI.Web.PersonControllerTest do
     insert(:person, person_data)
     insert(:person, person_data)
 
-    link = "/persons/?first_name=#{person.first_name}&last_name=#{person.last_name}&birth_date=#{person.birth_date}"
+    payload = %{
+      first_name: person.first_name,
+      last_name: person.last_name,
+      birth_date: person.birth_date
+    }
 
     error =
       conn
-      |> get(link)
+      |> get(person_path(conn, :index), payload)
       |> json_response(403)
       |> Map.fetch!("error")
 
