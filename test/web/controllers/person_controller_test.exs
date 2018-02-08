@@ -301,14 +301,15 @@ defmodule MPI.Web.PersonControllerTest do
 
     link = "/persons/?first_name=#{person.first_name}&last_name=#{person.last_name}&birth_date=#{person.birth_date}"
 
-    res =
+    data =
       conn
       |> get(link)
       |> json_response(200)
+      |> Map.get("data")
+      |> assert_person_search()
 
-    assert_person_search(res["data"])
     person_first_response = Map.take(person_response, required_fields)
-    assert [person_first_response] == res["data"]
+    assert [person_first_response] == data
 
     res =
       conn
@@ -330,12 +331,11 @@ defmodule MPI.Web.PersonControllerTest do
     person_third_response = Map.take(person_response, required_fields ++ ["phone_number"])
     assert [person_third_response] == res["data"]
 
-    res =
-      conn
-      |> get("#{link}&second_name=#{person.second_name}&tax_id=not_found")
-      |> json_response(200)
-
-    assert [] = res["data"]
+    assert [] =
+             conn
+             |> get("#{link}&second_name=#{person.second_name}&tax_id=not_found")
+             |> json_response(200)
+             |> Map.get("data")
 
     conn
     |> get("#{link}&phone_number=<>''''")
@@ -422,6 +422,7 @@ defmodule MPI.Web.PersonControllerTest do
              "gender" => _,
              "inserted_at" => _,
              "inserted_by" => _,
+             "invalid_tax_id" => _,
              "is_active" => true,
              "birth_date" => _,
              "national_id" => _,
@@ -456,5 +457,7 @@ defmodule MPI.Web.PersonControllerTest do
                "birth_date" => _
              } = person
     end)
+
+    data
   end
 end

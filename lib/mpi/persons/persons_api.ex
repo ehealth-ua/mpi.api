@@ -4,7 +4,7 @@ defmodule MPI.Persons.PersonsAPI do
   import Ecto.{Changeset, Query}
   alias MPI.{Repo, Person}
 
-  @inactive_statuses ["INACTIVE", "MERGED"]
+  @inactive_statuses ~w(INACTIVE MERGED)
   @allowed_search_types ~w(tax_id passport national_id birth_certificate temporary_certificate)
 
   def changeset(:internal, params) do
@@ -45,7 +45,7 @@ defmodule MPI.Persons.PersonsAPI do
     |> get_query(all)
   end
 
-  def get_query(%{type: type} = changes, all) do
+  def get_query(%{type: _type} = changes, all) do
     changes
     |> Map.drop(~w(type number)a)
     |> get_query(all)
