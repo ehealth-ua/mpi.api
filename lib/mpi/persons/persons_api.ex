@@ -5,7 +5,6 @@ defmodule MPI.Persons.PersonsAPI do
   alias MPI.{Repo, Person}
 
   @inactive_statuses ~w(INACTIVE MERGED)
-  @allowed_search_types ~w(tax_id passport national_id birth_certificate temporary_certificate)
 
   def changeset(:internal, params) do
     types = %{type: :string, number: :string}
@@ -13,7 +12,6 @@ defmodule MPI.Persons.PersonsAPI do
     {%{}, types}
     |> cast(params, Map.keys(types))
     |> validate_required(Map.keys(types))
-    |> validate_inclusion(:type, @allowed_search_types)
   end
 
   def changeset(struct, params) do

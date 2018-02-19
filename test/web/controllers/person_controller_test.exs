@@ -407,12 +407,6 @@ defmodule MPI.Web.PersonControllerTest do
       |> get(person_path(conn, :internal), tax_id: "000112")
       |> json_response(422)
     end
-
-    test "type no allowed", %{conn: conn} do
-      conn
-      |> get(person_path(conn, :internal), type: "edrpou", number: "100200")
-      |> json_response(422)
-    end
   end
 
   defp assert_person(data) do
