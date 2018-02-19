@@ -1,0 +1,10 @@
+Change log for versions 1.61.0 - 1.61.4
+
+**Patches and bug fixes**:
+
+- fix doc search (#67)
+- fix doc search
+- case insensitive search for doc type
+- case insensitive search for doc type
+
+
