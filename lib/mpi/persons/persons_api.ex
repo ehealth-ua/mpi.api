@@ -43,11 +43,13 @@ defmodule MPI.Persons.PersonsAPI do
     |> get_query(all)
   end
 
-  def get_query(%{type: _type} = changes, all) do
+  def get_query(%{type: type} = changes, all) do
+    type = String.upcase(type)
+
     changes
     |> Map.drop(~w(type number)a)
     |> get_query(all)
-    |> where([p], fragment("? @> ?", p.documents, ~s/[{"number":"#{changes.number}"}]/))
+    |> where([p], fragment("? @> ?", p.documents, ~s/[{"type":"#{type}","number":"#{changes.number}"}]/))
   end
 
   def get_query(%{phone_number: phone_number} = changes, all) do

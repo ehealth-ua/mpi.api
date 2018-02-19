@@ -391,7 +391,8 @@ defmodule MPI.Web.PersonControllerTest do
     end
 
     test "search by birth_certificate", %{conn: conn} do
-      %{id: id} = insert(:person, documents: [%{"type" => "temporary_certificate", "number" => "OOias2"}])
+      insert(:person, documents: [%{"type" => "birth_certificate", "number" => "OOias2"}])
+      %{id: id} = insert(:person, documents: [%{"type" => "TEMPORARY_CERTIFICATE", "number" => "OOias2"}])
 
       [person] =
         conn
