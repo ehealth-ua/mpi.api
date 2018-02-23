@@ -2,17 +2,14 @@ defmodule MPI.Persons.PersonsAPI do
   @moduledoc false
 
   import Ecto.{Changeset, Query}
-  alias MPI.{Repo, Person}
+  alias Ecto.Changeset
+  alias MPI.Person
+  alias MPI.Persons.Search.Public
+  alias MPI.Persons.Search.Admin
+  alias MPI.Repo
+  alias Scrivener.Page
 
   @inactive_statuses ~w(INACTIVE MERGED)
-
-  def changeset(:internal, params) do
-    types = %{type: :string, number: :string}
-
-    {%{}, types}
-    |> cast(params, Map.keys(types))
-    |> validate_required(Map.keys(types))
-  end
 
   def changeset(struct, params) do
     struct
@@ -20,30 +17,77 @@ defmodule MPI.Persons.PersonsAPI do
     |> validate_required(Person.fields_required())
   end
 
-  def search(%Ecto.Changeset{changes: parameters}, params, all \\ false) do
+  def create(params, consumer_id) do
+    search_params = Map.take(params, ~w(last_name first_name birth_date tax_id second_name))
+
+    case search(search_params, :public) do
+      %{paging: %Page{entries: [person]}} ->
+        with %Changeset{valid?: true} = changeset <- changeset(person, params) do
+          {:ok, Repo.update_and_log(changeset, consumer_id)}
+        end
+
+      # https://edenlab.atlassian.net/wiki/display/EH/Private.Create+or+update+Person
+      %{paging: %Page{}} ->
+        with %Changeset{valid?: true} = changeset <- changeset(%Person{}, params) do
+          {:created, Repo.insert_and_log(changeset, consumer_id)}
+        end
+
+      error ->
+        error
+    end
+  end
+
+  @doc """
+  Default search, used for public persons search
+  """
+  def search(params, :public) do
+    with %Changeset{valid?: true, changes: changes} <- Public.changeset(params) do
+      %{changes: changes, paging: do_search(changes, params, false)}
+    end
+  end
+
+  @doc """
+  Used for preload persons search, doesn't filter by status or is_active fields
+  """
+  def search(params, :public_all) do
+    with %Changeset{valid?: true, changes: changes} <- Public.changeset(params) do
+      %{changes: changes, paging: do_search(changes, params, true)}
+    end
+  end
+
+  @doc """
+  Admin search, allows to search by tax_id or national_id
+  """
+  def search(params, :admin) do
+    with %Changeset{valid?: true, changes: changes} <- Admin.changeset(params) do
+      %{changes: changes, paging: do_search(changes, params)}
+    end
+  end
+
+  defp do_search(changes, params, all) do
     params = Map.merge(%{"page_size" => Confex.get_env(:mpi, :max_persons_result)}, params)
 
-    parameters
+    changes
     |> prepare_ids()
     |> prepare_case_insensitive_fields()
     |> get_query(all)
     |> Repo.paginate(params)
   end
 
-  def search_internal(%Ecto.Changeset{valid?: true, changes: changes}, params) do
+  defp do_search(changes, params) do
     changes
     |> get_query(false)
     |> Repo.paginate(params)
   end
 
-  def get_query(%{type: type, number: number} = changes, all) when type in ~w(tax_id national_id) do
+  defp get_query(%{type: type, number: number} = changes, all) when type in ~w(tax_id national_id) do
     changes
     |> Map.drop(~w(type number)a)
     |> Map.put(String.to_atom(type), number)
     |> get_query(all)
   end
 
-  def get_query(%{type: type} = changes, all) do
+  defp get_query(%{type: type} = changes, all) do
     type = String.upcase(type)
 
     changes
@@ -52,14 +96,14 @@ defmodule MPI.Persons.PersonsAPI do
     |> where([p], fragment("? @> ?", p.documents, ~s/[{"type":"#{type}","number":"#{changes.number}"}]/))
   end
 
-  def get_query(%{phone_number: phone_number} = changes, all) do
+  defp get_query(%{phone_number: phone_number} = changes, all) do
     changes
     |> Map.delete(:phone_number)
     |> get_query(all)
     |> where([p], fragment("? @> ?", p.phones, ~s/[{"type":"MOBILE","number":"#{phone_number}"}]/))
   end
 
-  def get_query(changes, all) do
+  defp get_query(changes, all) do
     params = Enum.filter(changes, fn {_key, value} -> !is_tuple(value) end)
 
     q =

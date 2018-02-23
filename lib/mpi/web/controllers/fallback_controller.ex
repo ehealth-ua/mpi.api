@@ -10,7 +10,7 @@ defmodule MPI.Web.FallbackController do
     |> render(EView.Views.Error, :"404")
   end
 
-  def call(conn, %Page{total_pages: pages}) when pages > 1 do
+  def call(conn, %{paging: %Page{total_pages: pages}}) when pages > 1 do
     forbidden_message =
       "This API method returns only exact match results, please retry with more specific search parameters"
 
@@ -25,7 +25,7 @@ defmodule MPI.Web.FallbackController do
     |> render(EView.Views.Error, :"404")
   end
 
-  def call(conn, %Ecto.Changeset{valid?: false, data: %MPI.Persons.PersonSearch{}} = changeset) do
+  def call(conn, %Ecto.Changeset{valid?: false, data: %MPI.Persons.Search.Public{}} = changeset) do
     conn
     |> put_status(:unprocessable_entity)
     |> render(EView.Views.ValidationError, :"422.query", changeset)

@@ -4,7 +4,6 @@ defmodule MPI.Web.PersonController do
   alias MPI.Repo
   alias MPI.Person
   alias MPI.Persons.PersonsAPI
-  alias MPI.Persons.PersonSearch
   alias Ecto.Changeset
   alias Scrivener.Page
   alias MPI.ConnUtils
@@ -12,37 +11,34 @@ defmodule MPI.Web.PersonController do
   action_fallback(MPI.Web.FallbackController)
 
   def index(conn, params) do
-    with %Changeset{valid?: true} = changeset <- PersonSearch.changeset(params),
-         %Page{total_pages: 1} = paging <- PersonsAPI.search(changeset, params) do
+    with %{changes: changes, paging: %Page{total_pages: 1} = paging} <- PersonsAPI.search(params, :public) do
       conn
       |> put_status(:ok)
       |> render("persons.json", %{
         persons: paging.entries,
         paging: paging,
-        search_params: changeset.changes
+        search_params: changes
       })
     end
   end
 
   def all(conn, params) do
-    with %Changeset{valid?: true} = changeset <- PersonSearch.changeset(params),
-         %Page{total_pages: 1} = paging <- PersonsAPI.search(changeset, params, true) do
+    with %{changes: changes, paging: %Page{total_pages: 1} = paging} <- PersonsAPI.search(params, :public_all) do
       conn
       |> put_status(:ok)
       |> render("persons.json", %{
         persons: paging.entries,
         paging: paging,
-        search_params: changeset.changes
+        search_params: changes
       })
     end
   end
 
   def internal(conn, params) do
-    with %Ecto.Changeset{valid?: true} = changeset <- PersonsAPI.changeset(:internal, params),
-         %Page{} = paging <- PersonsAPI.search_internal(changeset, params) do
+    with %{changes: changes, paging: %Page{} = paging} <- PersonsAPI.search(params, :admin) do
       conn
       |> put_status(:ok)
-      |> render("persons.json", %{persons: paging.entries, paging: paging, search_params: changeset.changes})
+      |> render("persons.json", %{persons: paging.entries, paging: paging, search_params: changes})
     end
   end
 
@@ -55,10 +51,10 @@ defmodule MPI.Web.PersonController do
   end
 
   def create(conn, params) do
-    with search_params <- Map.take(params, ["last_name", "first_name", "birth_date", "tax_id", "second_name"]),
-         %Changeset{valid?: true} = changeset <- PersonSearch.changeset(search_params),
-         %Page{} = paging <- PersonsAPI.search(changeset, params) do
-      create_person_strategy(paging, conn, params)
+    with {status, {:ok, %Person{} = person}} <- PersonsAPI.create(params, ConnUtils.get_consumer_id(conn)) do
+      conn
+      |> put_status(status)
+      |> render("person.json", %{person: person})
     end
   end
 
@@ -86,28 +82,6 @@ defmodule MPI.Web.PersonController do
     else
       %Person{} -> {:error, {:conflict, "Invalid status MPI for this action"}}
       err -> err
-    end
-  end
-
-  defp create_person_strategy(%Page{entries: [person]}, conn, params) do
-    with %Changeset{valid?: true} = changeset <- PersonsAPI.changeset(person, params),
-         consumer_id = ConnUtils.get_consumer_id(conn),
-         {:ok, %Person{} = updated_person} <- Repo.update_and_log(changeset, consumer_id) do
-      conn
-      |> put_status(:ok)
-      |> render("person.json", %{person: updated_person})
-    end
-  end
-
-  # Case: No records found or found more than one
-  # https://edenlab.atlassian.net/wiki/display/EH/Private.Create+or+update+Person
-  defp create_person_strategy(%Page{}, conn, params) do
-    with %Changeset{valid?: true} = changeset <- PersonsAPI.changeset(%Person{}, params),
-         consumer_id = ConnUtils.get_consumer_id(conn),
-         {:ok, person} <- Repo.insert_and_log(changeset, consumer_id) do
-      conn
-      |> put_status(:created)
-      |> render("person.json", %{person: person})
     end
   end
 
