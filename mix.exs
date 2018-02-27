@@ -1,7 +1,7 @@
 defmodule MPI.Mixfile do
   use Mix.Project
 
-  @version "1.61.6"
+  @version "1.61.7"
 
   def project do
     [
