@@ -1,4 +1,6 @@
 defmodule MPI.Web.PersonControllerTest do
+  @moduledoc false
+
   use MPI.Web.ConnCase
   import MPI.Factory
 
@@ -158,20 +160,6 @@ defmodule MPI.Web.PersonControllerTest do
     assert response == %{"type" => "not_found"}
   end
 
-  test "GET /persons/ SEARCH 422", %{conn: conn} do
-    error =
-      conn
-      |> get("/persons/")
-      |> json_response(422)
-      |> Map.fetch!("error")
-
-    assert error["type"] == "validation_failed"
-
-    Enum.each(error["invalid"], fn %{"entry_type" => entry_type} ->
-      assert entry_type == "query_parameter"
-    end)
-  end
-
   test "PATCH /persons/:id", %{conn: conn} do
     merged_id1 = "cbe38ac6-a258-4b5d-b684-db53a4f54192"
     merged_id2 = "1190cd3a-18f0-4e0a-98d6-186cd6da145c"
@@ -205,56 +193,7 @@ defmodule MPI.Web.PersonControllerTest do
     end)
   end
 
-  test "GET /all-persons SEARCH", %{conn: conn} do
-    person = insert(:person, is_active: false)
-
-    conn1 =
-      get(
-        conn,
-        person_path(
-          conn,
-          :all,
-          last_name: person.last_name,
-          second_name: person.second_name,
-          first_name: person.first_name,
-          birth_date: "1996-12-12"
-        )
-      )
-
-    data = json_response(conn1, 200)["data"]
-    assert 1 == length(data)
-    assert person.id == hd(data)["id"]
-
-    conn2 =
-      get(
-        conn,
-        person_path(
-          conn,
-          :index,
-          last_name: "last_name-0",
-          second_name: "second_name-0",
-          first_name: "first_name-0",
-          birth_date: "1996-12-12"
-        )
-      )
-
-    data = json_response(conn2, 200)["data"]
-    assert 0 == length(data)
-  end
-
-  test "GET /all-persons by ids", %{conn: conn} do
-    %{id: id1} = insert(:person, is_active: false)
-    %{id: id2} = insert(:person)
-    insert(:person)
-    conn1 = get(conn, person_path(conn, :all, ids: Enum.join([id1, id2], ",")))
-    data = json_response(conn1, 200)["data"]
-    assert 2 == length(data)
-    assert id1 == hd(data)["id"]
-    assert id2 == Enum.at(data, 1)["id"]
-  end
-
   test "GET /persons/ SEARCH by ids 200", %{conn: conn} do
-    insert(:person)
     %{id: id_1} = insert(:person)
     %{id: id_2} = insert(:person)
     %{id: id_3} = insert(:person, is_active: false)
@@ -263,7 +202,7 @@ defmodule MPI.Web.PersonControllerTest do
 
     ids = [id_1, id_2, id_3, id_4, id_5]
 
-    conn = get(conn, person_path(conn, :index, ids: Enum.join(ids, ","), limit: 3))
+    conn = get(conn, person_path(conn, :index, ids: Enum.join(ids, ","), status: "active", limit: 3))
     data = json_response(conn, 200)["data"]
     assert 2 == length(data)
 
@@ -283,7 +222,39 @@ defmodule MPI.Web.PersonControllerTest do
   test "GET /persons/ SEARCH 200", %{conn: conn} do
     person = insert(:person, phones: [build(:phone, type: "LANDLINE"), build(:phone, type: "MOBILE")])
 
-    required_fields = ~W(id history first_name last_name birth_date birth_country birth_settlement merged_ids)
+    search_params = %{
+      "first_name" => person.first_name,
+      "last_name" => person.last_name,
+      "birth_date" => to_string(person.birth_date)
+    }
+
+    data =
+      conn
+      |> get(person_path(conn, :index), search_params)
+      |> json_response(200)
+      |> Map.get("data")
+      |> assert_person_search()
+
+    assert 1 == Enum.count(data)
+    assert search_params == data |> hd |> Map.take(Map.keys(search_params))
+
+    search_params =
+      search_params
+      |> Map.put("second_name", String.upcase(person.second_name))
+      |> Map.put("tax_id", person.tax_id)
+
+    data =
+      conn
+      |> get(person_path(conn, :index), search_params)
+      |> json_response(200)
+      |> Map.get("data")
+      |> assert_person_search()
+
+    assert 1 == Enum.count(data)
+
+    assert Enum.into(search_params, %{}, fn {k, v} -> {k, String.downcase(v)} end) ==
+             data |> hd |> Map.take(Map.keys(search_params))
+
     # Getting mobile phone number because search uses just it
     phone_number =
       person
@@ -292,122 +263,31 @@ defmodule MPI.Web.PersonControllerTest do
       |> List.first()
       |> Map.fetch!(:number)
 
-    person_response =
-      person
-      |> Poison.encode!()
-      |> Poison.decode!()
-      |> Map.take(required_fields ++ ["second_name", "tax_id"])
-      |> Map.put("phone_number", phone_number)
-
-    link = "/persons/?first_name=#{person.first_name}&last_name=#{person.last_name}&birth_date=#{person.birth_date}"
+    phone_number = String.replace_prefix(phone_number, "+", "%2b")
+    search_params = Map.put(search_params, "phone_number", phone_number)
 
     data =
       conn
-      |> get(link)
+      |> get(person_path(conn, :index), search_params)
       |> json_response(200)
       |> Map.get("data")
       |> assert_person_search()
 
-    person_first_response = Map.take(person_response, required_fields)
-    assert [person_first_response] == data
+    assert 1 == Enum.count(data)
+    params = Map.delete(search_params, "phone_number")
+    assert Enum.into(params, %{}, fn {k, v} -> {k, String.downcase(v)} end) == data |> hd |> Map.take(Map.keys(params))
 
-    res =
-      conn
-      |> get("#{link}&second_name=#{String.upcase(person.second_name)}&tax_id=#{person.tax_id}")
-      |> json_response(200)
-
-    assert_person_search(res["data"])
-    person_second_response = Map.take(person_response, required_fields ++ ["second_name", "tax_id"])
-    assert [person_second_response] == res["data"]
-
-    phone_number = String.replace_prefix(phone_number, "+", "%2b")
-
-    res =
-      conn
-      |> get("#{link}&phone_number=#{phone_number}")
-      |> json_response(200)
-
-    assert_person_search(res["data"])
-    person_third_response = Map.take(person_response, required_fields ++ ["phone_number"])
-    assert [person_third_response] == res["data"]
+    search_params =
+      search_params
+      |> Map.put("second_name", person.second_name)
+      |> Map.put("tax_id", "not_found")
 
     assert [] =
              conn
-             |> get("#{link}&second_name=#{person.second_name}&tax_id=not_found")
+             |> get(person_path(conn, :index), search_params)
              |> json_response(200)
              |> Map.get("data")
-
-    conn
-    |> get("#{link}&phone_number=<>''''")
-    |> json_response(422)
-  end
-
-  test "GET /persons/ SEARCH 403", %{conn: conn} do
-    person = insert(:person)
-    person_data = [first_name: person.first_name, last_name: person.last_name, birth_date: person.birth_date]
-    insert(:person, person_data)
-    insert(:person, person_data)
-
-    payload = %{
-      first_name: person.first_name,
-      last_name: person.last_name,
-      birth_date: person.birth_date
-    }
-
-    error =
-      conn
-      |> get(person_path(conn, :index), payload)
-      |> json_response(403)
-      |> Map.fetch!("error")
-
-    assert %{
-             "type" => "forbidden",
-             "message" =>
-               "This API method returns only exact match results, " <>
-                 "please retry with more specific search parameters"
-           } = error
-  end
-
-  describe "GET /persons_internal" do
-    setup %{conn: conn} do
-      insert(:person, tax_id: "000111")
-      insert(:person, national_id: "ID200300")
-      insert(:person, documents: [%{"type" => "birth_certificate", "number" => "11/2222"}])
-      insert(:person, documents: [%{"type" => "temporary_certificate", "number" => "OOias"}])
-
-      %{conn: conn}
-    end
-
-    test "search by tax_id", %{conn: conn} do
-      %{id: id} = insert(:person, tax_id: "000112")
-
-      [person] =
-        conn
-        |> get(person_path(conn, :internal), type: "tax_id", number: "000112")
-        |> json_response(200)
-        |> Map.get("data")
-
-      assert id == person["id"]
-    end
-
-    test "search by birth_certificate", %{conn: conn} do
-      insert(:person, documents: [%{"type" => "birth_certificate", "number" => "OOias2"}])
-      %{id: id} = insert(:person, documents: [%{"type" => "TEMPORARY_CERTIFICATE", "number" => "OOias2"}])
-
-      [person] =
-        conn
-        |> get(person_path(conn, :internal), type: "temporary_certificate", number: "OOias2")
-        |> json_response(200)
-        |> Map.get("data")
-
-      assert id == person["id"]
-    end
-
-    test "invalid search param", %{conn: conn} do
-      conn
-      |> get(person_path(conn, :internal), tax_id: "000112")
-      |> json_response(422)
-    end
+             |> assert_person_search()
   end
 
   defp assert_person(data) do

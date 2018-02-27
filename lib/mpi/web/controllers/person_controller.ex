@@ -1,5 +1,6 @@
 defmodule MPI.Web.PersonController do
   @moduledoc false
+
   use MPI.Web, :controller
   alias MPI.Repo
   alias MPI.Person
@@ -11,34 +12,13 @@ defmodule MPI.Web.PersonController do
   action_fallback(MPI.Web.FallbackController)
 
   def index(conn, params) do
-    with %{changes: changes, paging: %Page{total_pages: 1} = paging} <- PersonsAPI.search(params, :public) do
+    with %Page{} = paging <- PersonsAPI.search(params) do
       conn
       |> put_status(:ok)
       |> render("persons.json", %{
         persons: paging.entries,
-        paging: paging,
-        search_params: changes
+        paging: paging
       })
-    end
-  end
-
-  def all(conn, params) do
-    with %{changes: changes, paging: %Page{total_pages: 1} = paging} <- PersonsAPI.search(params, :public_all) do
-      conn
-      |> put_status(:ok)
-      |> render("persons.json", %{
-        persons: paging.entries,
-        paging: paging,
-        search_params: changes
-      })
-    end
-  end
-
-  def internal(conn, params) do
-    with %{changes: changes, paging: %Page{} = paging} <- PersonsAPI.search(params, :admin) do
-      conn
-      |> put_status(:ok)
-      |> render("persons.json", %{persons: paging.entries, paging: paging, search_params: changes})
     end
   end
 

@@ -4,12 +4,8 @@ defmodule MPI.Persons.PersonsAPI do
   import Ecto.{Changeset, Query}
   alias Ecto.Changeset
   alias MPI.Person
-  alias MPI.Persons.Search.Public
-  alias MPI.Persons.Search.Admin
   alias MPI.Repo
   alias Scrivener.Page
-
-  @inactive_statuses ~w(INACTIVE MERGED)
 
   def changeset(struct, params) do
     struct
@@ -20,14 +16,14 @@ defmodule MPI.Persons.PersonsAPI do
   def create(params, consumer_id) do
     search_params = Map.take(params, ~w(last_name first_name birth_date tax_id second_name))
 
-    case search(search_params, :public) do
-      %{paging: %Page{entries: [person]}} ->
+    case search(search_params) do
+      %Page{entries: [person]} ->
         with %Changeset{valid?: true} = changeset <- changeset(person, params) do
           {:ok, Repo.update_and_log(changeset, consumer_id)}
         end
 
       # https://edenlab.atlassian.net/wiki/display/EH/Private.Create+or+update+Person
-      %{paging: %Page{}} ->
+      %Page{} ->
         with %Changeset{valid?: true} = changeset <- changeset(%Person{}, params) do
           {:created, Repo.insert_and_log(changeset, consumer_id)}
         end
@@ -37,119 +33,63 @@ defmodule MPI.Persons.PersonsAPI do
     end
   end
 
-  @doc """
-  Default search, used for public persons search
-  """
-  def search(params, :public) do
-    with %Changeset{valid?: true, changes: changes} <- Public.changeset(params) do
-      %{changes: changes, paging: do_search(changes, params, false)}
-    end
+  def search(params) do
+    paging_params = Map.merge(%{"page_size" => Confex.get_env(:mpi, :max_persons_result)}, params)
+
+    params =
+      params
+      |> Map.drop(~w(type birth_certificate phone_number ids first_name last_name second_name))
+      |> Map.take(Enum.map(Person.__schema__(:fields), &to_string(&1)))
+
+    Person
+    |> where([p], ^Enum.into(params, Keyword.new(), fn {k, v} -> {String.to_atom(k), v} end))
+    |> where([p], p.is_active)
+    |> with_names(Map.take(params, ~w(first_name last_name second_name)))
+    |> with_ids(Map.take(params, ~w(ids)))
+    |> with_type_number(Map.take(params, ~w(type number)))
+    |> with_birth_certificate(Map.take(params, ~w(birth_certificate)))
+    |> with_phone_number(Map.take(params, ~w(phone_number)))
+    |> Repo.paginate(paging_params)
   end
 
-  @doc """
-  Used for preload persons search, doesn't filter by status or is_active fields
-  """
-  def search(params, :public_all) do
-    with %Changeset{valid?: true, changes: changes} <- Public.changeset(params) do
-      %{changes: changes, paging: do_search(changes, params, true)}
-    end
+  defp with_type_number(query, %{"type" => type, "number" => number})
+       when type in ~w(tax_id national_id) and not is_nil(number) do
+    where(query, [p], field(p, ^type) == ^number)
   end
 
-  @doc """
-  Admin search, allows to search by tax_id or national_id
-  """
-  def search(params, :admin) do
-    with %Changeset{valid?: true, changes: changes} <- Admin.changeset(params) do
-      %{changes: changes, paging: do_search(changes, params)}
-    end
-  end
-
-  defp do_search(changes, params, all) do
-    params = Map.merge(%{"page_size" => Confex.get_env(:mpi, :max_persons_result)}, params)
-
-    changes
-    |> prepare_ids()
-    |> prepare_case_insensitive_fields()
-    |> get_query(all)
-    |> Repo.paginate(params)
-  end
-
-  defp do_search(changes, params) do
-    changes
-    |> get_query(false)
-    |> Repo.paginate(params)
-  end
-
-  defp get_query(%{type: type, number: number} = changes, all) when type in ~w(tax_id national_id) do
-    changes
-    |> Map.drop(~w(type number)a)
-    |> Map.put(String.to_atom(type), number)
-    |> get_query(all)
-  end
-
-  defp get_query(%{type: type} = changes, all) do
+  defp with_type_number(query, %{"type" => type, "number" => number}) when not is_nil(type) and not is_nil(number) do
     type = String.upcase(type)
 
-    changes
-    |> Map.drop(~w(type number)a)
-    |> get_query(all)
-    |> where([p], fragment("? @> ?", p.documents, ~s/[{"type":"#{type}","number":"#{changes.number}"}]/))
+    where(query, [p], fragment("? @> ?", p.documents, ~s/[{"type":"#{type}","number":"#{number}"}]/))
   end
 
-  defp get_query(%{phone_number: phone_number} = changes, all) do
-    changes
-    |> Map.delete(:phone_number)
-    |> get_query(all)
-    |> where([p], fragment("? @> ?", p.phones, ~s/[{"type":"MOBILE","number":"#{phone_number}"}]/))
+  defp with_type_number(query, _), do: query
+
+  defp with_phone_number(query, %{"phone_number" => phone_number}) do
+    where(query, [p], fragment("? @> ?", p.phones, ~s/[{"type":"MOBILE","number":"#{phone_number}"}]/))
   end
 
-  defp get_query(changes, all) do
-    params = Enum.filter(changes, fn {_key, value} -> !is_tuple(value) end)
+  defp with_phone_number(query, _), do: query
 
-    q =
-      Person
-      |> where([p], ^params)
-      |> add_is_active_query(all)
-      |> add_status_query(all)
+  defp with_birth_certificate(query, %{"birth_certificate" => birth_certificate}) when not is_nil(birth_certificate) do
+    where(
+      query,
+      [p],
+      fragment("? @> ?", p.documents, ~s/[{"type":"BIRTH_CERTIFICATE","number":"#{birth_certificate}"}]/)
+    )
+  end
 
-    Enum.reduce(changes, q, fn {key, val}, query ->
-      case val do
-        {value, :lower} -> where(query, [r], fragment("lower(?)", field(r, ^key)) == ^String.downcase(value))
-        {value, :like} -> where(query, [r], ilike(field(r, ^key), ^("%" <> value <> "%")))
-        {value, :in} -> where(query, [r], field(r, ^key) in ^value)
-        _ -> query
-      end
+  defp with_birth_certificate(query, _), do: query
+
+  defp with_names(query, params) do
+    Enum.reduce(params, query, fn {key, value} ->
+      where(query, [p], fragment("lower(?)", field(p, ^key)) == ^String.downcase(value))
     end)
   end
 
-  defp add_is_active_query(query, true), do: query
-  defp add_is_active_query(query, false), do: where(query, [p], p.is_active)
-
-  defp add_status_query(query, true), do: query
-  defp add_status_query(query, false), do: where(query, [p], p.status not in ^@inactive_statuses)
-
-  def prepare_ids(%{ids: _} = params) do
-    convert_comma_params_to_where_in_clause(params, :ids, :id)
+  defp with_ids(query, %{"ids" => ids}) do
+    where(query, [p], p.id in ^String.split(ids, ","))
   end
 
-  def prepare_ids(params), do: params
-
-  def convert_comma_params_to_where_in_clause(changes, param_name, db_field) do
-    changes
-    |> Map.put(db_field, {String.split(changes[param_name], ","), :in})
-    |> Map.delete(param_name)
-  end
-
-  def prepare_case_insensitive_fields(params) do
-    fields = [:first_name, :last_name, :second_name]
-
-    params
-    |> Enum.map(fn {k, v} ->
-      case k in fields do
-        true -> {k, {v, :lower}}
-        false -> {k, v}
-      end
-    end)
-    |> Enum.into(%{})
-  end
+  defp with_ids(query, _), do: query
 end

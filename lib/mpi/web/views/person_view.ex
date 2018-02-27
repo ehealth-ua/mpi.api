@@ -6,10 +6,8 @@ defmodule MPI.Web.PersonView do
     convert_merged_ids(person)
   end
 
-  def render("persons.json", %{persons: persons, search_params: %{ids: _}}) do
-    Enum.map(persons, fn person ->
-      Map.take(person, ~W(id first_name last_name second_name)a)
-    end)
+  def render("persons.json", %{persons: persons}) do
+    render_many(persons, __MODULE__, "person.json", as: :person)
   end
 
   def render("persons.json", %{persons: persons, search_params: search_params}) do
