@@ -263,7 +263,6 @@ defmodule MPI.Web.PersonControllerTest do
       |> List.first()
       |> Map.fetch!(:number)
 
-    phone_number = String.replace_prefix(phone_number, "+", "%2b")
     search_params = Map.put(search_params, "phone_number", phone_number)
 
     data =

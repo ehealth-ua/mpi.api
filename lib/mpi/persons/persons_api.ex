@@ -36,13 +36,13 @@ defmodule MPI.Persons.PersonsAPI do
   def search(params) do
     paging_params = Map.merge(%{"page_size" => Confex.get_env(:mpi, :max_persons_result)}, params)
 
-    params =
+    direct_params =
       params
       |> Map.drop(~w(type birth_certificate phone_number ids first_name last_name second_name))
       |> Map.take(Enum.map(Person.__schema__(:fields), &to_string(&1)))
 
     Person
-    |> where([p], ^Enum.into(params, Keyword.new(), fn {k, v} -> {String.to_atom(k), v} end))
+    |> where([p], ^Enum.into(direct_params, Keyword.new(), fn {k, v} -> {String.to_atom(k), v} end))
     |> where([p], p.is_active)
     |> with_names(Map.take(params, ~w(first_name last_name second_name)))
     |> with_ids(Map.take(params, ~w(ids)))
@@ -82,12 +82,12 @@ defmodule MPI.Persons.PersonsAPI do
   defp with_birth_certificate(query, _), do: query
 
   defp with_names(query, params) do
-    Enum.reduce(params, query, fn {key, value} ->
-      where(query, [p], fragment("lower(?)", field(p, ^key)) == ^String.downcase(value))
+    Enum.reduce(params, query, fn {key, value}, query ->
+      where(query, [p], fragment("lower(?)", field(p, ^String.to_atom(key))) == ^String.downcase(value))
     end)
   end
 
-  defp with_ids(query, %{"ids" => ids}) do
+  defp with_ids(query, %{"ids" => ids}) when ids != "" do
     where(query, [p], p.id in ^String.split(ids, ","))
   end
 
