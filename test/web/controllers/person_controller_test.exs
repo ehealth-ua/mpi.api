@@ -52,36 +52,57 @@ defmodule MPI.Web.PersonControllerTest do
     assert_person(res["data"])
   end
 
-  test "Create or update Person", %{conn: conn} do
-    person_data = :person |> build() |> Map.from_struct()
+  describe "create or update person" do
+    test "success create and update person", %{conn: conn} do
+      person_data =
+        :person
+        |> build()
+        |> Map.from_struct()
+        |> Map.put(:first_name, "test1")
 
-    person_created =
-      conn
-      |> post("/persons/", person_data)
-      |> json_response(201)
+      person_created =
+        conn
+        |> post("/persons/", person_data)
+        |> json_response(201)
 
-    assert_person(person_created["data"])
+      assert_person(person_created["data"])
 
-    person_data =
-      person_data
-      |> Map.put(:birth_country, "some-changed-birth-country")
-      |> Map.put(:phones, [%{"type" => "MOBILE", "number" => "+38#{Enum.random(1_000_000_000..9_999_999_999)}"}])
+      person_data =
+        person_data
+        |> Map.put(:birth_country, "some-changed-birth-country")
+        |> Map.put(:phones, [%{"type" => "MOBILE", "number" => "+38#{Enum.random(1_000_000_000..9_999_999_999)}"}])
+        |> Map.put(:id, person_created["data"]["id"])
 
-    res =
-      conn
-      |> post("/persons/", person_data)
-      |> json_response(200)
+      res =
+        conn
+        |> post("/persons/", person_data)
+        |> json_response(200)
 
-    assert_person(res["data"])
+      assert_person(res["data"])
 
-    res =
-      conn
-      |> get("/persons/#{person_created["data"]["id"]}")
-      |> json_response(200)
+      res =
+        conn
+        |> get("/persons/#{person_created["data"]["id"]}")
+        |> json_response(200)
 
-    assert res["data"]
+      assert res["data"]
 
-    assert res["data"]["birth_country"] == "some-changed-birth-country"
+      assert res["data"]["birth_country"] == "some-changed-birth-country"
+    end
+
+    test "person not found", %{conn: conn} do
+      assert conn
+             |> post("/persons/", %{"id" => Ecto.UUID.generate()})
+             |> json_response(404)
+    end
+
+    test "person is not active", %{conn: conn} do
+      person = insert(:person, is_active: false)
+
+      assert conn
+             |> post("/persons/", %{"id" => person.id})
+             |> json_response(409)
+    end
   end
 
   test "POST /persons/ 422", %{conn: conn} do

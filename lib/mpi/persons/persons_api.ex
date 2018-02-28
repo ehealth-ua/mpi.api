@@ -5,7 +5,6 @@ defmodule MPI.Persons.PersonsAPI do
   alias Ecto.Changeset
   alias MPI.Person
   alias MPI.Repo
-  alias Scrivener.Page
 
   def changeset(struct, params) do
     struct
@@ -13,23 +12,19 @@ defmodule MPI.Persons.PersonsAPI do
     |> validate_required(Person.fields_required())
   end
 
+  def create(%{"id" => id} = params, consumer_id) when is_binary(id) do
+    with %Person{is_active: true} = person <- Repo.get(Person, id),
+         %Changeset{valid?: true} = changeset <- changeset(person, Map.delete(params, "id")) do
+      {:ok, Repo.update_and_log(changeset, consumer_id)}
+    else
+      %Person{is_active: false} -> {:error, {:conflict, "person is not active"}}
+      error -> error
+    end
+  end
+
   def create(params, consumer_id) do
-    search_params = Map.take(params, ~w(last_name first_name birth_date tax_id second_name))
-
-    case search(search_params) do
-      %Page{entries: [person]} ->
-        with %Changeset{valid?: true} = changeset <- changeset(person, params) do
-          {:ok, Repo.update_and_log(changeset, consumer_id)}
-        end
-
-      # https://edenlab.atlassian.net/wiki/display/EH/Private.Create+or+update+Person
-      %Page{} ->
-        with %Changeset{valid?: true} = changeset <- changeset(%Person{}, params) do
-          {:created, Repo.insert_and_log(changeset, consumer_id)}
-        end
-
-      error ->
-        error
+    with %Changeset{valid?: true} = changeset <- changeset(%Person{}, params) do
+      {:created, Repo.insert_and_log(changeset, consumer_id)}
     end
   end
 
