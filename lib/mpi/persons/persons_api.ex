@@ -13,11 +13,12 @@ defmodule MPI.Persons.PersonsAPI do
   end
 
   def create(%{"id" => id} = params, consumer_id) when is_binary(id) do
-    with %Person{is_active: true} = person <- Repo.get(Person, id),
+    with %Person{is_active: true, status: "active"} = person <- Repo.get(Person, id),
          %Changeset{valid?: true} = changeset <- changeset(person, Map.delete(params, "id")) do
       {:ok, Repo.update_and_log(changeset, consumer_id)}
     else
       %Person{is_active: false} -> {:error, {:conflict, "person is not active"}}
+      %Person{status: _} -> {:error, {:conflict, "person is not active"}}
       error -> error
     end
   end
