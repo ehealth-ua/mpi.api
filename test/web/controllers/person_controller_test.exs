@@ -214,6 +214,29 @@ defmodule MPI.Web.PersonControllerTest do
     end)
   end
 
+  test "GET /persons/ SEARCH by tax_id 200", %{conn: conn} do
+    person = insert(:person)
+    tax_id = person.tax_id
+
+    conn =
+      get(
+        conn,
+        person_path(
+          conn,
+          :index,
+          number: tax_id,
+          type: "tax_id"
+        )
+      )
+
+    data = json_response(conn, 200)["data"]
+    assert 1 == length(data)
+
+    Enum.each(data, fn person ->
+      assert tax_id == person["tax_id"]
+    end)
+  end
+
   test "GET /persons/ SEARCH by ids 200", %{conn: conn} do
     %{id: id_1} = insert(:person)
     %{id: id_2} = insert(:person)

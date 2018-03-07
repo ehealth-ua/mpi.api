@@ -50,7 +50,7 @@ defmodule MPI.Persons.PersonsAPI do
 
   defp with_type_number(query, %{"type" => type, "number" => number})
        when type in ~w(tax_id national_id) and not is_nil(number) do
-    where(query, [p], field(p, ^type) == ^number)
+    where(query, [p], field(p, ^String.to_atom(type)) == ^number)
   end
 
   defp with_type_number(query, %{"type" => type, "number" => number}) when not is_nil(type) and not is_nil(number) do
