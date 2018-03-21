@@ -1,7 +1,13 @@
 {
   "skip_files": [
     "test/*",
-    "/lib/mpi/tasks.ex"
+    "lib/mpi/tasks.ex",
+    "lib/mpi/application.ex",
+    "lib/mpi/repo.ex",
+    "lib/mpi/web/web.ex",
+    "lib/mpi/web/router.ex",
+    "lib/mpi/web/endpoint.ex",
+    "lib/mpi/deduplication/scheduler.ex"
   ],
   "custom_stop_words": [
     "field",

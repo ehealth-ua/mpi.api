@@ -3,13 +3,7 @@ defmodule MPI.Web.FallbackController do
 
   use MPI.Web, :controller
 
-  def call(conn, nil) do
-    conn
-    |> put_status(:not_found)
-    |> render(EView.Views.Error, :"404")
-  end
-
-  def call(conn, []) do
+  def call(conn, params) when is_nil(params) or params === [] do
     conn
     |> put_status(:not_found)
     |> render(EView.Views.Error, :"404")

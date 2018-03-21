@@ -11,6 +11,8 @@ defmodule MPI.Web.PersonController do
 
   action_fallback(MPI.Web.FallbackController)
 
+  @person_status_active Person.status(:active)
+
   def index(conn, params) do
     with %Page{} = paging <- PersonsAPI.search(params) do
       conn
@@ -52,7 +54,7 @@ defmodule MPI.Web.PersonController do
   def reset_auth_method(conn, %{"id" => id}) do
     params = %{"authentication_methods" => [%{"type" => "NA"}]}
 
-    with %Person{status: "active"} = person <- Repo.get(Person, id),
+    with %Person{status: @person_status_active} = person <- Repo.get(Person, id),
          %Changeset{valid?: true} = changeset <- PersonsAPI.changeset(person, params),
          consumer_id = ConnUtils.get_consumer_id(conn),
          {:ok, %Person{} = person} <- Repo.update_and_log(changeset, consumer_id) do

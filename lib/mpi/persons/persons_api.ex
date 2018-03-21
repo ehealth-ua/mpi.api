@@ -6,6 +6,8 @@ defmodule MPI.Persons.PersonsAPI do
   alias MPI.Person
   alias MPI.Repo
 
+  @person_status_active Person.status(:active)
+
   def changeset(struct, params) do
     struct
     |> cast(params, Person.fields())
@@ -13,7 +15,7 @@ defmodule MPI.Persons.PersonsAPI do
   end
 
   def create(%{"id" => id} = params, consumer_id) when is_binary(id) do
-    with %Person{is_active: true, status: "active"} = person <- Repo.get(Person, id),
+    with %Person{is_active: true, status: @person_status_active} = person <- Repo.get(Person, id),
          %Changeset{valid?: true} = changeset <- changeset(person, Map.delete(params, "id")) do
       {:ok, Repo.update_and_log(changeset, consumer_id)}
     else

@@ -1,9 +1,11 @@
 defmodule MPI.Deduplication.Match do
   @moduledoc false
 
-  require Logger
+  use Confex, otp_app: :mpi
 
+  require Logger
   import Ecto.Query
+  import MPI.AuditLogs, only: [create_audit_logs: 1]
 
   alias MPI.Repo
   alias MPI.Person
@@ -11,9 +13,8 @@ defmodule MPI.Deduplication.Match do
   alias Ecto.UUID
   alias Confex.Resolver
   alias Ecto.Multi
-  import MPI.AuditLogs, only: [create_audit_logs: 1]
 
-  use Confex, otp_app: :mpi
+  @person_status_inactive Person.status(:inactive)
 
   def run do
     Logger.info("Starting to look for duplicates...")
@@ -80,7 +81,7 @@ defmodule MPI.Deduplication.Match do
       {:ok, _} =
         Multi.new()
         |> Multi.insert_all(:insert_candidates, MergeCandidate, merge_candidates, returning: true)
-        |> Multi.update_all(:update_stale_persons, stale_persons_query, set: [status: "inactive"])
+        |> Multi.update_all(:update_stale_persons, stale_persons_query, set: [status: @person_status_inactive])
         |> Multi.run(:log_inserts, &log_insert(&1.insert_candidates, system_user_id))
         |> Repo.transaction()
 

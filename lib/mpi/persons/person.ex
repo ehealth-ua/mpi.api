@@ -2,6 +2,9 @@ defmodule MPI.Person do
   @moduledoc false
   use Ecto.Schema
 
+  @status_active "active"
+  @status_inactive "inactive"
+
   @primary_key {:id, Ecto.UUID, autogenerate: true}
   @derive {Poison.Encoder, except: [:__meta__]}
   schema "persons" do
@@ -28,7 +31,7 @@ defmodule MPI.Person do
     field(:confidant_person, {:array, :map})
     field(:patient_signed, :boolean)
     field(:process_disclosure_data_consent, :boolean)
-    field(:status, :string, default: "active")
+    field(:status, :string, default: @status_active)
     field(:inserted_by, :string, default: "default")
     field(:updated_by, :string, default: "default")
     field(:authentication_methods, {:array, :map})
@@ -36,6 +39,9 @@ defmodule MPI.Person do
 
     timestamps(type: :utc_datetime)
   end
+
+  def status(:active), do: @status_active
+  def status(:inactive), do: @status_inactive
 
   @fields ~W(
     version

@@ -5,6 +5,8 @@ defmodule MPI.Factory do
   """
   use ExMachina.Ecto, repo: MPI.Repo
 
+  @person_status_active MPI.Person.status(:active)
+
   def merge_candidate_factory do
     %MPI.MergeCandidate{
       status: "NEW",
@@ -38,7 +40,7 @@ defmodule MPI.Factory do
       confidant_person: build_list(1, :confidant_person),
       patient_signed: true,
       process_disclosure_data_consent: true,
-      status: "active",
+      status: @person_status_active,
       inserted_by: Ecto.UUID.generate(),
       updated_by: Ecto.UUID.generate(),
       authentication_methods: build_list(2, :authentication_method),
