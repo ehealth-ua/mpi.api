@@ -1,7 +1,10 @@
-Change log for versions 1.61.0 - 1.61.10
+Change log for versions 1.61.0 - 1.61.13
 
 **Patches and bug fixes**:
 
+#1968 Improve code coverage (#74)
+Update test data
+Fix code style according formatter
 fix tax_id/national_id search (#73)
 fix active person check (#72)
 get or update person by id (#71)
@@ -13,4 +16,10 @@ refactor persons search (#68)
 - case insensitive search for doc type
 - case insensitive search for doc type
 
+**Other**:
 
+Remove unused code
+Add statuses to person schema and update code accordingly
+Improve coveralls:
+- update person api tests
+- add files to coveralls ignore
