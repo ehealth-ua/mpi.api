@@ -52,7 +52,8 @@ defmodule MPI.Mixfile do
       {:ecto_logger_json, "~> 0.1"},
       {:excoveralls, ">= 0.0.0", only: [:dev, :test]},
       {:credo, ">= 0.0.0", only: [:dev, :test]},
-      {:ex_machina, ">= 1.0.0", only: [:test]}
+      {:ex_machina, ">= 1.0.0", only: [:test]},
+      {:mox, "~> 0.3", only: [:test]}
     ]
   end
 

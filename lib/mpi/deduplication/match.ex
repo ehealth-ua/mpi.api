@@ -14,6 +14,7 @@ defmodule MPI.Deduplication.Match do
   alias Confex.Resolver
   alias Ecto.Multi
 
+  @deduplication_client Application.get_env(:mpi, :deduplication_client)
   @person_status_inactive Person.status(:inactive)
 
   def run do
@@ -88,7 +89,7 @@ defmodule MPI.Deduplication.Match do
       Enum.each(config[:subscribers], fn subscriber ->
         url = Resolver.resolve!(subscriber)
 
-        HTTPoison.post!(url, "", [{"Content-Type", "application/json"}])
+        @deduplication_client.post!(url, "", [{"Content-Type", "application/json"}])
       end)
     else
       Logger.info("Found no duplicates.")

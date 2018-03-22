@@ -94,7 +94,7 @@ defmodule MPI.Factory do
 
   def document_factory do
     %{
-      type: Enum.random(["PASSPORT", "NATIONAL_ID"]),
+      type: Enum.random(["PASSPORT", "NATIONAL_ID", "BIRTH_CERTIFICATE"]),
       number: sequence(:document_number, &"document-number-#{&1}")
     }
   end

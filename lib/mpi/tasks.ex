@@ -9,7 +9,6 @@ defmodule :mpi_tasks do
 
   alias Ecto.Migrator
 
-  @priv_dir "priv"
   @repo MPI.Repo
 
   def migrate! do

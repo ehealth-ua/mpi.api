@@ -1,12 +1,17 @@
 defmodule MPI.Deduplication.MatchTest do
   use MPI.ModelCase, async: true
+  import Mox
 
   alias MPI.Repo
   alias MPI.Person
   alias MPI.MergeCandidate
-
   alias MPI.Deduplication.Match, as: Deduplication
   alias MPI.Factory
+
+  setup do
+    expect(DeduplicationClientMock, :post!, fn _url, _body, _headers -> %HTTPoison.Response{status_code: 200} end)
+    :ok
+  end
 
   describe "run/0" do
     test "subsequent runs skip found duplicates" do
@@ -35,6 +40,8 @@ defmodule MPI.Deduplication.MatchTest do
 
       Deduplication.run()
       assert 2 = Repo.one(from(mc in MergeCandidate, select: count(1)))
+
+      verify!(DeduplicationClientMock)
     end
 
     test "multiple diplicates of same records were created during depth window" do
@@ -74,6 +81,7 @@ defmodule MPI.Deduplication.MatchTest do
           )
 
         assert Repo.one(query)
+        verify!(DeduplicationClientMock)
       end)
     end
 
@@ -129,6 +137,7 @@ defmodule MPI.Deduplication.MatchTest do
       person2_dup = insert(person2_attrs_dup, %{inserted_at: within_hours(73)})
 
       Deduplication.run()
+      verify!(DeduplicationClientMock)
 
       valid_pairs = [
         [older: person1_dup, newer: person1],

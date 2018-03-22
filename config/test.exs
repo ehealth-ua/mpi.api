@@ -18,4 +18,7 @@ config :mpi, MPI.Repo,
   pool: Ecto.Adapters.SQL.Sandbox,
   database: "mpi_test"
 
-config :mpi, MPI.Deduplication.Match, subscribers: []
+config :mpi, MPI.Deduplication.Match,
+  subscribers: {:system, "DEDUPLICATION_SUBSCRIBERS_LIST", ["http://no-http-call-expected"]}
+
+config :mpi, :deduplication_client, DeduplicationClientMock

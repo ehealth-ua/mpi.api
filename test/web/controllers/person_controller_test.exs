@@ -169,16 +169,18 @@ defmodule MPI.Web.PersonControllerTest do
       |> patch("/persons/#{person.id}/actions/reset_auth_method")
       |> json_response(409)
     end
+
+    test "not found", %{conn: conn} do
+      conn
+      |> patch("/persons/9fa323da-37e1-4789-87f1-8776999d5196/actions/reset_auth_method")
+      |> assert_not_found()
+    end
   end
 
   test "PUT /persons/not_found", %{conn: conn} do
-    response =
-      conn
-      |> put("/persons/9fa323da-37e1-4789-87f1-8776999d5196", %{})
-      |> json_response(404)
-      |> Map.fetch!("error")
-
-    assert response == %{"type" => "not_found"}
+    conn
+    |> put("/persons/9fa323da-37e1-4789-87f1-8776999d5196", %{})
+    |> assert_not_found()
   end
 
   test "PATCH /persons/:id", %{conn: conn} do
@@ -371,14 +373,20 @@ defmodule MPI.Web.PersonControllerTest do
     assert is_list(data["merged_ids"])
   end
 
-  def assert_person_search(data) do
-    Enum.each(data, fn person ->
-      assert %{
-               "id" => _,
-               "birth_date" => _
-             } = person
-    end)
+  defp assert_person_search(data) do
+    for person <- data do
+      assert %{"id" => _, "birth_date" => _} = person
+    end
 
     data
+  end
+
+  defp assert_not_found(conn) do
+    response =
+      conn
+      |> json_response(404)
+      |> Map.fetch("error")
+
+    assert {:ok, %{"type" => "not_found"}} === response
   end
 end
