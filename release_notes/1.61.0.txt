@@ -1,7 +1,12 @@
-Change log for versions 1.61.0 - 1.61.13
+Change log for versions 1.61.0 - 1.61.18
 
 **Patches and bug fixes**:
 
+Update test data
+Fix code style according formatter
+Update coverage to 100
+Fix code style with formatter
+Add additional assertions to verify mock calls
 #1968 Improve code coverage (#74)
 Update test data
 Fix code style according formatter
@@ -18,6 +23,14 @@ refactor persons search (#68)
 
 **Other**:
 
+#1968 impove code coverage (#75)
+Remove unused code
+Add statuses to person schema and update code accordingly
+Improve coveralls:
+- update person api tests
+- add files to coveralls ignore
+- add mox: mock httposion in deduplication part
+- add tests to check search in person api
 Remove unused code
 Add statuses to person schema and update code accordingly
 Improve coveralls:
