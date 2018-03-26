@@ -4,5 +4,3 @@
 Ecto.Adapters.SQL.Sandbox.mode(MPI.Repo, :manual)
 
 ExUnit.start()
-
-Mox.defmock(DeduplicationClientMock, for: MPI.Deduplication.DeduplicationClientBehaviour)
