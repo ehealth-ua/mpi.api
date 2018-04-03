@@ -67,9 +67,6 @@ defmodule MPI.Web.PersonControllerTest do
 
       assert_person(person_created["data"])
 
-      alias MPI.Repo
-      alias MPI.Person
-
       response =
         conn
         |> post("/persons/", person_data)

@@ -72,10 +72,12 @@ defmodule MPI.Persons.PersonsAPI do
   defp with_phone_number(query, _), do: query
 
   defp with_birth_certificate(query, %{"birth_certificate" => birth_certificate}) when not is_nil(birth_certificate) do
+    data = String.replace(birth_certificate, "\\", "\\\\")
+
     where(
       query,
       [p],
-      fragment("? @> ?", p.documents, ~s/[{"type":"BIRTH_CERTIFICATE","number":"#{birth_certificate}"}]/)
+      fragment("? @> ?", p.documents, ~s/[{"type":"BIRTH_CERTIFICATE","number":"#{data}"}]/)
     )
   end
 

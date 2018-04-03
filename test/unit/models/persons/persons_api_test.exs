@@ -69,6 +69,24 @@ defmodule MPI.Persons.PersonTest do
     assert expected_entries_count === PersonsAPI.search(%{"birth_certificate" => nil}).total_entries
   end
 
+  test "searches with birth certificate escape" do
+    insert_person_test_data(%{
+      id: @test_person_id,
+      documents: [%{"type" => "BIRTH_CERTIFICATE", "number" => "1test\\1"}]
+    })
+
+    insert_person_test_data(%{id: @test_person_id2})
+
+    assert %Scrivener.Page{
+             entries: [
+               %Person{
+                 id: @test_person_id,
+                 documents: [%{"type" => "BIRTH_CERTIFICATE", "number" => "1test\\1"}]
+               }
+             ]
+           } = PersonsAPI.search(%{"birth_certificate" => "1test\\1"})
+  end
+
   test "searches with type and nubmer" do
     insert_person_test_data(%{
       id: @test_person_id,
