@@ -1,7 +1,8 @@
-Change log for versions 1.61.0 - 1.61.21
+Change log for versions 1.61.0 - 1.61.22
 
 **Patches and bug fixes**:
 
+fix search birth_certification with backslashes
 add person uniq constraint
 add persons search indexes (#78)
 Fix warnings with mock (#77)
