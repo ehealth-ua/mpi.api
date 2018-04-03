@@ -67,6 +67,32 @@ defmodule MPI.Web.PersonControllerTest do
 
       assert_person(person_created["data"])
 
+      alias MPI.Repo
+      alias MPI.Person
+
+      response =
+        conn
+        |> post("/persons/", person_data)
+        |> json_response(422)
+
+      assert %{
+               "error" => %{
+                 "invalid" => [
+                   %{
+                     "entry" => "$.last_name",
+                     "entry_type" => "json_data_property",
+                     "rules" => [
+                       %{
+                         "description" => "has already been taken",
+                         "params" => [],
+                         "rule" => nil
+                       }
+                     ]
+                   }
+                 ]
+               }
+             } = response
+
       person_data =
         person_data
         |> Map.put(:birth_country, "some-changed-birth-country")

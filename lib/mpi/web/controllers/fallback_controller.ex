@@ -15,6 +15,10 @@ defmodule MPI.Web.FallbackController do
     |> render(EView.Views.ValidationError, :"422", changeset)
   end
 
+  def call(conn, {:error, %Ecto.Changeset{valid?: false} = changeset}) do
+    call(conn, changeset)
+  end
+
   def call(conn, {:validation_error, validation_errors}) do
     conn
     |> put_status(:unprocessable_entity)

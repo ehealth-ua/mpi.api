@@ -12,6 +12,7 @@ defmodule MPI.Persons.PersonsAPI do
     struct
     |> cast(params, Person.fields())
     |> validate_required(Person.fields_required())
+    |> unique_constraint(:last_name, name: :persons_first_name_last_name_second_name_tax_id_birth_date_inde)
   end
 
   def create(%{"id" => id} = params, consumer_id) when is_binary(id) do
@@ -26,8 +27,9 @@ defmodule MPI.Persons.PersonsAPI do
   end
 
   def create(params, consumer_id) do
-    with %Changeset{valid?: true} = changeset <- changeset(%Person{}, params) do
-      {:created, Repo.insert_and_log(changeset, consumer_id)}
+    with %Changeset{valid?: true} = changeset <- changeset(%Person{}, params),
+         {:ok, person} <- Repo.insert_and_log(changeset, consumer_id) do
+      {:created, {:ok, person}}
     end
   end
 
