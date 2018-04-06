@@ -41,15 +41,20 @@ defmodule MPI.Persons.PersonsAPI do
       |> Map.drop(~w(type birth_certificate phone_number ids first_name last_name second_name))
       |> Map.take(Enum.map(Person.__schema__(:fields), &to_string(&1)))
 
-    Person
-    |> where([p], ^Enum.into(direct_params, Keyword.new(), fn {k, v} -> {String.to_atom(k), v} end))
-    |> where([p], p.is_active)
-    |> with_names(Map.take(params, ~w(first_name last_name second_name)))
-    |> with_ids(Map.take(params, ~w(ids)))
-    |> with_type_number(Map.take(params, ~w(type number)))
-    |> with_birth_certificate(Map.take(params, ~w(birth_certificate)))
-    |> with_phone_number(Map.take(params, ~w(phone_number)))
-    |> Repo.paginate(paging_params)
+    try do
+      Person
+      |> where([p], ^Enum.into(direct_params, Keyword.new(), fn {k, v} -> {String.to_atom(k), v} end))
+      |> where([p], p.is_active)
+      |> with_names(Map.take(params, ~w(first_name last_name second_name)))
+      |> with_ids(Map.take(params, ~w(ids)))
+      |> with_type_number(Map.take(params, ~w(type number)))
+      |> with_birth_certificate(Map.take(params, ~w(birth_certificate)))
+      |> with_phone_number(Map.take(params, ~w(phone_number)))
+      |> Repo.paginate(paging_params)
+    rescue
+      _ in Postgrex.Error ->
+        {:query_error, "invalid search characters"}
+    end
   end
 
   defp with_type_number(query, %{"type" => type, "number" => number})

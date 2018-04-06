@@ -239,6 +239,25 @@ defmodule MPI.Web.PersonControllerTest do
     end)
   end
 
+  test "GET /persons/ SEARCH by invalid characters 422", %{conn: conn} do
+    person = insert(:person, phones: nil)
+
+    conn =
+      get(
+        conn,
+        person_path(
+          conn,
+          :index,
+          birth_certificate: "АК \"27",
+          birth_date: to_string(person.birth_date)
+        )
+      )
+
+    assert %{
+             "error" => %{"error" => "invalid search characters"}
+           } = json_response(conn, 422)
+  end
+
   test "GET /persons/ SEARCH by tax_id 200", %{conn: conn} do
     person = insert(:person)
     tax_id = person.tax_id
