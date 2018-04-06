@@ -21,6 +21,15 @@ defmodule MPI.Web.PersonController do
         persons: paging.entries,
         paging: paging
       })
+    else
+      {:query_error, msg} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> put_resp_content_type("application/json")
+        |> send_resp(422, Poison.encode!(%{error: msg}))
+
+      error ->
+        error
     end
   end
 

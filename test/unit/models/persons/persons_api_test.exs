@@ -75,8 +75,6 @@ defmodule MPI.Persons.PersonTest do
       documents: [%{"type" => "BIRTH_CERTIFICATE", "number" => "1test\\1"}]
     })
 
-    insert_person_test_data(%{id: @test_person_id2})
-
     assert %Scrivener.Page{
              entries: [
                %Person{
@@ -85,6 +83,10 @@ defmodule MPI.Persons.PersonTest do
                }
              ]
            } = PersonsAPI.search(%{"birth_certificate" => "1test\\1"})
+  end
+
+  test "searches with birth certificate invalid search symbols" do
+    assert {:query_error, "invalid search characters"} == PersonsAPI.search(%{"birth_certificate" => "АК \"27"})
   end
 
   test "searches with type and nubmer" do
