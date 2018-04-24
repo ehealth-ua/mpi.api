@@ -51,6 +51,7 @@ defmodule MPI.Web.PersonController do
 
   def update(conn, %{"id" => id} = params) do
     with %Person{} = person <- Repo.get(Person, id),
+         :ok <- person_is_active(person),
          %Changeset{valid?: true} = changeset <- PersonsAPI.changeset(person, preprocess_params(person, params)),
          consumer_id = ConnUtils.get_consumer_id(conn),
          {:ok, %Person{} = person} <- Repo.update_and_log(changeset, consumer_id) do
@@ -59,6 +60,9 @@ defmodule MPI.Web.PersonController do
       |> render("person.json", %{person: person})
     end
   end
+
+  defp person_is_active(%Person{is_active: true}), do: :ok
+  defp person_is_active(_), do: {:error, {:"422", "Person is not active"}}
 
   def reset_auth_method(conn, %{"id" => id}) do
     params = %{"authentication_methods" => [%{"type" => "NA"}]}

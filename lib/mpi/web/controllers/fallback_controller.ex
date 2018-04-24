@@ -2,6 +2,7 @@ defmodule MPI.Web.FallbackController do
   @moduledoc false
 
   use MPI.Web, :controller
+  alias EView.Views.Error
 
   def call(conn, params) when is_nil(params) or params === [] do
     conn
@@ -17,6 +18,12 @@ defmodule MPI.Web.FallbackController do
 
   def call(conn, {:error, %Ecto.Changeset{valid?: false} = changeset}) do
     call(conn, changeset)
+  end
+
+  def call(conn, {:error, {:"422", error}}) do
+    conn
+    |> put_status(422)
+    |> render(Error, :"400", %{message: error})
   end
 
   def call(conn, {:validation_error, validation_errors}) do
