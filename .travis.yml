@@ -29,7 +29,7 @@ env:
     - MIX_ENV=test
     - REQUIRE_VERSION_TAGS="true"
     - DOCKER_HUB_ACCOUNT=edenlabllc
-    - TRUNK_BRANCH="preprod"
+    - TRUNK_BRANCH="master"
     # Docker Credentials
     - secure: "lNSOl7jubWCk2H7lgiTE5iII0LziJ8SuTZtUsSIJxZV0RtLZUmf5c7HmEeXCG8quotX53k0Mw8FDPF+Y+NuBJ4sCmP9u8MLLWmRWgUwwNRzADwjekGvKOvEcaZURXK7asUvt+Vbsd1VcmFyUvh870jHIsbXhh5L8KpDXpjSXeH/x9HORr+TwMPHxpMWH40DGHjd46cjSaU1h9f2PwHwjukZNDthHdk0SCbuJl0rxfUNpOCy9bD5lZAgd8vB6QITUShgkJfy7fb5zEH51DdF5ZUsl+lB1Zrgxbu1kX32pzX1yVwKDEcJgqc1h93WKQzcHRu2E5h6nVe6PHvSOi4SadZ1O/4sjj7FrbYDvpwHt2Tzd8pur+x6uvOgag2VwwVYnl9fclayJ7x2fJI0a5LihQD92GmGFabV8aUxIB97Yl8GcJPWqrlgzkogwelzb2fcSRbsv/Nyhdvw4qrM7DURx3oDVMmrsZYvGGoyKOY8GnqlOmcEtDUoxabMdenzW6/dhirHU1y8u1SPY1dUmbuk7Zwu66uIok1K0xDpoP/FgKATVHq0KYWSZfrf7XuzEeB9lGq29YG4lBVnatmiRoeiNNdprxy+aa0AxS4TqycrI0A3onMT1pr05gcRkfduBSI4tiRuxiL5odko5Qogxv//4py7iL6Ln4F3X/hlr9R2lCBg="
     # GitHub Credentials
