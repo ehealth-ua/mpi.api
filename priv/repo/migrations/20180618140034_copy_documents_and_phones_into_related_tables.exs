@@ -36,9 +36,9 @@ defmodule MPI.Repo.Migrations.CopyDocumentsAndPhonesIntoRelatedTables do
     Person
     |> select([:id, :inserted_at, :updated_at, :documents, :phones])
     |> join(:left, [p], d in PersonDocument, d.person_id == p.id)
-    |> where(fragment(" p1.person_id IS NULL and p0.updated_at >=
-    COALESCE((select max(updated_at) from person_documents), to_timestamp(0))"))
-    |> order_by(:updated_at)
+    |> where(fragment(" p1.person_id IS NULL and p0.inserted_at >=
+    COALESCE((select max(inserted_at) from person_documents), to_timestamp(0))"))
+    |> order_by(:inserted_at)
     |> limit(^limit)
     |> Repo.all()
     |> case do
@@ -51,19 +51,13 @@ defmodule MPI.Repo.Migrations.CopyDocumentsAndPhonesIntoRelatedTables do
     end
   end
 
-  @schemas [:person_documents, :person_phones, :persons]
-
   def up do
-    Enum.each(@schemas, fn shemaname -> create(index(shemaname, [:updated_at], concurrently: true)) end)
-
     limit = 2000
     chunk_persons_process(limit)
-
-    Enum.each(@schemas, fn shemaname -> drop(index(shemaname, [:updated_at], concurrently: true)) end)
   end
 
   def down do
-    Repo.truncate(PersonPhone)
-    Repo.truncate(PersonDocument)
+    # Repo.truncate(PersonPhone)
+    # Repo.truncate(PersonDocument)
   end
 end
