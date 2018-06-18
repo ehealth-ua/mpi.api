@@ -47,14 +47,21 @@ defmodule MPI.Repo.Migrations.CopyDocumentsAndPhonesIntoRelatedTables do
       persons ->
         Logger.info(fn -> "Run migration with offset: #{inspect(offset)}, limit #{inspect(limit)}" end)
         insert_fetched_attributes(persons)
-        chunk_persons_process(limit, offset + offset)
+        chunk_persons_process(limit, limit + offset)
+    end
+  end
+
+  defp get_current_offset() do
+    System.get_env("PERSON_MIGRATION_OFFSET")
+    |> case do
+      nil -> 0
+      offset -> offset
     end
   end
 
   def up do
     limit = 2000
-    offset = 0
-    chunk_persons_process(limit, offset)
+    offset = chunk_persons_process(limit, get_current_offset())
   end
 
   def down do
