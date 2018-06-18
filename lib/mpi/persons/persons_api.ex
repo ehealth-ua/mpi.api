@@ -3,7 +3,7 @@ defmodule MPI.Persons.PersonsAPI do
 
   import Ecto.{Changeset, Query}
   alias Ecto.Changeset
-  alias MPI.{Repo, Person, PersonDocument, PersonPhone}
+  alias MPI.{Repo, Person}
 
   @person_status_active Person.status(:active)
 
@@ -85,42 +85,25 @@ defmodule MPI.Persons.PersonsAPI do
 
   defp with_type_number(query, %{"type" => type, "number" => number}) when not is_nil(type) and not is_nil(number) do
     type = String.upcase(type)
-    join(query, :inner, [p], d in PersonDocument, d.person_id == p.id and d.type == ^type and d.number == ^number)
-    # where(query, [p], fragment("? @> ?", p.documents, ~s/[{"type":"#{type}","number":"#{number}"}]/))
+    where(query, [p], fragment("? @> ?", p.documents, ~s/[{"type":"#{type}","number":"#{number}"}]/))
   end
 
   defp with_type_number(query, _), do: query
 
   defp with_phone_number(query, %{"phone_number" => phone_number}) do
-    join(
-      query,
-      :inner,
-      [p],
-      ph in PersonPhone,
-      ph.person_id == p.id and ph.type == "MOBILE" and ph.number == ^phone_number
-    )
-
-    # where(query, [p], fragment("? @> ?", p.phones, ~s/[{"type":"MOBILE","number":"#{phone_number}"}]/))
+    where(query, [p], fragment("? @> ?", p.phones, ~s/[{"type":"MOBILE","number":"#{phone_number}"}]/))
   end
 
   defp with_phone_number(query, _), do: query
 
   defp with_birth_certificate(query, %{"birth_certificate" => birth_certificate}) when not is_nil(birth_certificate) do
-    join(
-      query,
-      :inner,
-      [p],
-      d in PersonDocument,
-      d.person_id == p.id and d.type == "BIRTH_CERTIFICATE" and d.number == ^birth_certificate
-    )
+    data = String.replace(birth_certificate, "\\", "\\\\")
 
-    # data = String.replace(birth_certificate, "\\", "\\\\")
-    #
-    # where(
-    #   query,
-    #   [p],
-    #   fragment("? @> ?", p.documents, ~s/[{"type":"BIRTH_CERTIFICATE","number":"#{data}"}]/)
-    # )
+    where(
+      query,
+      [p],
+      fragment("? @> ?", p.documents, ~s/[{"type":"BIRTH_CERTIFICATE","number":"#{data}"}]/)
+    )
   end
 
   defp with_birth_certificate(query, _), do: query
