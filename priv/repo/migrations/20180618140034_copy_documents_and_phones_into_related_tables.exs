@@ -10,9 +10,10 @@ defmodule MPI.Repo.Migrations.CopyDocumentsAndPhonesIntoRelatedTables do
   end
 
   defp insert_fetched_attributes([], acc_phones, acc_documents) do
-    {pn, _} = Repo.insert_all(PersonPhone, List.flatten(acc_phones))
-    {dn, _} = Repo.insert_all(PersonDocument, List.flatten(acc_documents))
-    {pn, dn}
+    Repo.transaction(fn ->
+      Repo.insert_all(PersonPhone, List.flatten(acc_phones))
+      Repo.insert_all(PersonDocument, List.flatten(acc_documents))
+    end)
   end
 
   defp insert_fetched_attributes([person | rest], acc_phones, acc_documents) do
@@ -45,8 +46,14 @@ defmodule MPI.Repo.Migrations.CopyDocumentsAndPhonesIntoRelatedTables do
         :ok
 
       persons ->
-        Logger.info(fn -> "Run migration with offset: #{inspect(offset)}, limit #{inspect(limit)}" end)
         insert_fetched_attributes(persons)
+
+        Logger.info(fn ->
+          "Run migration with offset: #{inspect(offset)}, limit #{inspect(limit)}, new PERSON_MIGRATION_OFFSET  should be: #{
+            limit + offset
+          }"
+        end)
+
         chunk_persons_process(limit, limit + offset)
     end
   end
@@ -54,14 +61,19 @@ defmodule MPI.Repo.Migrations.CopyDocumentsAndPhonesIntoRelatedTables do
   defp get_current_offset() do
     System.get_env("PERSON_MIGRATION_OFFSET")
     |> case do
-      nil -> 0
-      offset -> offset
+      nil ->
+        0
+
+      offset_str ->
+        {offset, _} = Integer.parse(offset_str)
+        offset
     end
   end
 
   def up do
-    limit = 2000
-    offset = chunk_persons_process(limit, get_current_offset())
+    limit = 1000
+    offset = get_current_offset()
+    chunk_persons_process(limit, offset)
   end
 
   def down do
