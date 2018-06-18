@@ -51,9 +51,15 @@ defmodule MPI.Repo.Migrations.CopyDocumentsAndPhonesIntoRelatedTables do
     end
   end
 
+  @schemas [:person_documents, :person_phones, :persons]
+
   def up do
+    Enum.each(@schemas, fn shemaname -> create(index(shemaname, [:updated_at], concurrently: true)) end)
+
     limit = 2000
     chunk_persons_process(limit)
+
+    Enum.each(@schemas, fn shemaname -> drop(index(shemaname, [:updated_at], concurrently: true)) end)
   end
 
   def down do
