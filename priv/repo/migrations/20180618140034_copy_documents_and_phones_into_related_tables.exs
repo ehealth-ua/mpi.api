@@ -37,7 +37,10 @@ defmodule MPI.Repo.Migrations.CopyDocumentsAndPhonesIntoRelatedTables do
   def chunk_persons_process(limit, offset) do
     Person
     |> select([:id, :inserted_at, :updated_at, :documents, :phones])
-    |> order_by(:inserted_at)
+    |> join(:left, [p], d in PersonDocument, d.person_id == p.id)
+    |> where(fragment(" p1.person_id IS NULL and p0.updated_at <=
+    (select min(updated_at) from person_documents)"))
+    |> order_by(:updated_at)
     |> offset(^offset)
     |> limit(^limit)
     |> Repo.all()
@@ -74,10 +77,13 @@ defmodule MPI.Repo.Migrations.CopyDocumentsAndPhonesIntoRelatedTables do
     limit = 1000
     offset = get_current_offset()
     chunk_persons_process(limit, offset)
+
+    drop(index(:persons, [:updated_at], concurrently: true))
+    drop(index(:person_documents, [:updated_at], concurrently: true))
   end
 
   def down do
-    Repo.truncate(PersonPhone)
-    Repo.truncate(PersonDocument)
+    create(index(:persons, [:updated_at], concurrently: true))
+    create(index(:person_documents, [:updated_at], concurrently: true))
   end
 end
