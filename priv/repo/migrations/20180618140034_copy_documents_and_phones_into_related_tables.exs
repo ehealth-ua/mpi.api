@@ -29,19 +29,17 @@ defmodule MPI.Repo.Migrations.CopyDocumentsAndPhonesIntoRelatedTables do
       end)
       |> Map.put(:id, Ecto.UUID.generate())
       |> Map.put(:person_id, person.id)
-      |> Map.put(:inserted_at, person.inserted_at)
-      |> Map.put(:updated_at, person.updated_at)
+      |> Map.put(:inserted_at, Timex.now())
+      |> Map.put(:updated_at, Timex.now())
     end)
   end
 
-  def chunk_persons_process(limit, offset) do
+  def chunk_persons_process(limit) do
     Person
-    |> select([:id, :inserted_at, :updated_at, :documents, :phones])
+    |> select([:id, :documents, :phones])
     |> join(:left, [p], d in PersonDocument, d.person_id == p.id)
     |> where(fragment(" p1.person_id IS NULL and p0.updated_at <=
     (select min(updated_at) from person_documents)"))
-    |> order_by(:updated_at)
-    |> offset(^offset)
     |> limit(^limit)
     |> Repo.all()
     |> case do
@@ -51,32 +49,13 @@ defmodule MPI.Repo.Migrations.CopyDocumentsAndPhonesIntoRelatedTables do
       persons ->
         insert_fetched_attributes(persons)
 
-        Logger.info(fn ->
-          "Run migration with offset: #{inspect(offset)}, limit #{inspect(limit)}, new PERSON_MIGRATION_OFFSET  should be: #{
-            limit + offset
-          }"
-        end)
-
-        chunk_persons_process(limit, limit + offset)
-    end
-  end
-
-  defp get_current_offset() do
-    System.get_env("PERSON_MIGRATION_OFFSET")
-    |> case do
-      nil ->
-        0
-
-      offset_str ->
-        {offset, _} = Integer.parse(offset_str)
-        offset
+        chunk_persons_process(limit)
     end
   end
 
   def up do
     limit = 1000
-    offset = get_current_offset()
-    chunk_persons_process(limit, offset)
+    chunk_persons_process(limit)
 
     drop(index(:persons, [:updated_at], concurrently: true))
     drop(index(:person_documents, [:updated_at], concurrently: true))
