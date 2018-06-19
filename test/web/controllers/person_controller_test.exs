@@ -14,10 +14,10 @@ defmodule MPI.Web.PersonControllerTest do
 
       {person_data, db_data} ->
         process_items = fn person_data_s ->
-          for obj <- person_data_s,
+          for item <- person_data_s,
               into: [],
               do:
-                obj
+                item
                 |> Poison.encode!()
                 |> Poison.decode!()
                 |> Map.take(attributes)
@@ -39,17 +39,17 @@ defmodule MPI.Web.PersonControllerTest do
   def insert_person(args \\ []) do
     person = insert(:person, args)
 
-    ifnil = fn
+    if_nil = fn
       nil -> []
       attrs when is_list(attrs) -> attrs
       _ -> {:error, :attribute_type}
     end
 
-    Enum.each(ifnil.(person.documents), fn document ->
+    Enum.each(if_nil.(person.documents), fn document ->
       insert(:person_document, [{:person_id, person.id} | Map.to_list(document)])
     end)
 
-    Enum.each(ifnil.(person.phones), fn phone ->
+    Enum.each(if_nil.(person.phones), fn phone ->
       insert(:person_phone, [{:person_id, person.id} | Map.to_list(phone)])
     end)
 
@@ -295,7 +295,7 @@ defmodule MPI.Web.PersonControllerTest do
     data = json_response(conn, 200)["data"]
     assert 1 == length(data)
 
-    for data_obj <- data, do: json_person_attributes?(data_obj)
+    for data_item <- data, do: json_person_attributes?(data_item)
 
     Enum.each(data, fn person ->
       refute Map.has_key?(person, "phone_number")

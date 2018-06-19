@@ -129,17 +129,17 @@ defmodule MPI.Persons.PersonTest do
     def_args = %{id: @test_person_id, first_name: @test_consumer_first_name_original}
     person = insert(:person, Map.merge(def_args, args))
 
-    ifnil = fn
+    if_nil = fn
       nil -> []
       attrs when is_list(attrs) -> attrs
       _ -> {:error, :attribute_type}
     end
 
-    Enum.each(ifnil.(person.documents), fn document ->
+    Enum.each(if_nil.(person.documents), fn document ->
       insert(:person_document, [{:person_id, person.id} | Map.to_list(document)])
     end)
 
-    Enum.each(ifnil.(person.phones), fn phone ->
+    Enum.each(if_nil.(person.phones), fn phone ->
       insert(:person_phone, [{:person_id, person.id} | Map.to_list(phone)])
     end)
 
