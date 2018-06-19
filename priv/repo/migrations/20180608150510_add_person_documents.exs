@@ -7,7 +7,7 @@ defmodule MPI.Repo.Migrations.AddPersonDocuments do
       add(:person_id, :uuid, references: :persons, type: :uuid)
       add(:type, :string)
       add(:number, :string)
-      add(:issue_date, :string)
+      add(:issue_at, :string)
       add(:expiration_date, :string)
       add(:issued_by, :string)
       timestamps(type: :utc_datetime)
