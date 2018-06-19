@@ -180,7 +180,6 @@ defmodule MPI.Web.PersonControllerTest do
     end
 
     test "person is not active", %{conn: conn} do
-      # insert(:person, is_active: false)
       person = insert_person(is_active: false)
 
       assert conn
@@ -248,7 +247,6 @@ defmodule MPI.Web.PersonControllerTest do
     end
 
     test "invalid status", %{conn: conn} do
-      # insert(:person, status: "INACTIVE")
       person = insert_person(status: "INACTIVE")
 
       conn
@@ -272,7 +270,6 @@ defmodule MPI.Web.PersonControllerTest do
   test "PATCH /persons/:id", %{conn: conn} do
     merged_id1 = "cbe38ac6-a258-4b5d-b684-db53a4f54192"
     merged_id2 = "1190cd3a-18f0-4e0a-98d6-186cd6da145c"
-    # insert(:person, merged_ids: [merged_id1])
     person = insert_person(merged_ids: [merged_id1])
 
     patch(conn, "/persons/#{person.id}", Poison.encode!(%{merged_ids: [merged_id2]}))
@@ -281,7 +278,6 @@ defmodule MPI.Web.PersonControllerTest do
   end
 
   test "GET /persons/ SEARCH by last_name 200", %{conn: conn} do
-    # insert(:person, phones: nil)
     person = insert_person(phones: nil)
 
     conn =
@@ -332,11 +328,8 @@ defmodule MPI.Web.PersonControllerTest do
   test "GET /persons/ SEARCH by ids 200", %{conn: conn} do
     %{id: id_1} = insert_person()
     %{id: id_2} = insert_person()
-    # insert(:person, is_active: false)
     %{id: id_3} = insert_person(is_active: false)
-    # insert(:person, status: "INACTIVE")
     %{id: id_4} = insert_person(status: "INACTIVE")
-    # insert(:person, status: "MERGED")
     %{id: id_5} = insert_person(status: "MERGED")
 
     ids = [id_1, id_2, id_3, id_4, id_5]
@@ -360,7 +353,6 @@ defmodule MPI.Web.PersonControllerTest do
 
   test "GET /persons/ SEARCH 200", %{conn: conn} do
     person = insert_person(phones: [build(:phone, type: "LANDLINE"), build(:phone, type: "MOBILE")])
-    # insert(:person, phones: [build(:phone, type: "LANDLINE"), build(:phone, type: "MOBILE")])
 
     search_params = %{
       "first_name" => person.first_name,

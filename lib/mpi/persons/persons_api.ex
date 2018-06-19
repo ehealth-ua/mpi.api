@@ -31,8 +31,8 @@ defmodule MPI.Persons.PersonsAPI do
 
   def get_by_id(id) do
     Person
-    |> Ecto.Query.where([p], p.id == ^id)
-    |> Ecto.Query.preload([:person_phones, :person_documents])
+    |> where([p], p.id == ^id)
+    |> preload([:person_phones, :person_documents])
     |> Repo.one()
   end
 
