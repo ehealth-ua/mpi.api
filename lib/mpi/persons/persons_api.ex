@@ -3,20 +3,41 @@ defmodule MPI.Persons.PersonsAPI do
 
   import Ecto.{Changeset, Query}
   alias Ecto.Changeset
-  alias MPI.Person
-  alias MPI.Repo
+  alias MPI.{Repo, Person}
 
   @person_status_active Person.status(:active)
 
-  def changeset(struct, params) do
-    struct
-    |> cast(params, Person.fields())
-    |> validate_required(Person.fields_required())
-    |> unique_constraint(:last_name, name: :persons_first_name_last_name_second_name_tax_id_birth_date_inde)
+  def changeset(%Person{} = person, params) do
+    person_changeset =
+      person
+      |> cast(params, Person.fields())
+      |> validate_required(Person.fields_required())
+      |> unique_constraint(:last_name, name: :persons_first_name_last_name_second_name_tax_id_birth_date_inde)
+
+    with %Changeset{valid?: true} <- person_changeset,
+         person <- apply_changes(person_changeset) do
+      person_changeset
+      |> cast(
+        %{
+          person_documents: person.documents,
+          person_phones: person.phones
+        },
+        []
+      )
+      |> cast_assoc(:person_phones)
+      |> cast_assoc(:person_documents)
+    end
+  end
+
+  def get_by_id(id) do
+    Person
+    |> where([p], p.id == ^id)
+    |> preload([:person_phones, :person_documents])
+    |> Repo.one()
   end
 
   def create(%{"id" => id} = params, consumer_id) when is_binary(id) do
-    with %Person{is_active: true, status: @person_status_active} = person <- Repo.get(Person, id),
+    with %Person{is_active: true, status: @person_status_active} = person <- get_by_id(id),
          %Changeset{valid?: true} = changeset <- changeset(person, Map.delete(params, "id")) do
       {:ok, Repo.update_and_log(changeset, consumer_id)}
     else
@@ -64,7 +85,6 @@ defmodule MPI.Persons.PersonsAPI do
 
   defp with_type_number(query, %{"type" => type, "number" => number}) when not is_nil(type) and not is_nil(number) do
     type = String.upcase(type)
-
     where(query, [p], fragment("? @> ?", p.documents, ~s/[{"type":"#{type}","number":"#{number}"}]/))
   end
 

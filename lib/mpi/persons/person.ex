@@ -1,12 +1,13 @@
 defmodule MPI.Person do
   @moduledoc false
   use Ecto.Schema
+  alias MPI.{PersonDocument, PersonPhone}
 
   @status_active "active"
   @status_inactive "inactive"
 
   @primary_key {:id, Ecto.UUID, autogenerate: true}
-  @derive {Poison.Encoder, except: [:__meta__]}
+  @derive {Poison.Encoder, except: [:__meta__, :person_phones, :person_documents]}
   schema "persons" do
     field(:version, :string, default: "default")
     field(:first_name, :string)
@@ -37,6 +38,8 @@ defmodule MPI.Person do
     field(:authentication_methods, {:array, :map})
     field(:merged_ids, {:array, :string})
 
+    has_many(:person_documents, PersonDocument, on_delete: :delete_all, on_replace: :delete)
+    has_many(:person_phones, PersonPhone, on_delete: :delete_all, on_replace: :delete)
     timestamps(type: :utc_datetime)
   end
 

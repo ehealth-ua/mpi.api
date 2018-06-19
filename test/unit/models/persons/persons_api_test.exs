@@ -3,8 +3,7 @@ defmodule MPI.Persons.PersonTest do
 
   import MPI.Factory
 
-  alias MPI.Person
-  alias MPI.Persons.PersonsAPI
+  alias MPI.{Person, Persons.PersonsAPI}
 
   @test_person_id "ce377777-d8c4-4dd8-9328-de24b1ee3879"
   @test_person_id2 "ce377777-d8c4-4dd8-9328-de24b1ee3880"
@@ -51,7 +50,7 @@ defmodule MPI.Persons.PersonTest do
   test "searches with birth certificate" do
     insert_person_test_data(%{
       id: @test_person_id,
-      documents: [%{"type" => "BIRTH_CERTIFICATE", "number" => @test_document_number}]
+      documents: [%{type: "BIRTH_CERTIFICATE", number: @test_document_number}]
     })
 
     insert_person_test_data(%{id: @test_person_id2})
@@ -72,17 +71,25 @@ defmodule MPI.Persons.PersonTest do
   test "searches with birth certificate escape" do
     insert_person_test_data(%{
       id: @test_person_id,
-      documents: [%{"type" => "BIRTH_CERTIFICATE", "number" => "1test\\1"}]
+      documents: [%{type: "BIRTH_CERTIFICATE", number: "1test\\1"}]
     })
 
     assert %Scrivener.Page{
              entries: [
                %Person{
-                 id: @test_person_id,
                  documents: [%{"type" => "BIRTH_CERTIFICATE", "number" => "1test\\1"}]
                }
              ]
            } = PersonsAPI.search(%{"birth_certificate" => "1test\\1"})
+
+    %Scrivener.Page{
+      entries: [
+        %Person{
+          id: @test_person_id,
+          documents: [%{type: "BIRTH_CERTIFICATE", number: "1test\\1"}]
+        }
+      ]
+    }
   end
 
   test "searches with birth certificate invalid search symbols" do
@@ -92,7 +99,7 @@ defmodule MPI.Persons.PersonTest do
   test "searches with type and nubmer" do
     insert_person_test_data(%{
       id: @test_person_id,
-      documents: [%{"type" => "PASSPORT", "number" => @test_document_number}]
+      documents: [%{type: "PASSPORT", number: @test_document_number}]
     })
 
     insert_person_test_data(%{id: @test_person_id2, documents: []})
@@ -116,8 +123,27 @@ defmodule MPI.Persons.PersonTest do
     end
   end
 
-  defp insert_person_test_data(merge_data \\ %{}) do
-    insert(:person, Map.merge(%{id: @test_person_id, first_name: @test_consumer_first_name_original}, merge_data))
+  def insert_person_test_data(args \\ %{}) do
+    def_args = %{id: @test_person_id, first_name: @test_consumer_first_name_original}
+    person = insert(:person, Map.merge(def_args, args))
+
+    if_nil = fn
+      nil -> []
+      attrs when is_list(attrs) -> attrs
+      _ -> {:error, :attribute_type}
+    end
+
+    Enum.each(if_nil.(person.documents), fn document ->
+      insert(:person_document, [{:person_id, person.id} | Map.to_list(document)])
+    end)
+
+    Enum.each(if_nil.(person.phones), fn phone ->
+      insert(:person_phone, [{:person_id, person.id} | Map.to_list(phone)])
+    end)
+
+    person
+    |> Repo.preload(:person_phones)
+    |> Repo.preload(:person_documents)
   end
 
   defp build_person_map do

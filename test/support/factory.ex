@@ -32,9 +32,7 @@ defmodule MPI.Factory do
       death_date: ~D[2117-11-09],
       preferred_way_communication: "email",
       is_active: true,
-      documents: build_list(2, :document),
       addresses: build_list(2, :address),
-      phones: build_list(1, :phone),
       secret: sequence(:secret, &"secret-#{&1}"),
       emergency_contact: build(:emergency_contact),
       confidant_person: build_list(1, :confidant_person),
@@ -44,7 +42,23 @@ defmodule MPI.Factory do
       inserted_by: Ecto.UUID.generate(),
       updated_by: Ecto.UUID.generate(),
       authentication_methods: build_list(2, :authentication_method),
-      merged_ids: []
+      merged_ids: [],
+      phones: build_list(1, :phone),
+      documents: build_list(2, :document)
+    }
+  end
+
+  def person_document_factory do
+    %MPI.PersonDocument{
+      type: Enum.random(["PASSPORT", "NATIONAL_ID", "BIRTH_CERTIFICATE"]),
+      number: sequence(:document_number, &"document-number-#{&1}")
+    }
+  end
+
+  def person_phone_factory do
+    %MPI.PersonPhone{
+      type: Enum.random(["MOBILE", "LANDLINE"]),
+      number: "+38#{Enum.random(1_000_000_000..9_999_999_999)}"
     }
   end
 
