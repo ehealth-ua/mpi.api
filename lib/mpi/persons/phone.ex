@@ -3,7 +3,7 @@ defmodule MPI.PersonPhone do
 
   use Ecto.Schema
   import Ecto.Changeset
-  alias MPI.{Person, PersonPhone}
+  alias MPI.Person
 
   @derive {Poison.Encoder, only: [:type, :number]}
   @primary_key {:id, Ecto.UUID, autogenerate: true}
