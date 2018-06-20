@@ -22,7 +22,7 @@ defmodule MPI.Repo.Migrations.CopyDocumentsAndPhonesIntoRelatedTables do
     insert_fetched_attributes(rest, [person_phone_entries | acc_phones], [person_document_entities | acc_documents])
   end
 
-  defp prepare_entries(person, entries) do
+  defp prepare_entries(person, entries) when is_list(entries) do
     Enum.map(entries, fn entry ->
       entry
       |> Enum.reduce(%{}, fn {k, v}, acc ->
@@ -33,6 +33,10 @@ defmodule MPI.Repo.Migrations.CopyDocumentsAndPhonesIntoRelatedTables do
       |> Map.put(:inserted_at, person.inserted_at)
       |> Map.put(:updated_at, person.updated_at)
     end)
+  end
+
+  defp prepare_entries(_, _) do
+    []
   end
 
   def chunk_persons_process(limit) do
