@@ -24,22 +24,24 @@ defmodule MPI.Repo.Migrations.CopyDocumentsAndPhonesIntoRelatedTables do
 
   defp prepare_entries(person, entries) do
     Enum.map(entries, fn entry ->
-      Enum.reduce(entry, %{}, fn {k, v}, acc ->
+      entry
+      |> Enum.reduce(%{}, fn {k, v}, acc ->
         Map.put(acc, String.to_existing_atom(k), v)
       end)
       |> Map.put(:id, Ecto.UUID.generate())
       |> Map.put(:person_id, person.id)
-      |> Map.put(:inserted_at, Timex.now())
-      |> Map.put(:updated_at, Timex.now())
+      |> Map.put(:inserted_at, person.inserted_at)
+      |> Map.put(:updated_at, person.updated_at)
     end)
   end
 
   def chunk_persons_process(limit) do
     Person
-    |> select([:id, :documents, :phones])
+    |> select([:id, :inserted_at, :updated_at, :documents, :phones])
     |> join(:left, [p], d in PersonDocument, d.person_id == p.id)
-    |> where(fragment(" p1.person_id IS NULL and p0.updated_at <=
-    (select min(updated_at) from person_documents)"))
+    |> where([p, d], fragment("? IS NULL and ? <=
+    (select COALESCE(min(updated_at), '01-01-3000 00:00:00') from person_documents)", d.person_id, p.updated_at))
+    |> order_by(desc: :updated_at)
     |> limit(^limit)
     |> Repo.all()
     |> case do

@@ -92,7 +92,6 @@ defmodule MPI.Persons.PersonTest do
     }
   end
 
-  ## search now run in related table, not in json, so any characters allowed
   test "searches with birth certificate invalid search symbols" do
     assert {:query_error, "invalid search characters"} == PersonsAPI.search(%{"birth_certificate" => "АК \"27"})
   end
