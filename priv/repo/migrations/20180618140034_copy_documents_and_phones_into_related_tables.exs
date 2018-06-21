@@ -63,6 +63,9 @@ defmodule MPI.Repo.Migrations.CopyDocumentsAndPhonesIntoRelatedTables do
     limit = 1000
     chunk_persons_process(limit)
 
+    create(index(:person_phones, [:type, :number], concurrently: true))
+    create(index(:person_documents, [:type, :number], concurrently: true))
+
     drop(index(:persons, [:updated_at], concurrently: true))
     drop(index(:person_documents, [:updated_at], concurrently: true))
   end
@@ -70,5 +73,8 @@ defmodule MPI.Repo.Migrations.CopyDocumentsAndPhonesIntoRelatedTables do
   def down do
     create(index(:persons, [:updated_at], concurrently: true))
     create(index(:person_documents, [:updated_at], concurrently: true))
+
+    drop(index(:person_phones, [:type, :number], concurrently: true))
+    drop(index(:person_documents, [:type, :number], concurrently: true))
   end
 end
