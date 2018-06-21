@@ -10,7 +10,6 @@ defmodule MPI.Repo.Migrations.AddPersonPhones do
       timestamps(type: :utc_datetime)
     end
 
-    create(index(:person_phones, [:type, :number]))
     create(index(:person_phones, [:person_id]))
   end
 

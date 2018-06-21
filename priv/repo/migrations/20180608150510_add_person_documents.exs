@@ -13,7 +13,6 @@ defmodule MPI.Repo.Migrations.AddPersonDocuments do
       timestamps(type: :utc_datetime)
     end
 
-    create(index(:person_documents, [:type, :number]))
     create(index(:person_documents, [:person_id]))
   end
 
