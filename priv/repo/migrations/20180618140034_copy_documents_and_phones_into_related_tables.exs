@@ -26,7 +26,7 @@ defmodule MPI.Repo.Migrations.CopyDocumentsAndPhonesIntoRelatedTables do
     Enum.map(entries, fn entry ->
       entry
       |> Enum.reduce(%{}, fn {k, v}, acc ->
-        Map.put(acc, String.to_existing_atom(k), v)
+        Map.put(acc, String.to_atom(k), v)
       end)
       |> Map.put(:id, Ecto.UUID.generate())
       |> Map.put(:person_id, person.id)
