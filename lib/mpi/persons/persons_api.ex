@@ -20,7 +20,7 @@ defmodule MPI.Persons.PersonsAPI do
       |> cast(
         %{
           person_documents: person.documents,
-          person_phones: person.phones
+          person_phones: person.phones || []
         },
         []
       )

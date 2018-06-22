@@ -1,4 +1,4 @@
-defmodule MPI.Repo.Migrations.AddInsertedAtIndex do
+defmodule MPI.Repo.Migrations.AddUpdatedAtIndex do
   use Ecto.Migration
   @disable_ddl_transaction true
 

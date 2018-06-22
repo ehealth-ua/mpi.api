@@ -110,6 +110,26 @@ defmodule MPI.Web.PersonControllerTest do
     assert_person(res["data"])
   end
 
+  test "POST /persons/ OK no phones", %{conn: conn} do
+    person_data = :person |> build() |> Map.from_struct() |> Map.delete(:phones)
+
+    res =
+      conn
+      |> post("/persons/", person_data)
+      |> json_response(201)
+
+    assert_person(res["data"])
+
+    res =
+      conn
+      |> get("/persons/#{res["data"]["id"]}")
+      |> json_response(200)
+
+    json_person_attributes?(res["data"])
+
+    assert_person(res["data"])
+  end
+
   describe "create or update person" do
     test "success create and update person", %{conn: conn} do
       person_data =
