@@ -372,7 +372,11 @@ defmodule MPI.Web.PersonControllerTest do
   end
 
   test "GET /persons/ SEARCH 200", %{conn: conn} do
-    person = insert_person(phones: [build(:phone, type: "LANDLINE"), build(:phone, type: "MOBILE")])
+    person =
+      insert_person(
+        documents: [build(:document, type: "BIRTH_CERTIFICATE", number: "1234567890")],
+        phones: [build(:phone, type: "LANDLINE"), build(:phone, type: "MOBILE")]
+      )
 
     search_params = %{
       "first_name" => person.first_name,
@@ -388,6 +392,40 @@ defmodule MPI.Web.PersonControllerTest do
       |> assert_person_search()
 
     assert 1 == Enum.count(data)
+    assert search_params == data |> hd |> Map.take(Map.keys(search_params))
+
+    search_params_bc = %{
+      "first_name" => person.first_name,
+      "last_name" => person.last_name,
+      "birth_date" => to_string(person.birth_date),
+      "birth_certificate" => "1234567890"
+    }
+
+    data =
+      conn
+      |> get(person_path(conn, :index), search_params_bc)
+      |> json_response(200)
+      |> Map.get("data")
+      |> assert_person_search()
+
+    assert 1 == Enum.count(data)
+
+    search_params_bc = %{
+      "first_name" => person.first_name,
+      "last_name" => person.last_name,
+      "birth_date" => to_string(person.birth_date),
+      "birth_certificate" => "0123456789"
+    }
+
+    data_no_bc =
+      conn
+      |> get(person_path(conn, :index), search_params_bc)
+      |> json_response(200)
+      |> Map.get("data")
+      |> assert_person_search()
+
+    assert data_no_bc == []
+
     assert search_params == data |> hd |> Map.take(Map.keys(search_params))
 
     search_params =
