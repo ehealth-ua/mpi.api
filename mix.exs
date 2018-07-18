@@ -1,13 +1,11 @@
 defmodule MPI.Mixfile do
   use Mix.Project
 
-  @version "1.74.0"
-
   def project do
     [
       app: :mpi,
-      version: @version,
-      elixir: "~> 1.5",
+      version: "0.1.0",
+      elixir: "~> 1.6",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:phoenix] ++ Mix.compilers(),
       build_embedded: Mix.env() == :prod,
@@ -46,7 +44,7 @@ defmodule MPI.Mixfile do
       {:poison, "~> 3.1", override: true},
       {:eview, ">= 0.0.0"},
       {:postgrex, ">= 0.0.0"},
-      {:timex, "~> 3.1.0"},
+      {:timex, "~> 3.3.0"},
       {:quantum, "~> 2.2.0"},
       {:plug_logger_json, "~> 0.5"},
       {:ecto_logger_json, "~> 0.1"},
