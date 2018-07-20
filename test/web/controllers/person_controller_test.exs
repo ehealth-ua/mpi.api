@@ -39,17 +39,11 @@ defmodule MPI.Web.PersonControllerTest do
   def insert_person(args \\ []) do
     person = insert(:person, args)
 
-    if_nil = fn
-      nil -> []
-      attrs when is_list(attrs) -> attrs
-      _ -> {:error, :attribute_type}
-    end
-
-    Enum.each(if_nil.(person.documents), fn document ->
+    Enum.each(person.documents, fn document ->
       insert(:person_document, [{:person_id, person.id} | Map.to_list(document)])
     end)
 
-    Enum.each(if_nil.(person.phones), fn phone ->
+    Enum.each(person.phones || [], fn phone ->
       insert(:person_phone, [{:person_id, person.id} | Map.to_list(phone)])
     end)
 
@@ -128,6 +122,74 @@ defmodule MPI.Web.PersonControllerTest do
     json_person_attributes?(res["data"])
 
     assert_person(res["data"])
+  end
+
+  describe "create or update person with national id" do
+    test "success create person and update national_id from documents if national_id is nil", %{conn: conn} do
+      %{number: number} = document = build(:document, type: "NATIONAL_ID")
+
+      person_data =
+        :person
+        |> build(national_id: nil, documents: [document])
+        |> Map.from_struct()
+
+      person_created =
+        conn
+        |> post("/persons/", person_data)
+        |> json_response(201)
+
+      assert number == person_created["data"]["national_id"]
+
+      assert_person(person_created["data"])
+    end
+
+    test "success update person and update national_id from documents if new national id is null", %{conn: conn} do
+      %{number: number} = document = build(:document, type: "NATIONAL_ID")
+      person = insert(:person, national_id: "old-national-id-number")
+
+      person_data = Map.from_struct(%{person | documents: [document], national_id: nil})
+
+      person_updated =
+        conn
+        |> post("/persons/", person_data)
+        |> json_response(200)
+
+      assert number == person_updated["data"]["national_id"]
+
+      assert_person(person_updated["data"])
+    end
+
+    test "success update person and update national_id ignore documents", %{conn: conn} do
+      document = build(:document, type: "NATIONAL_ID")
+      person = insert(:person, national_id: "old-national-id-number")
+
+      person_data = Map.from_struct(%{person | documents: [document], national_id: "new-national-id"})
+
+      person_updated =
+        conn
+        |> post("/persons/", person_data)
+        |> json_response(200)
+
+      assert "new-national-id" == person_updated["data"]["national_id"]
+
+      assert_person(person_updated["data"])
+    end
+
+    test "success update person documents without national_id do not change person's national_id", %{conn: conn} do
+      document = build(:document, type: "PASSPORT")
+      person = insert(:person, national_id: "national-id")
+
+      person_data = Map.from_struct(%{person | documents: [document]})
+
+      person_updated =
+        conn
+        |> post("/persons/", person_data)
+        |> json_response(200)
+
+      assert "national-id" == person_updated["data"]["national_id"]
+
+      assert_person(person_updated["data"])
+    end
   end
 
   describe "create or update person" do
