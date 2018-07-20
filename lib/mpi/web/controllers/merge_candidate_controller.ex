@@ -3,9 +3,9 @@ defmodule MPI.Web.MergeCandidateController do
 
   use MPI.Web, :controller
 
+  alias MPI.ConnUtils
   alias MPI.MergeCandidate
   alias MPI.MergeCandidates.API
-  alias MPI.ConnUtils
 
   action_fallback(MPI.Web.FallbackController)
 

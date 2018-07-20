@@ -7,12 +7,12 @@ defmodule MPI.Deduplication.Match do
   import Ecto.Query
   import MPI.AuditLogs, only: [create_audit_logs: 1]
 
-  alias MPI.Repo
-  alias MPI.Person
-  alias MPI.MergeCandidate
-  alias Ecto.UUID
   alias Confex.Resolver
   alias Ecto.Multi
+  alias Ecto.UUID
+  alias MPI.MergeCandidate
+  alias MPI.Person
+  alias MPI.Repo
 
   @deduplication_client Application.get_env(:mpi, :deduplication_client)
   @person_status_inactive Person.status(:inactive)

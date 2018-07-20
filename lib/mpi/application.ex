@@ -3,10 +3,10 @@ defmodule MPI do
   This is an entry point of mpi application.
   """
   use Application
-  alias MPI.Web.Endpoint
   alias Confex.Resolver
-  alias MPI.Deduplication.Scheduler
   alias MPI.Deduplication.Match
+  alias MPI.Deduplication.Scheduler
+  alias MPI.Web.Endpoint
 
   # See http://elixir-lang.org/docs/stable/elixir/Application.html
   # for more information on OTP Applications

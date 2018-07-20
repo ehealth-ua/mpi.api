@@ -3,7 +3,10 @@ defmodule MPI.Persons.PersonsAPI do
 
   import Ecto.{Changeset, Query}
   alias Ecto.Changeset
-  alias MPI.{Repo, Person, PersonDocument, PersonPhone}
+  alias MPI.Person
+  alias MPI.PersonDocument
+  alias MPI.PersonPhone
+  alias MPI.Repo
 
   @person_status_active Person.status(:active)
 

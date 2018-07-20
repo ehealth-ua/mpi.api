@@ -4,8 +4,8 @@ defmodule MPI.MergeCandidates.API do
   import Ecto.Query, only: [from: 2]
   import Ecto.Changeset
 
-  alias MPI.Repo
   alias MPI.MergeCandidate
+  alias MPI.Repo
 
   def get_all(attrs) do
     Repo.all(from(mc in MergeCandidate, where: ^attrs))
