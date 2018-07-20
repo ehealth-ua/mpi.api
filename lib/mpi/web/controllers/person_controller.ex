@@ -2,12 +2,12 @@ defmodule MPI.Web.PersonController do
   @moduledoc false
 
   use MPI.Web, :controller
-  alias MPI.Repo
+  alias Ecto.Changeset
+  alias MPI.ConnUtils
   alias MPI.Person
   alias MPI.Persons.PersonsAPI
-  alias Ecto.Changeset
+  alias MPI.Repo
   alias Scrivener.Page
-  alias MPI.ConnUtils
 
   action_fallback(MPI.Web.FallbackController)
 
