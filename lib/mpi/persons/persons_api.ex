@@ -14,6 +14,7 @@ defmodule MPI.Persons.PersonsAPI do
     person_changeset =
       person
       |> cast(params, Person.fields())
+      |> cast_national_id(params)
       |> validate_required(Person.fields_required())
       |> unique_constraint(:last_name, name: :persons_first_name_last_name_second_name_tax_id_birth_date_inde)
 
@@ -31,6 +32,20 @@ defmodule MPI.Persons.PersonsAPI do
       |> cast_assoc(:person_documents)
     end
   end
+
+  defp cast_national_id(changeset, %{"national_id" => national_id})
+       when not is_nil(national_id),
+       do: cast(changeset, %{national_id: national_id}, [:national_id])
+
+  defp cast_national_id(%Changeset{changes: %{documents: documents}} = changeset, _),
+    do: cast(changeset, %{national_id: get_national_id(documents)}, [:national_id])
+
+  defp cast_national_id(changes, _), do: changes
+
+  defp get_national_id([]), do: nil
+  defp get_national_id([%{type: "NATIONAL_ID", number: national_id} | _]), do: national_id
+  defp get_national_id([%{"type" => "NATIONAL_ID", "number" => national_id} | _]), do: national_id
+  defp get_national_id([_ | documents]), do: get_national_id(documents)
 
   def get_by_id(id) do
     Person
