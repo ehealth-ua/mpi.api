@@ -33,12 +33,22 @@ defmodule MPI.Persons.PersonsAPI do
     end
   end
 
+  defp cast_national_id(%Changeset{changes: changes = %{national_id: nil}} = changeset, params),
+    do: cast_national_id(%{changeset | changes: Map.delete(changes, :national_id)}, params)
+
   defp cast_national_id(changeset, %{"national_id" => national_id})
        when not is_nil(national_id),
        do: cast(changeset, %{national_id: national_id}, [:national_id])
 
-  defp cast_national_id(%Changeset{changes: %{documents: documents}} = changeset, _),
-    do: cast(changeset, %{national_id: get_national_id(documents)}, [:national_id])
+  defp cast_national_id(%Changeset{changes: %{documents: documents}} = changeset, _) do
+    case get_national_id(documents) do
+      nil ->
+        changeset
+
+      national_id ->
+        cast(changeset, %{national_id: national_id}, [:national_id])
+    end
+  end
 
   defp cast_national_id(changes, _), do: changes
 
