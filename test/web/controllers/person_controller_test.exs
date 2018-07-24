@@ -175,6 +175,23 @@ defmodule MPI.Web.PersonControllerTest do
       assert_person(person_updated["data"])
     end
 
+    test "success update person and national_id stau unchanged if national_id is nil in new enity and documents has no national id",
+         %{conn: conn} do
+      document = build(:document, type: "PASSPORT")
+      person = insert(:person, national_id: "national-id")
+
+      person_data = Map.from_struct(%{person | documents: [document], national_id: nil})
+
+      person_updated =
+        conn
+        |> post("/persons/", person_data)
+        |> json_response(200)
+
+      assert person_updated["data"]["national_id"] == "national-id"
+
+      assert_person(person_updated["data"])
+    end
+
     test "success update person documents without national_id do not change person's national_id", %{conn: conn} do
       document = build(:document, type: "PASSPORT")
       person = insert(:person, national_id: "national-id")
