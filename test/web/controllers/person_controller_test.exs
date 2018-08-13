@@ -134,41 +134,43 @@ defmodule MPI.Web.PersonControllerTest do
   end
 
   describe "create or update person with national id" do
-    test "success create person and update national_id from documents if national_id is nil", %{conn: conn} do
-      %{number: number} = document = build(:document, type: "NATIONAL_ID")
+    # TODO: cast national id according  to new rules in feature
+    #   test "success create person and update national_id from documents if national_id is nil", %{conn: conn} do
+    #     %{number: number} = document = build(:document, type: "NATIONAL_ID")
+    #
+    #     person_data =
+    #       :person
+    #       |> build(national_id: nil, documents: [document])
+    #       |> Poison.encode!()
+    #       |> Poison.decode!()
+    #
+    #     person_created =
+    #       conn
+    #       |> post(person_path(conn, :create), person_data)
+    #       |> json_response(201)
+    #
+    #     assert number == person_created["data"]["national_id"]
+    #     assert_person(person_created["data"])
+    #   end
 
-      person_data =
-        :person
-        |> build(national_id: nil, documents: [document])
-        |> Poison.encode!()
-        |> Poison.decode!()
-
-      person_created =
-        conn
-        |> post(person_path(conn, :create), person_data)
-        |> json_response(201)
-
-      assert number == person_created["data"]["national_id"]
-      assert_person(person_created["data"])
-    end
-
-    test "success update person and update national_id from documents if new national id is null", %{conn: conn} do
-      %{number: number} = document = build(:document, type: "NATIONAL_ID")
-      person = insert(:person, national_id: "old-national-id-number")
-
-      person_data =
-        %{person | documents: [document], national_id: nil}
-        |> Poison.encode!()
-        |> Poison.decode!()
-
-      person_updated =
-        conn
-        |> post(person_path(conn, :create), person_data)
-        |> json_response(200)
-
-      assert number == person_updated["data"]["national_id"]
-      assert_person(person_updated["data"])
-    end
+    # TODO: cast national id according  to new rules in feature
+    # test "success update person and update national_id from documents if new national id is null", %{conn: conn} do
+    #   %{number: number} = document = build(:document, type: "NATIONAL_ID")
+    #   person = insert(:person, national_id: "old-national-id-number")
+    #
+    #   person_data =
+    #     %{person | documents: [document], national_id: nil}
+    #     |> Poison.encode!()
+    #     |> Poison.decode!()
+    #
+    #   person_updated =
+    #     conn
+    #     |> post(person_path(conn, :create), person_data)
+    #     |> json_response(200)
+    #
+    #   assert number == person_updated["data"]["national_id"]
+    #   assert_person(person_updated["data"])
+    # end
 
     test "success update person and update national_id ignore documents", %{conn: conn} do
       document = build(:document, type: "NATIONAL_ID")
@@ -188,24 +190,25 @@ defmodule MPI.Web.PersonControllerTest do
       assert_person(person_updated["data"])
     end
 
-    test "success update person and national_id stau unchanged if national_id is nil in new enity and documents has no national id",
-         %{conn: conn} do
-      document = build(:document, type: "PASSPORT")
-      person = insert(:person, national_id: "national-id")
-
-      person_data =
-        %{person | documents: [document], national_id: nil}
-        |> Poison.encode!()
-        |> Poison.decode!()
-
-      person_updated =
-        conn
-        |> post(person_path(conn, :create), person_data)
-        |> json_response(200)
-
-      assert person_updated["data"]["national_id"] == "national-id"
-      assert_person(person_updated["data"])
-    end
+    # TODO: cast national id according  to new rules in feature
+    # test "success update person and national_id stau unchanged if national_id is nil in new enity and documents has no national id",
+    #      %{conn: conn} do
+    #   document = build(:document, type: "PASSPORT")
+    #   person = insert(:person, national_id: "national-id")
+    #
+    #   person_data =
+    #     %{person | documents: [document], national_id: nil}
+    #     |> Poison.encode!()
+    #     |> Poison.decode!()
+    #
+    #   person_updated =
+    #     conn
+    #     |> post(person_path(conn, :create), person_data)
+    #     |> json_response(200)
+    #
+    #   assert person_updated["data"]["national_id"] == "national-id"
+    #   assert_person(person_updated["data"])
+    # end
 
     test "success update person documents without national_id do not change person's national_id", %{conn: conn} do
       document = build(:document, type: "PASSPORT")
