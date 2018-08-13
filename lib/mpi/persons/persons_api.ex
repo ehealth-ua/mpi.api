@@ -50,6 +50,8 @@ defmodule MPI.Persons.PersonsAPI do
   end
 
   def create(%{"id" => id} = params, consumer_id) when is_binary(id) do
+    params = Map.put(params, "updated_by", consumer_id)
+
     with %Person{is_active: true, status: @person_status_active} = person <- get_by_id(id),
          %Changeset{valid?: true} = changeset <- changeset(person, Map.delete(params, "id")) do
       {:ok, Repo.update_and_log(changeset, consumer_id)}
@@ -61,9 +63,37 @@ defmodule MPI.Persons.PersonsAPI do
   end
 
   def create(params, consumer_id) do
+    params =
+      params
+      |> Map.put("inserted_by", consumer_id)
+      |> Map.put("updated_by", consumer_id)
+
     with %Changeset{valid?: true} = changeset <- changeset(%Person{}, params),
          {:ok, person} <- Repo.insert_and_log(changeset, consumer_id) do
       {:created, {:ok, person}}
+    end
+  end
+
+  def update(id, params, consumer_id) do
+    with %Person{} = person <- get_by_id(id),
+         :ok <- person_is_active(person),
+         params =
+           person
+           |> preprocess_params(params)
+           |> Map.put("updated_by", consumer_id),
+         %Changeset{valid?: true} = changeset <- changeset(person, params),
+         {:ok, %Person{} = person} <- Repo.update_and_log(changeset, consumer_id) do
+      {:ok, person}
+    end
+  end
+
+  def reset_auth_method(id, params, consumer_id) do
+    params = Map.put(params, "updated_by", consumer_id)
+
+    with %Person{status: @person_status_active} = person <- get_by_id(id),
+         %Changeset{valid?: true} = changeset <- changeset(person, params),
+         {:ok, %Person{} = person} <- Repo.update_and_log(changeset, consumer_id) do
+      {:ok, person}
     end
   end
 
@@ -143,4 +173,14 @@ defmodule MPI.Persons.PersonsAPI do
   end
 
   defp with_ids(query, _), do: query
+
+  defp preprocess_params(person, params) do
+    existing_merged_ids = person.merged_ids || []
+    new_merged_ids = Map.get(params, "merged_ids", [])
+
+    Map.merge(params, %{"merged_ids" => existing_merged_ids ++ new_merged_ids})
+  end
+
+  defp person_is_active(%Person{is_active: true}), do: :ok
+  defp person_is_active(_), do: {:error, {:"422", "Person is not active"}}
 end
