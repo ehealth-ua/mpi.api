@@ -3,7 +3,7 @@ defmodule MPI.Deduplication.MatchTest do
   import Mox
 
   alias MPI.Repo
-  alias MPI.Person
+  alias MPI.{Person, PersonDocument, PersonPhone}
   alias MPI.MergeCandidate
   alias MPI.Deduplication.Match, as: Deduplication
   alias MPI.Factory
@@ -86,19 +86,19 @@ defmodule MPI.Deduplication.MatchTest do
     end
 
     test "compare_lists/2" do
-      list1 = [%{"NUMBER" => "111115", "type" => "BIRTH_CERTIFICATE"}]
-      list2 = [%{"number" => "111111", "TYPE" => "BIRTH_CERTIFICATE"}]
+      list1 = [%PersonDocument{number: "111115", type: "BIRTH_CERTIFICATE"}]
+      list2 = [%PersonDocument{number: "111111", type: "BIRTH_CERTIFICATE"}]
       assert :no_match = Deduplication.compare_lists(list1, list2)
 
-      list1 = [%{"NUMBER" => "111111", "type" => "BIRTH_CERTIFICATE"}]
-      list2 = [%{"number" => "111111", "TYPE" => "BIRTH_CERTIFICATE"}]
+      list1 = [%PersonDocument{number: "111111", type: "BIRTH_CERTIFICATE"}]
+      list2 = [%PersonDocument{number: "111111", type: "BIRTH_CERTIFICATE"}]
       assert :match = Deduplication.compare_lists(list1, list2)
 
       list1 = nil
-      list2 = [%{"number" => "111111", "TYPE" => "BIRTH_CERTIFICATE"}]
+      list2 = [%PersonDocument{number: "111111", type: "BIRTH_CERTIFICATE"}]
       assert :no_match = Deduplication.compare_lists(list1, list2)
 
-      list1 = [%{"NUMBER" => "111115", "type" => "BIRTH_CERTIFICATE"}]
+      list1 = [%PersonDocument{number: "111115", type: "BIRTH_CERTIFICATE"}]
       list2 = nil
       assert :no_match = Deduplication.compare_lists(list1, list2)
 
@@ -205,15 +205,15 @@ defmodule MPI.Deduplication.MatchTest do
         second_name: "Миколайович",
         birth_date: "12.06.1993",
         documents: [
-          %{
-            "type" => "PASSPORT",
-            "number" => "ВВ123456"
+          %PersonDocument{
+            type: "PASSPORT",
+            number: "ВВ123456"
           }
         ],
         national_id: "РП-765123",
         phones: [
-          %{"type" => "MOBILE", "number" => "+380501234567"},
-          %{"type" => "MOBILE", "number" => "+380507654321"}
+          %PersonPhone{type: "MOBILE", number: "+380501234567"},
+          %PersonPhone{type: "MOBILE", number: "+380507654321"}
         ]
       }
 
@@ -224,21 +224,19 @@ defmodule MPI.Deduplication.MatchTest do
         second_name: "Миколайович",
         birth_date: "13.06.1993",
         documents: [
-          %{
-            "type" => "PASSPORT",
-            "number" => "ВВ654321"
+          %PersonDocument{
+            type: "PASSPORT",
+            number: "ВВ654321"
           }
         ],
         national_id: "РП-765123",
         phones: [
-          %{"type" => "MOBILE", "number" => "+380501234567"}
+          %PersonPhone{type: "MOBILE", number: "+380501234567"}
         ]
       }
 
-      person3 = %Person{person1 | phones: nil}
-      person4 = %Person{person2 | phones: nil}
-      person5 = %{person1 | phones: nil}
-      person6 = %{person1 | phones: 0}
+      person3 = %Person{person1 | phones: []}
+      person4 = %Person{person2 | phones: []}
 
       comparison_fields = %{
         tax_id: [match: 0.1, no_match: -0.1],
@@ -252,9 +250,12 @@ defmodule MPI.Deduplication.MatchTest do
       }
 
       assert {0.2, _} = Deduplication.match_score(person1, person2, comparison_fields)
+      assert {0.6, _} = Deduplication.match_score(person1, person3, comparison_fields)
+      assert {0.0, _} = Deduplication.match_score(person1, person4, comparison_fields)
+      assert {0.0, _} = Deduplication.match_score(person2, person3, comparison_fields)
+      assert {0.6, _} = Deduplication.match_score(person2, person4, comparison_fields)
       assert {0.2, _} = Deduplication.match_score(person3, person4, comparison_fields)
-      assert {0.0, _} = Deduplication.match_score(person5, person2, comparison_fields)
-      assert {0.0, _} = Deduplication.match_score(person6, person2, comparison_fields)
+      assert {0.8, _} = Deduplication.match_score(person1, person1, comparison_fields)
     end
 
     test "match score is correct (#1674)" do
@@ -265,16 +266,16 @@ defmodule MPI.Deduplication.MatchTest do
         second_name: "Євгенович",
         birth_date: "2007-12-18",
         documents: [
-          %{
-            "type" => "BIRTH_CERTIFICATE",
-            "number" => "11111111111"
+          %PersonDocument{
+            type: "BIRTH_CERTIFICATE",
+            number: "11111111111"
           }
         ],
         national_id: "",
         phones: [
-          %{
-            "type" => "MOBILE",
-            "number" => "+380965992121"
+          %PersonPhone{
+            type: "MOBILE",
+            number: "+380965992121"
           }
         ]
       }
@@ -286,16 +287,16 @@ defmodule MPI.Deduplication.MatchTest do
         second_name: "Петрівна",
         birth_date: "2017-11-11",
         documents: [
-          %{
-            "type" => "BIRTH_CERTIFICATE",
-            "number" => "456789"
+          %PersonDocument{
+            type: "BIRTH_CERTIFICATE",
+            number: "456789"
           }
         ],
         national_id: "",
         phones: [
-          %{
-            "type" => "MOBILE",
-            "number" => "+380639368040"
+          %PersonPhone{
+            type: "MOBILE",
+            number: "+380639368040"
           }
         ]
       }
@@ -313,21 +314,39 @@ defmodule MPI.Deduplication.MatchTest do
 
       assert {0.6,
               %{
-                birth_date: %{candidate: "2007-12-18", person: "2017-11-11", weight: -0.1},
-                documents: %{
-                  candidate: [%{"number" => "11111111111", "type" => "BIRTH_CERTIFICATE"}],
-                  person: [%{"number" => "456789", "type" => "BIRTH_CERTIFICATE"}],
+                birth_date: %{
+                  candidate: "2007-12-18",
+                  person: "2017-11-11",
                   weight: -0.1
                 },
-                first_name: %{candidate: "Сергій", person: "Діана", weight: -0.1},
-                last_name: %{candidate: "Закусило", person: "Закусило", weight: 0.2},
+                first_name: %{
+                  candidate: "Сергій",
+                  person: "Діана",
+                  weight: -0.1
+                },
+                last_name: %{
+                  candidate: "Закусило",
+                  person: "Закусило",
+                  weight: 0.2
+                },
                 national_id: %{candidate: "", person: "", weight: 0.4},
-                phones: %{
-                  candidate: [%{"number" => "+380965992121", "type" => "MOBILE"}],
-                  person: [%{"number" => "+380639368040", "type" => "MOBILE"}],
+                documents: %{
+                  candidate: [
+                    %{number: "11111111111", type: "BIRTH_CERTIFICATE"}
+                  ],
+                  person: [%{number: "456789", type: "BIRTH_CERTIFICATE"}],
                   weight: -0.1
                 },
-                second_name: %{candidate: "Євгенович", person: "Петрівна", weight: -0.1},
+                phones: %{
+                  candidate: [%{number: "+380965992121", type: "MOBILE"}],
+                  person: [%{number: "+380639368040", type: "MOBILE"}],
+                  weight: -0.1
+                },
+                second_name: %{
+                  candidate: "Євгенович",
+                  person: "Петрівна",
+                  weight: -0.1
+                },
                 tax_id: %{candidate: "", person: "", weight: 0.5}
               }} = Deduplication.match_score(person1, person2, comparison_fields)
     end

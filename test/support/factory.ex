@@ -4,6 +4,7 @@ defmodule MPI.Factory do
   for tests that involve preparation of DB data
   """
   use ExMachina.Ecto, repo: MPI.Repo
+  alias Ecto.UUID
 
   @person_status_active MPI.Person.status(:active)
 
@@ -39,17 +40,18 @@ defmodule MPI.Factory do
       patient_signed: true,
       process_disclosure_data_consent: true,
       status: @person_status_active,
-      inserted_by: Ecto.UUID.generate(),
-      updated_by: Ecto.UUID.generate(),
+      inserted_by: UUID.generate(),
+      updated_by: UUID.generate(),
       authentication_methods: build_list(2, :authentication_method),
       merged_ids: [],
-      phones: build_list(1, :phone),
-      documents: build_list(2, :document)
+      phones: build_list(1, :person_phone),
+      documents: build_list(2, :person_document)
     }
   end
 
   def person_document_factory do
     %MPI.PersonDocument{
+      person_id: UUID.generate(),
       type: Enum.random(["PASSPORT", "NATIONAL_ID", "BIRTH_CERTIFICATE"]),
       number: sequence(:document_number, &"document-number-#{&1}")
     }
@@ -57,6 +59,7 @@ defmodule MPI.Factory do
 
   def person_phone_factory do
     %MPI.PersonPhone{
+      person_id: UUID.generate(),
       type: Enum.random(["MOBILE", "LANDLINE"]),
       number: "+38#{Enum.random(1_000_000_000..9_999_999_999)}"
     }
@@ -97,7 +100,7 @@ defmodule MPI.Factory do
       region: sequence(:region, &"address-region-#{&1}"),
       settlement: sequence(:settlement, &"address-settlement-#{&1}"),
       settlement_type: Enum.random(["CITY"]),
-      settlement_id: Ecto.UUID.generate(),
+      settlement_id: UUID.generate(),
       street_type: Enum.random(["STREET"]),
       street: sequence(:street, &"address-street-#{&1}"),
       building: sequence(:building, &"#{&1 + 1}а"),

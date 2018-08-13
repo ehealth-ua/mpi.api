@@ -11,7 +11,7 @@ defmodule MPI.Deduplication.Match do
   alias Ecto.Multi
   alias Ecto.UUID
   alias MPI.MergeCandidate
-  alias MPI.Person
+  alias MPI.{Person, PersonDocument, PersonPhone}
   alias MPI.Repo
 
   @deduplication_client Application.get_env(:mpi, :deduplication_client)
@@ -44,8 +44,15 @@ defmodule MPI.Deduplication.Match do
         order_by: [desc: :inserted_at]
       )
 
-    candidates = Repo.all(candidates_query)
-    persons = Repo.all(persons_query)
+    candidates =
+      candidates_query
+      |> preload([:documents, :phones])
+      |> Repo.all()
+
+    persons =
+      persons_query
+      |> preload([:documents, :phones])
+      |> Repo.all()
 
     pairs =
       find_duplicates(candidates, persons, fn candidate, person ->
@@ -129,8 +136,8 @@ defmodule MPI.Deduplication.Match do
 
     {score, details} =
       Enum.reduce(comparison_fields, {0.0, %{}}, fn {field_name, coeficients}, {score, details} ->
-        candidate_field = Map.get(candidate, field_name)
-        person_field = Map.get(person, field_name)
+        candidate_field = process_field(candidate, field_name)
+        person_field = process_field(person, field_name)
 
         weight = coeficients[matched?.(field_name, candidate_field, person_field)]
 
@@ -147,21 +154,47 @@ defmodule MPI.Deduplication.Match do
     {Float.round(score, 2), details}
   end
 
-  defp normalize_keys(map) do
-    for {key, value} <- map, into: %{}, do: {String.downcase(key), value}
+  defp process_field(struct, field_name) do
+    if field_name == :documents || field_name == :phones do
+      struct
+      |> Map.get(field_name)
+      |> Enum.map(fn item ->
+        case item do
+          %PersonDocument{} ->
+            item
+            |> Map.from_struct()
+            |> Map.take(~w(type number)a)
+
+          %PersonPhone{} ->
+            item
+            |> Map.from_struct()
+            |> Map.take(~w(type number)a)
+
+          %{} ->
+            item =
+              for {key, val} <- item, into: %{} do
+                if is_binary(key), do: {String.to_atom(String.downcase(key)), val}, else: {key, val}
+              end
+
+            Map.take(item, ~w(type number)a)
+
+          _ ->
+            item
+        end
+      end)
+    else
+      Map.get(struct, field_name)
+    end
   end
 
   def compare_lists([], []), do: :match
 
   def compare_lists(candidate_field, person_field) when is_list(candidate_field) and is_list(person_field) do
-    candidate_field = Enum.map(candidate_field, &normalize_keys(&1))
-    person_field = Enum.map(person_field, &normalize_keys(&1))
-
     common_items =
       for item1 <- candidate_field,
           item2 <- person_field,
-          item1["number"] == item2["number"],
-          item1["type"] == item2["type"],
+          item1.number == item2.number,
+          item1.type == item2.type,
           do: true
 
     if List.first(common_items), do: :match, else: :no_match
