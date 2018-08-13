@@ -13,7 +13,8 @@ defmodule MPI.Persons.PersonsAPI do
     |> cast(params, Person.fields())
     |> cast_assoc(:phones)
     |> cast_assoc(:documents, required: true)
-    |> cast_national_id(params)
+    # TODO: cast national id according  to new rules in feature
+    # |> cast_national_id(params)
     |> validate_required(Person.fields_required())
     |> unique_constraint(:last_name, name: :persons_first_name_last_name_second_name_tax_id_birth_date_inde)
   end
