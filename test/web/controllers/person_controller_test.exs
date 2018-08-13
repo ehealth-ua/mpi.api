@@ -81,6 +81,26 @@ defmodule MPI.Web.PersonControllerTest do
     assert_person(res["data"])
   end
 
+  test "successful create person with inserted_by, updayed_by by x-consumer-id", %{conn: conn} do
+    user_id = UUID.generate()
+
+    person_data =
+      build(:person)
+      |> Poison.encode!()
+      |> Poison.decode!()
+      |> Map.delete("phones")
+
+    res =
+      conn
+      |> put_req_header("x-consumer-id", user_id)
+      |> post(person_path(conn, :create), person_data)
+      |> json_response(201)
+
+    assert_person(res["data"])
+    assert res["data"]["inserted_by"] == user_id
+    assert res["data"]["updated_by"] == user_id
+  end
+
   test "successful create person without phones", %{conn: conn} do
     person_data =
       build(:person)
@@ -172,9 +192,13 @@ defmodule MPI.Web.PersonControllerTest do
     #   assert_person(person_updated["data"])
     # end
 
-    test "success update person and update national_id ignore documents", %{conn: conn} do
+    test "success update person and update national_id ignore documents and check updated_by and inserted_by user", %{
+      conn: conn
+    } do
+      inserted_by_id = UUID.generate()
+      update_by_id = UUID.generate()
       document = build(:document, type: "NATIONAL_ID")
-      person = insert(:person, national_id: "old-national-id-number")
+      person = insert(:person, national_id: "old-national-id-number", inserted_by: inserted_by_id)
 
       person_data =
         %{person | documents: [document], national_id: "new-national-id"}
@@ -183,11 +207,15 @@ defmodule MPI.Web.PersonControllerTest do
 
       person_updated =
         conn
+        |> put_req_header("x-consumer-id", update_by_id)
         |> post(person_path(conn, :create), person_data)
         |> json_response(200)
 
       assert "new-national-id" == person_updated["data"]["national_id"]
       assert_person(person_updated["data"])
+
+      assert person_updated["data"]["inserted_by"] == inserted_by_id
+      assert person_updated["data"]["updated_by"] == update_by_id
     end
 
     # TODO: cast national id according  to new rules in feature

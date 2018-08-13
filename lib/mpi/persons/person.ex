@@ -31,8 +31,8 @@ defmodule MPI.Person do
     field(:patient_signed, :boolean)
     field(:process_disclosure_data_consent, :boolean)
     field(:status, :string, default: @status_active)
-    field(:inserted_by, :string, default: "default")
-    field(:updated_by, :string, default: "default")
+    field(:inserted_by, :string)
+    field(:updated_by, :string)
     field(:authentication_methods, {:array, :map})
     field(:merged_ids, {:array, :string})
 
