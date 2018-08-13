@@ -3,34 +3,19 @@ defmodule MPI.Persons.PersonsAPI do
 
   import Ecto.{Changeset, Query}
   alias Ecto.Changeset
-  alias MPI.Person
-  alias MPI.PersonDocument
-  alias MPI.PersonPhone
-  alias MPI.Repo
+  alias MPI.{Person, PersonDocument, PersonPhone, Repo}
 
   @person_status_active Person.status(:active)
 
   def changeset(%Person{} = person, params) do
-    person_changeset =
-      person
-      |> cast(params, Person.fields())
-      |> cast_national_id(params)
-      |> validate_required(Person.fields_required())
-      |> unique_constraint(:last_name, name: :persons_first_name_last_name_second_name_tax_id_birth_date_inde)
-
-    with %Changeset{valid?: true} <- person_changeset,
-         person <- apply_changes(person_changeset) do
-      person_changeset
-      |> cast(
-        %{
-          person_documents: person.documents,
-          person_phones: person.phones || []
-        },
-        []
-      )
-      |> cast_assoc(:person_phones)
-      |> cast_assoc(:person_documents)
-    end
+    person
+    |> Repo.preload([:phones, :documents])
+    |> cast(params, Person.fields())
+    |> cast_assoc(:phones)
+    |> cast_assoc(:documents, required: true)
+    |> cast_national_id(params)
+    |> validate_required(Person.fields_required())
+    |> unique_constraint(:last_name, name: :persons_first_name_last_name_second_name_tax_id_birth_date_inde)
   end
 
   defp cast_national_id(%Changeset{changes: changes = %{national_id: nil}} = changeset, params),
@@ -53,14 +38,13 @@ defmodule MPI.Persons.PersonsAPI do
   defp cast_national_id(changes, _), do: changes
 
   defp get_national_id([]), do: nil
-  defp get_national_id([%{type: "NATIONAL_ID", number: national_id} | _]), do: national_id
-  defp get_national_id([%{"type" => "NATIONAL_ID", "number" => national_id} | _]), do: national_id
+  defp get_national_id([%Changeset{changes: %{type: "NATIONAL_ID", number: national_id}} | _]), do: national_id
   defp get_national_id([_ | documents]), do: get_national_id(documents)
 
   def get_by_id(id) do
     Person
     |> where([p], p.id == ^id)
-    |> preload([:person_phones, :person_documents])
+    |> preload([:phones, :documents])
     |> Repo.one()
   end
 
@@ -90,7 +74,7 @@ defmodule MPI.Persons.PersonsAPI do
       |> Map.drop(~w(type birth_certificate phone_number ids first_name last_name second_name))
       |> Map.take(Enum.map(Person.__schema__(:fields), &to_string(&1)))
 
-    try do
+    subquery =
       Person
       |> where([p], ^Enum.into(direct_params, Keyword.new(), fn {k, v} -> {String.to_atom(k), v} end))
       |> where([p], p.is_active)
@@ -99,6 +83,11 @@ defmodule MPI.Persons.PersonsAPI do
       |> with_type_number(Map.take(params, ~w(type number)))
       |> with_birth_certificate(Map.take(params, ~w(birth_certificate)))
       |> with_phone_number(Map.take(params, ~w(phone_number)))
+
+    try do
+      Person
+      |> preload([:documents, :phones])
+      |> join(:inner, [p], s in subquery(subquery), p.id == s.id)
       |> Repo.paginate(paging_params)
     rescue
       _ in Postgrex.Error ->

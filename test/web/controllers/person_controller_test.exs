@@ -4,6 +4,7 @@ defmodule MPI.Web.PersonControllerTest do
   use MPI.Web.ConnCase
   import MPI.Factory
   alias MPI.{Repo, Persons.PersonsAPI}
+  alias Ecto.UUID
 
   defp is_equal(key, person_key, attributes, data) do
     %{^person_key => db_data} = PersonsAPI.get_by_id(data["id"])
@@ -32,96 +33,104 @@ defmodule MPI.Web.PersonControllerTest do
   end
 
   def json_person_attributes?(data) do
-    is_equal("phones", :person_phones, ["number", "type"], data) &&
-      is_equal("documents", :person_documents, ["number", "type"], data)
+    is_equal("phones", :phones, ["number", "type"], data) && is_equal("documents", :documents, ["number", "type"], data)
   end
 
-  def insert_person(args \\ []) do
-    person = insert(:person, args)
-
-    Enum.each(person.documents, fn document ->
-      insert(:person_document, [{:person_id, person.id} | Map.to_list(document)])
-    end)
-
-    Enum.each(person.phones || [], fn phone ->
-      insert(:person_phone, [{:person_id, person.id} | Map.to_list(phone)])
-    end)
-
-    person
-    |> Repo.preload(:person_phones)
-    |> Repo.preload(:person_documents)
-  end
-
-  test "GET /persons/:id OK", %{conn: conn} do
-    person = insert_person()
+  test "successful show person", %{conn: conn} do
+    person = insert(:person)
 
     res =
       conn
-      |> get("/persons/#{person.id}")
+      |> get(person_path(conn, :show, person.id))
       |> json_response(200)
 
-    assert res["data"]
-
-    person =
-      person
-      |> Poison.encode!()
-      |> Poison.decode!()
-
-    assert person == res["data"]
-
+    assert res["data"]["id"] == person.id
     json_person_attributes?(res["data"])
-
     assert_person(res["data"])
   end
 
-  test "GET /persons/not_found", %{conn: conn} do
+  test "person is not found", %{conn: conn} do
     response =
       conn
-      |> get("/persons/9fa323da-37e1-4789-87f1-8776999d5196")
+      |> get(person_path(conn, :show, UUID.generate()))
       |> json_response(404)
       |> Map.fetch!("error")
 
     assert response == %{"type" => "not_found"}
   end
 
-  test "POST /persons/ OK", %{conn: conn} do
-    person_data = :person |> build() |> Map.from_struct()
+  test "successful create person", %{conn: conn} do
+    person_data =
+      build(:person)
+      |> Poison.encode!()
+      |> Poison.decode!()
 
     res =
       conn
-      |> post("/persons/", person_data)
+      |> post(person_path(conn, :create), person_data)
       |> json_response(201)
 
     assert_person(res["data"])
 
     res =
       conn
-      |> get("/persons/#{res["data"]["id"]}")
+      |> get(person_path(conn, :show, res["data"]["id"]))
       |> json_response(200)
 
     json_person_attributes?(res["data"])
-
     assert_person(res["data"])
   end
 
-  test "POST /persons/ OK no phones", %{conn: conn} do
-    person_data = :person |> build() |> Map.from_struct() |> Map.delete(:phones)
+  test "successful create person without phones", %{conn: conn} do
+    person_data =
+      build(:person)
+      |> Poison.encode!()
+      |> Poison.decode!()
+      |> Map.delete("phones")
 
     res =
       conn
-      |> post("/persons/", person_data)
+      |> post(person_path(conn, :create), person_data)
       |> json_response(201)
 
     assert_person(res["data"])
 
     res =
       conn
-      |> get("/persons/#{res["data"]["id"]}")
+      |> get(person_path(conn, :show, res["data"]["id"]))
       |> json_response(200)
 
     json_person_attributes?(res["data"])
-
     assert_person(res["data"])
+  end
+
+  test "creation person without documents failed", %{conn: conn} do
+    person_data =
+      build(:person)
+      |> Poison.encode!()
+      |> Poison.decode!()
+      |> Map.delete("documents")
+
+    res =
+      conn
+      |> post(person_path(conn, :create), person_data)
+      |> json_response(422)
+
+    assert %{
+             "invalid" => [
+               %{
+                 "entry" => "$.documents",
+                 "rules" => [
+                   %{
+                     "description" => "can't be blank",
+                     "params" => [],
+                     "rule" => "required"
+                   }
+                 ]
+               }
+             ],
+             "type" => "validation_failed"
+           } = res["error"]
   end
 
   describe "create or update person with national id" do
@@ -131,15 +140,15 @@ defmodule MPI.Web.PersonControllerTest do
       person_data =
         :person
         |> build(national_id: nil, documents: [document])
-        |> Map.from_struct()
+        |> Poison.encode!()
+        |> Poison.decode!()
 
       person_created =
         conn
-        |> post("/persons/", person_data)
+        |> post(person_path(conn, :create), person_data)
         |> json_response(201)
 
       assert number == person_created["data"]["national_id"]
-
       assert_person(person_created["data"])
     end
 
@@ -147,15 +156,17 @@ defmodule MPI.Web.PersonControllerTest do
       %{number: number} = document = build(:document, type: "NATIONAL_ID")
       person = insert(:person, national_id: "old-national-id-number")
 
-      person_data = Map.from_struct(%{person | documents: [document], national_id: nil})
+      person_data =
+        %{person | documents: [document], national_id: nil}
+        |> Poison.encode!()
+        |> Poison.decode!()
 
       person_updated =
         conn
-        |> post("/persons/", person_data)
+        |> post(person_path(conn, :create), person_data)
         |> json_response(200)
 
       assert number == person_updated["data"]["national_id"]
-
       assert_person(person_updated["data"])
     end
 
@@ -163,15 +174,17 @@ defmodule MPI.Web.PersonControllerTest do
       document = build(:document, type: "NATIONAL_ID")
       person = insert(:person, national_id: "old-national-id-number")
 
-      person_data = Map.from_struct(%{person | documents: [document], national_id: "new-national-id"})
+      person_data =
+        %{person | documents: [document], national_id: "new-national-id"}
+        |> Poison.encode!()
+        |> Poison.decode!()
 
       person_updated =
         conn
-        |> post("/persons/", person_data)
+        |> post(person_path(conn, :create), person_data)
         |> json_response(200)
 
       assert "new-national-id" == person_updated["data"]["national_id"]
-
       assert_person(person_updated["data"])
     end
 
@@ -180,15 +193,17 @@ defmodule MPI.Web.PersonControllerTest do
       document = build(:document, type: "PASSPORT")
       person = insert(:person, national_id: "national-id")
 
-      person_data = Map.from_struct(%{person | documents: [document], national_id: nil})
+      person_data =
+        %{person | documents: [document], national_id: nil}
+        |> Poison.encode!()
+        |> Poison.decode!()
 
       person_updated =
         conn
-        |> post("/persons/", person_data)
+        |> post(person_path(conn, :create), person_data)
         |> json_response(200)
 
       assert person_updated["data"]["national_id"] == "national-id"
-
       assert_person(person_updated["data"])
     end
 
@@ -196,15 +211,17 @@ defmodule MPI.Web.PersonControllerTest do
       document = build(:document, type: "PASSPORT")
       person = insert(:person, national_id: "national-id")
 
-      person_data = Map.from_struct(%{person | documents: [document]})
+      person_data =
+        %{person | documents: [document]}
+        |> Poison.encode!()
+        |> Poison.decode!()
 
       person_updated =
         conn
-        |> post("/persons/", person_data)
+        |> post(person_path(conn, :create), person_data)
         |> json_response(200)
 
       assert "national-id" == person_updated["data"]["national_id"]
-
       assert_person(person_updated["data"])
     end
   end
@@ -214,19 +231,20 @@ defmodule MPI.Web.PersonControllerTest do
       person_data =
         :person
         |> build()
-        |> Map.from_struct()
-        |> Map.put(:first_name, "test1")
+        |> Poison.encode!()
+        |> Poison.decode!()
+        |> Map.put("first_name", "test1")
 
       person_created =
         conn
-        |> post("/persons/", person_data)
+        |> post(person_path(conn, :create), person_data)
         |> json_response(201)
 
       assert_person(person_created["data"])
 
       response =
         conn
-        |> post("/persons/", person_data)
+        |> post(person_path(conn, :create), person_data)
         |> json_response(422)
 
       assert %{
@@ -249,48 +267,48 @@ defmodule MPI.Web.PersonControllerTest do
 
       person_data =
         person_data
-        |> Map.put(:birth_country, "some-changed-birth-country")
-        |> Map.put(:phones, [%{"type" => "MOBILE", "number" => "+38#{Enum.random(1_000_000_000..9_999_999_999)}"}])
-        |> Map.put(:id, person_created["data"]["id"])
+        |> Map.put("birth_country", "some-changed-birth-country")
+        |> Map.put("phones", [
+          %{"type" => "MOBILE", "number" => "+38#{Enum.random(1_000_000_000..9_999_999_999)}"}
+        ])
+        |> Map.put("id", person_created["data"]["id"])
 
       res =
         conn
-        |> post("/persons/", person_data)
+        |> post(person_path(conn, :create), person_data)
         |> json_response(200)
 
       assert_person(res["data"])
 
       res =
         conn
-        |> get("/persons/#{person_created["data"]["id"]}")
+        |> get(person_path(conn, :show, person_created["data"]["id"]))
         |> json_response(200)
 
       assert res["data"]
-
       json_person_attributes?(res["data"])
-
       assert res["data"]["birth_country"] == "some-changed-birth-country"
     end
 
     test "person not found", %{conn: conn} do
       assert conn
-             |> post("/persons/", %{"id" => Ecto.UUID.generate()})
+             |> post(person_path(conn, :create), %{"id" => Ecto.UUID.generate()})
              |> json_response(404)
     end
 
     test "person is not active", %{conn: conn} do
-      person = insert_person(is_active: false)
+      person = insert(:person, is_active: false)
 
       assert conn
-             |> post("/persons/", %{"id" => person.id})
+             |> post(person_path(conn, :create), %{"id" => person.id})
              |> json_response(409)
     end
   end
 
-  test "POST /persons/ 422", %{conn: conn} do
+  test "person update without params failed", %{conn: conn} do
     error =
       conn
-      |> post("/persons/", %{})
+      |> post(person_path(conn, :create), %{})
       |> json_response(422)
       |> Map.fetch!("error")
 
@@ -298,7 +316,7 @@ defmodule MPI.Web.PersonControllerTest do
   end
 
   test "HEAD /persons/:id OK", %{conn: conn} do
-    person = insert_person()
+    person = insert(:person)
 
     status =
       conn
@@ -311,19 +329,24 @@ defmodule MPI.Web.PersonControllerTest do
   test "HEAD /persons/not_found OK", %{conn: conn} do
     status =
       conn
-      |> head("/persons/9fa323da-37e1-4789-87f1-8776999d5196")
+      |> head("/persons/#{UUID.generate()}")
       |> Map.fetch!(:status)
 
     assert status == 404
   end
 
-  test "PUT /persons/:id OK", %{conn: conn} do
-    person = insert_person()
-    person_data = :person |> build() |> Map.from_struct()
+  test "successful update person", %{conn: conn} do
+    person = insert(:person)
+
+    person_data =
+      :person
+      |> build()
+      |> Poison.encode!()
+      |> Poison.decode!()
 
     res =
       conn
-      |> put("/persons/#{person.id}", person_data)
+      |> put(person_path(conn, :update, person.id), person_data)
       |> json_response(200)
 
     assert res["data"]
@@ -333,11 +356,11 @@ defmodule MPI.Web.PersonControllerTest do
 
   describe "reset auth method" do
     test "success", %{conn: conn} do
-      person = insert_person()
+      person = insert(:person)
 
       res =
         conn
-        |> patch("/persons/#{person.id}/actions/reset_auth_method")
+        |> patch(person_path(conn, :reset_auth_method, person.id))
         |> json_response(200)
 
       assert res["data"]
@@ -346,38 +369,38 @@ defmodule MPI.Web.PersonControllerTest do
     end
 
     test "invalid status", %{conn: conn} do
-      person = insert_person(status: "INACTIVE")
+      person = insert(:person, status: "INACTIVE")
 
       conn
-      |> patch("/persons/#{person.id}/actions/reset_auth_method")
+      |> patch(person_path(conn, :reset_auth_method, person.id))
       |> json_response(409)
     end
 
     test "not found", %{conn: conn} do
       conn
-      |> patch("/persons/9fa323da-37e1-4789-87f1-8776999d5196/actions/reset_auth_method")
+      |> patch(person_path(conn, :reset_auth_method, UUID.generate()))
       |> assert_not_found()
     end
   end
 
-  test "PUT /persons/not_found", %{conn: conn} do
+  test "update not-found person failed", %{conn: conn} do
     conn
-    |> put("/persons/9fa323da-37e1-4789-87f1-8776999d5196", %{})
+    |> put(person_path(conn, :update, UUID.generate()), %{})
     |> assert_not_found()
   end
 
-  test "PATCH /persons/:id", %{conn: conn} do
-    merged_id1 = "cbe38ac6-a258-4b5d-b684-db53a4f54192"
-    merged_id2 = "1190cd3a-18f0-4e0a-98d6-186cd6da145c"
-    person = insert_person(merged_ids: [merged_id1])
+  test "successful update person with merged_ids", %{conn: conn} do
+    merged_id1 = UUID.generate()
+    merged_id2 = UUID.generate()
+    person = insert(:person, merged_ids: [merged_id1])
 
-    patch(conn, "/persons/#{person.id}", Poison.encode!(%{merged_ids: [merged_id2]}))
+    patch(conn, person_path(conn, :update, person.id), Poison.encode!(%{merged_ids: [merged_id2]}))
 
-    assert [^merged_id1, ^merged_id2] = MPI.Repo.get(MPI.Person, person.id).merged_ids
+    assert [^merged_id1, ^merged_id2] = Repo.get(MPI.Person, person.id).merged_ids
   end
 
-  test "GET /persons/ SEARCH by last_name 200", %{conn: conn} do
-    person = insert_person(phones: nil)
+  test "successful persons search by last_name", %{conn: conn} do
+    person = insert(:person, phones: [])
 
     conn =
       get(
@@ -401,8 +424,8 @@ defmodule MPI.Web.PersonControllerTest do
     end)
   end
 
-  test "GET /persons/ SEARCH by tax_id 200", %{conn: conn} do
-    person = insert_person()
+  test "successful persons search by tax_id", %{conn: conn} do
+    person = insert(:person)
     tax_id = person.tax_id
 
     conn =
@@ -424,12 +447,12 @@ defmodule MPI.Web.PersonControllerTest do
     end)
   end
 
-  test "GET /persons/ SEARCH by ids 200", %{conn: conn} do
-    %{id: id_1} = insert_person()
-    %{id: id_2} = insert_person()
-    %{id: id_3} = insert_person(is_active: false)
-    %{id: id_4} = insert_person(status: "INACTIVE")
-    %{id: id_5} = insert_person(status: "MERGED")
+  test "successful persons search by ids", %{conn: conn} do
+    %{id: id_1} = insert(:person)
+    %{id: id_2} = insert(:person)
+    %{id: id_3} = insert(:person, is_active: false)
+    %{id: id_4} = insert(:person, status: "INACTIVE")
+    %{id: id_5} = insert(:person, status: "MERGED")
 
     ids = [id_1, id_2, id_3, id_4, id_5]
 
@@ -445,14 +468,15 @@ defmodule MPI.Web.PersonControllerTest do
     end)
   end
 
-  test "GET /persons/ empty search", %{conn: conn} do
+  test "empty search", %{conn: conn} do
     conn = get(conn, person_path(conn, :index, ids: ""))
     assert [] == json_response(conn, 200)["data"]
   end
 
-  test "GET /persons/ SEARCH 200", %{conn: conn} do
+  test "successful person search", %{conn: conn} do
     person =
-      insert_person(
+      insert(
+        :person,
         documents: [build(:document, type: "BIRTH_CERTIFICATE", number: "1234567890")],
         phones: [build(:phone, type: "LANDLINE"), build(:phone, type: "MOBILE")]
       )
