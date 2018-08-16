@@ -33,7 +33,9 @@ defmodule MPI.Mixfile do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:distillery, "~> 1.4.1", runtime: false},
+      {:distillery, "~> 2.0", runtime: false, override: true},
+      {:toml, "~> 0.3.0"},
+      {:kafka_ex, "~> 0.8.3"},
       {:cowboy, "~> 1.1"},
       {:phoenix, "~> 1.3.3"},
       {:phoenix_ecto, "~> 3.2"},
