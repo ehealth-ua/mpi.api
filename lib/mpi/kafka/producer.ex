@@ -4,7 +4,14 @@ defmodule MPI.Kafka.Producer do
   @person_events_topic "person_events"
   @behaviour MPI.Behaviours.KafkaProducerBehaviour
 
+  require Logger
+
   def publish_person_event(id, status) do
-    KafkaEx.produce(@person_events_topic, 0, :erlang.term_to_binary(%{"id" => id, "status" => status}))
+    event = %{"id" => id, "status" => status}
+
+    with :ok <- KafkaEx.produce(@person_events_topic, 0, :erlang.term_to_binary(event)) do
+      Logger.info("Published event #{inspect(event)} to kafka", application: :kafka_ex)
+      :ok
+    end
   end
 end
