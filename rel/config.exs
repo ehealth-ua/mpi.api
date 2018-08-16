@@ -8,11 +8,16 @@ use Mix.Releases.Config,
 # |> Base.encode64
 
 environment :default do
-  set(pre_start_hook: "bin/hooks/pre-start.sh")
+  set(pre_start_hooks: "bin/hooks/")
   set(dev_mode: false)
   set(include_erts: true)
   set(include_src: false)
-  #  set cookie: cookie
+
+  set(
+    overlays: [
+      {:template, "rel/templates/vm.args.eex", "releases/<%= release_version %>/vm.args"}
+    ]
+  )
 end
 
 release :mpi do
@@ -21,6 +26,12 @@ release :mpi do
   set(
     applications: [
       mpi: :permanent
+    ]
+  )
+
+  set(
+    config_providers: [
+      {Toml.Provider, [path: "/app/config.toml"]}
     ]
   )
 end

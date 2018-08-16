@@ -3,9 +3,13 @@ defmodule MPI.Persons.PersonsAPI do
 
   import Ecto.{Changeset, Query}
   alias Ecto.Changeset
-  alias MPI.{Person, PersonDocument, PersonPhone, Repo}
+  alias MPI.Person
+  alias MPI.PersonDocument
+  alias MPI.PersonPhone
+  alias MPI.Repo
 
   @person_status_active Person.status(:active)
+  @kafka_producer Application.get_env(:mpi, :kafka)[:producer]
 
   def changeset(%Person{} = person, params) do
     person
@@ -53,8 +57,17 @@ defmodule MPI.Persons.PersonsAPI do
     params = Map.put(params, "updated_by", consumer_id)
 
     with %Person{is_active: true, status: @person_status_active} = person <- get_by_id(id),
-         %Changeset{valid?: true} = changeset <- changeset(person, Map.delete(params, "id")) do
-      {:ok, Repo.update_and_log(changeset, consumer_id)}
+         %Changeset{valid?: true} = changeset <- changeset(person, Map.delete(params, "id")),
+         {:ok, result} <- {:ok, Repo.update_and_log(changeset, consumer_id)} do
+      case fetch_change(changeset, :status) do
+        {:ok, new_status} ->
+          @kafka_producer.publish_person_event(id, new_status)
+
+        _ ->
+          nil
+      end
+
+      {:ok, result}
     else
       %Person{is_active: false} -> {:error, {:conflict, "person is not active"}}
       %Person{status: _} -> {:error, {:conflict, "person is not active"}}
@@ -70,6 +83,7 @@ defmodule MPI.Persons.PersonsAPI do
 
     with %Changeset{valid?: true} = changeset <- changeset(%Person{}, params),
          {:ok, person} <- Repo.insert_and_log(changeset, consumer_id) do
+      @kafka_producer.publish_person_event(person.id, person.status)
       {:created, {:ok, person}}
     end
   end
@@ -83,6 +97,14 @@ defmodule MPI.Persons.PersonsAPI do
            |> Map.put("updated_by", consumer_id),
          %Changeset{valid?: true} = changeset <- changeset(person, params),
          {:ok, %Person{} = person} <- Repo.update_and_log(changeset, consumer_id) do
+      case fetch_change(changeset, :status) do
+        {:ok, new_status} ->
+          @kafka_producer.publish_person_event(id, new_status)
+
+        _ ->
+          nil
+      end
+
       {:ok, person}
     end
   end

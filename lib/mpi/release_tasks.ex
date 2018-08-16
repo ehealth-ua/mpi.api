@@ -1,4 +1,4 @@
-defmodule :mpi_tasks do
+defmodule MPI.ReleaseTasks do
   @moduledoc """
   Nice way to apply migrations inside a released application.
 
@@ -11,7 +11,7 @@ defmodule :mpi_tasks do
 
   @repo MPI.Repo
 
-  def migrate! do
+  def migrate do
     # Migrate
     migrations_dir = Application.app_dir(:mpi, "priv/repo/migrations")
 
@@ -26,7 +26,7 @@ defmodule :mpi_tasks do
 
   defp start_repo(repo) do
     start_applications([:logger, :postgrex, :ecto])
-    :ok = Application.load(:mpi)
+    Application.load(:mpi)
     # If you don't include Repo in application supervisor start it here manually
     repo.start_link()
     repo

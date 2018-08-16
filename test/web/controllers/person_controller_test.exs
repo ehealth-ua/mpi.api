@@ -3,6 +3,7 @@ defmodule MPI.Web.PersonControllerTest do
 
   use MPI.Web.ConnCase
   import MPI.Factory
+  import Mox
   alias MPI.{Repo, Persons.PersonsAPI}
   alias Ecto.UUID
 
@@ -60,6 +61,8 @@ defmodule MPI.Web.PersonControllerTest do
   end
 
   test "successful create person", %{conn: conn} do
+    expect(KafkaMock, :publish_person_event, fn _, _ -> :ok end)
+
     person_data =
       build(:person)
       |> Poison.encode!()
@@ -82,6 +85,7 @@ defmodule MPI.Web.PersonControllerTest do
   end
 
   test "successful create person with inserted_by, updayed_by by x-consumer-id", %{conn: conn} do
+    expect(KafkaMock, :publish_person_event, fn _, _ -> :ok end)
     user_id = UUID.generate()
 
     person_data =
@@ -102,6 +106,8 @@ defmodule MPI.Web.PersonControllerTest do
   end
 
   test "successful create person without phones", %{conn: conn} do
+    expect(KafkaMock, :publish_person_event, fn _, _ -> :ok end)
+
     person_data =
       build(:person)
       |> Poison.encode!()
@@ -259,6 +265,8 @@ defmodule MPI.Web.PersonControllerTest do
 
   describe "create or update person" do
     test "success create and update person", %{conn: conn} do
+      expect(KafkaMock, :publish_person_event, fn _, _ -> :ok end)
+
       person_data =
         :person
         |> build()

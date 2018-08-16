@@ -2,7 +2,7 @@ defmodule MPI.Persons.PersonTest do
   use MPI.ModelCase, async: true
 
   import MPI.Factory
-
+  import Mox
   alias MPI.{Person, Persons.PersonsAPI, PersonDocument}
 
   @test_person_id "ce377777-d8c4-4dd8-9328-de24b1ee3879"
@@ -19,6 +19,7 @@ defmodule MPI.Persons.PersonTest do
   end
 
   test "creates person" do
+    expect(KafkaMock, :publish_person_event, fn _, _ -> :ok end)
     assert {:created, {:ok, %Person{id: _}}} = PersonsAPI.create(build_person_map(), @test_consumer_id)
   end
 
