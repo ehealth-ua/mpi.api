@@ -9,6 +9,7 @@ defmodule MPI.Repo.Migrations.PublishPersonEvents do
   @disable_ddl_transaction true
 
   def change do
+    Application.ensure_all_started(:kafka_ex)
     publish_events(0)
   end
 
