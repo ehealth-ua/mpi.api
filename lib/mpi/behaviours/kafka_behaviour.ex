@@ -1,7 +1,7 @@
 defmodule MPI.Behaviours.KafkaProducerBehaviour do
   @moduledoc false
 
-  @callback publish_person_event(id :: binary, status :: binary) ::
+  @callback publish_person_event(id :: binary, status :: binary, updated_by :: binary) ::
               :ok
               | {:ok, integer}
               | {:error, :closed}

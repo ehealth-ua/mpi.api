@@ -22,7 +22,7 @@ defmodule MPI.Repo.Migrations.PublishPersonEvents do
       |> Repo.all()
 
     Enum.map(persons, fn person ->
-      Producer.publish_person_event(person.id, person.status)
+      Producer.publish_person_event(person.id, person.status, person.updated_by)
     end)
 
     if Enum.empty?(persons) do
