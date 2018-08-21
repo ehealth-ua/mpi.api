@@ -657,6 +657,18 @@ defmodule MPI.Web.PersonControllerTest do
            } = data
 
     assert is_list(data["merged_ids"])
+    assert is_list(data["documents"])
+
+    Enum.each(data["documents"], fn document -> assert_document(document) end)
+  end
+
+  defp assert_document(document) do
+    Enum.each(
+      ~w(type number issued_by issued_at expiration_date),
+      fn field ->
+        assert Map.has_key?(document, field)
+      end
+    )
   end
 
   defp assert_person_search(data) do
