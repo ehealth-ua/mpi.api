@@ -61,7 +61,7 @@ defmodule MPI.Persons.PersonsAPI do
          {:ok, result} <- {:ok, Repo.update_and_log(changeset, consumer_id)} do
       case fetch_change(changeset, :status) do
         {:ok, new_status} ->
-          @kafka_producer.publish_person_event(id, new_status)
+          @kafka_producer.publish_person_event(id, new_status, consumer_id)
 
         _ ->
           nil
@@ -76,14 +76,11 @@ defmodule MPI.Persons.PersonsAPI do
   end
 
   def create(params, consumer_id) do
-    params =
-      params
-      |> Map.put("inserted_by", consumer_id)
-      |> Map.put("updated_by", consumer_id)
+    params = Map.merge(params, %{"inserted_by" => consumer_id, "updated_by" => consumer_id})
 
     with %Changeset{valid?: true} = changeset <- changeset(%Person{}, params),
          {:ok, person} <- Repo.insert_and_log(changeset, consumer_id) do
-      @kafka_producer.publish_person_event(person.id, person.status)
+      @kafka_producer.publish_person_event(person.id, person.status, consumer_id)
       {:created, {:ok, person}}
     end
   end
@@ -99,7 +96,7 @@ defmodule MPI.Persons.PersonsAPI do
          {:ok, %Person{} = person} <- Repo.update_and_log(changeset, consumer_id) do
       case fetch_change(changeset, :status) do
         {:ok, new_status} ->
-          @kafka_producer.publish_person_event(id, new_status)
+          @kafka_producer.publish_person_event(id, new_status, consumer_id)
 
         _ ->
           nil

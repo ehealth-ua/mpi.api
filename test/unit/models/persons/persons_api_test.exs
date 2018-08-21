@@ -19,7 +19,7 @@ defmodule MPI.Persons.PersonTest do
   end
 
   test "creates person" do
-    expect(KafkaMock, :publish_person_event, fn _, _ -> :ok end)
+    expect(KafkaMock, :publish_person_event, fn _, _, _ -> :ok end)
     assert {:created, {:ok, %Person{id: _}}} = PersonsAPI.create(build_person_map(), @test_consumer_id)
   end
 
