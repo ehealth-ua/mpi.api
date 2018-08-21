@@ -664,7 +664,7 @@ defmodule MPI.Web.PersonControllerTest do
 
   defp assert_document(document) do
     Enum.each(
-      ~w(type number issued_by issued_at expiration_date),
+      ~w(type number issued_by issued_at),
       fn field ->
         assert Map.has_key?(document, field)
       end
