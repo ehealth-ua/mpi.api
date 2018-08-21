@@ -5,7 +5,7 @@ defmodule MPI.PersonDocument do
   import Ecto.Changeset
   alias MPI.Person
 
-  @derive {Poison.Encoder, only: [:type, :number, :issue_date, :expiration_date, :issued_by]}
+  @derive {Poison.Encoder, only: [:type, :number, :issued_by, :issued_at, :expiration_date]}
   @primary_key {:id, Ecto.UUID, autogenerate: true}
   @foreign_key_type Ecto.UUID
   schema "person_documents" do
