@@ -35,3 +35,19 @@ release :mpi do
     ]
   )
 end
+
+release :person_updates_producer do
+  set(version: current_version(:person_updates_producer))
+
+  set(
+    applications: [
+      person_updates_producer: :permanent
+    ]
+  )
+
+  set(
+    config_providers: [
+      {Toml.Provider, [path: "/app/config.toml"]}
+    ]
+  )
+end

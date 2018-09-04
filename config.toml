@@ -8,3 +8,5 @@ password = "postgres"
 hostname = "travis"
 port = 5432
 
+[person_updates_producer."PersonUpdatesProducer.Worker"]
+batch_size = 100
