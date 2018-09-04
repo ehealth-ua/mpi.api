@@ -26,6 +26,8 @@ defmodule PersonUpdatesProducer.Worker do
     updates = PersonUpdate |> limit(^limit) |> Repo.all()
 
     if Enum.empty?(updates) do
+      pid = Process.whereis(PersonUpdatesProducer.Supervisor)
+      Process.exit(pid, :normal)
       {:stop, :normal, state}
     else
       Enum.each(updates, fn %PersonUpdate{person_id: id, status: status, updated_by: updated_by} ->

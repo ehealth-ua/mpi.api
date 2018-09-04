@@ -18,6 +18,7 @@ defmodule PersonUpdateProducer.WorkerTest do
     test "success start worker" do
       person_id = UUID.generate()
       insert(:person_update, person_id: person_id)
+      Process.flag(:trap_exit, true)
       {:ok, _pid} = GenServer.start_link(Worker, [])
       :timer.sleep(100)
       assert [] = Repo.all(PersonUpdate)
