@@ -168,7 +168,7 @@ defmodule Core.Deduplication.MatchTest do
                    "documents" => %{"match" => 0.3, "no_match" => -0.1},
                    "first_name" => %{"match" => 0.1, "no_match" => -0.1},
                    "last_name" => %{"match" => 0.2, "no_match" => -0.1},
-                   "national_id" => %{"match" => 0.4, "no_match" => -0.1},
+                   "unzr" => %{"match" => 0.4, "no_match" => -0.1},
                    "phones" => %{"match" => 0.3, "no_match" => -0.1},
                    "second_name" => %{"match" => 0.1, "no_match" => -0.1},
                    "tax_id" => %{"match" => 0.5, "no_match" => -0.1}
@@ -212,7 +212,7 @@ defmodule Core.Deduplication.MatchTest do
             number: "ВВ123456"
           }
         ],
-        national_id: "РП-765123",
+        unzr: "РП-765123",
         phones: [
           %PersonPhone{type: "MOBILE", number: "+380501234567"},
           %PersonPhone{type: "MOBILE", number: "+380507654321"}
@@ -231,7 +231,7 @@ defmodule Core.Deduplication.MatchTest do
             number: "ВВ654321"
           }
         ],
-        national_id: "РП-765123",
+        unzr: "РП-765123",
         phones: [
           %PersonPhone{type: "MOBILE", number: "+380501234567"}
         ]
@@ -247,7 +247,7 @@ defmodule Core.Deduplication.MatchTest do
         second_name: [match: 0.1, no_match: -0.1],
         birth_date: [match: 0.1, no_match: -0.1],
         documents: [match: 0.1, no_match: -0.1],
-        national_id: [match: 0.1, no_match: -0.1],
+        unzr: [match: 0.1, no_match: -0.1],
         phones: [match: 0.1, no_match: -0.1]
       }
 
@@ -273,7 +273,7 @@ defmodule Core.Deduplication.MatchTest do
             number: "11111111111"
           }
         ],
-        national_id: "",
+        unzr: "",
         phones: [
           %PersonPhone{
             type: "MOBILE",
@@ -294,7 +294,7 @@ defmodule Core.Deduplication.MatchTest do
             number: "456789"
           }
         ],
-        national_id: "",
+        unzr: "",
         phones: [
           %PersonPhone{
             type: "MOBILE",
@@ -310,7 +310,7 @@ defmodule Core.Deduplication.MatchTest do
         second_name: [match: 0.1, no_match: -0.1],
         birth_date: [match: 0.5, no_match: -0.1],
         documents: [match: 0.3, no_match: -0.1],
-        national_id: [match: 0.4, no_match: -0.1],
+        unzr: [match: 0.4, no_match: -0.1],
         phones: [match: 0.3, no_match: -0.1]
       }
 
@@ -331,7 +331,7 @@ defmodule Core.Deduplication.MatchTest do
                   person: "Закусило",
                   weight: 0.2
                 },
-                national_id: %{candidate: "", person: "", weight: 0.4},
+                unzr: %{candidate: "", person: "", weight: 0.4},
                 documents: %{
                   candidate: [
                     %{number: "11111111111", type: "BIRTH_CERTIFICATE"}

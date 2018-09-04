@@ -21,7 +21,7 @@ defmodule Core.Person do
     field(:gender, :string)
     field(:email, :string)
     field(:tax_id, :string)
-    field(:national_id, :string)
+    field(:unzr, :string)
     field(:death_date, :date)
     field(:preferred_way_communication, :string)
     field(:invalid_tax_id, :boolean, default: false)
@@ -37,6 +37,7 @@ defmodule Core.Person do
     field(:updated_by, :string)
     field(:authentication_methods, {:array, :map})
     field(:merged_ids, {:array, :string})
+    field(:no_tax_id, :boolean, default: false)
 
     has_many(:documents, PersonDocument, on_delete: :delete_all, on_replace: :delete)
     has_many(:phones, PersonPhone, on_delete: :delete_all, on_replace: :delete)
@@ -57,7 +58,7 @@ defmodule Core.Person do
     gender
     email
     tax_id
-    national_id
+    unzr
     death_date
     preferred_way_communication
     invalid_tax_id
@@ -73,6 +74,7 @@ defmodule Core.Person do
     updated_by
     authentication_methods
     merged_ids
+    no_tax_id
   )
 
   @fields_required [
@@ -90,6 +92,7 @@ defmodule Core.Person do
     :patient_signed,
     :process_disclosure_data_consent,
     :status,
+    :no_tax_id,
     :inserted_by,
     :updated_by
   ]
