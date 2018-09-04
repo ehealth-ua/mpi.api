@@ -9,6 +9,7 @@ defmodule Core.Factory do
   alias Core.Person
   alias Core.PersonDocument
   alias Core.PersonPhone
+  alias Core.PersonUpdate
 
   @person_status_active Core.Person.status(:active)
 
@@ -53,6 +54,14 @@ defmodule Core.Factory do
       merged_ids: [],
       phones: build_list(1, :person_phone),
       documents: build_list(2, :person_document)
+    }
+  end
+
+  def person_update_factory do
+    %PersonUpdate{
+      person_id: UUID.generate(),
+      status: Person.status(:active),
+      updated_by: UUID.generate()
     }
   end
 

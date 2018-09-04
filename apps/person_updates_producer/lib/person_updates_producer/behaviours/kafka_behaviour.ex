@@ -1,4 +1,4 @@
-defmodule Core.Behaviours.KafkaProducerBehaviour do
+defmodule PersonUpdatesProducer.Behaviours.KafkaProducerBehaviour do
   @moduledoc false
 
   @callback publish_person_event(id :: binary, status :: binary, updated_by :: binary) ::

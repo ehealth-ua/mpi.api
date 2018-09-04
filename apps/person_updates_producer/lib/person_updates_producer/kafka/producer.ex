@@ -1,8 +1,8 @@
-defmodule Core.Kafka.Producer do
+defmodule PersonUpdatesProducer.Kafka.Producer do
   @moduledoc false
 
   @person_events_topic "person_events"
-  @behaviour Core.Behaviours.KafkaProducerBehaviour
+  @behaviour PersonUpdatesProducer.Behaviours.KafkaProducerBehaviour
 
   require Logger
 
