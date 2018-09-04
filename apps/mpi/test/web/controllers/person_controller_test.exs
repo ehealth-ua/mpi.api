@@ -161,55 +161,17 @@ defmodule MPI.Web.PersonControllerTest do
            } = res["error"]
   end
 
-  describe "create or update person with national id" do
-    # TODO: cast national id according  to new rules in feature
-    #   test "success create person and update national_id from documents if national_id is nil", %{conn: conn} do
-    #     %{number: number} = document = build(:document, type: "NATIONAL_ID")
-    #
-    #     person_data =
-    #       :person
-    #       |> build(national_id: nil, documents: [document])
-    #       |> Poison.encode!()
-    #       |> Poison.decode!()
-    #
-    #     person_created =
-    #       conn
-    #       |> post(person_path(conn, :create), person_data)
-    #       |> json_response(201)
-    #
-    #     assert number == person_created["data"]["national_id"]
-    #     assert_person(person_created["data"])
-    #   end
-
-    # TODO: cast national id according  to new rules in feature
-    # test "success update person and update national_id from documents if new national id is null", %{conn: conn} do
-    #   %{number: number} = document = build(:document, type: "NATIONAL_ID")
-    #   person = insert(:person, national_id: "old-national-id-number")
-    #
-    #   person_data =
-    #     %{person | documents: [document], national_id: nil}
-    #     |> Poison.encode!()
-    #     |> Poison.decode!()
-    #
-    #   person_updated =
-    #     conn
-    #     |> post(person_path(conn, :create), person_data)
-    #     |> json_response(200)
-    #
-    #   assert number == person_updated["data"]["national_id"]
-    #   assert_person(person_updated["data"])
-    # end
-
-    test "success update person and update national_id ignore documents and check updated_by and inserted_by user", %{
+  describe "create or update person with unzr" do
+    test "success update person and update unzr ignore documents and check updated_by and inserted_by user", %{
       conn: conn
     } do
       inserted_by_id = UUID.generate()
       update_by_id = UUID.generate()
       document = build(:document, type: "NATIONAL_ID")
-      person = insert(:person, national_id: "old-national-id-number", inserted_by: inserted_by_id)
+      person = insert(:person, unzr: "19910827-33445", inserted_by: inserted_by_id)
 
       person_data =
-        %{person | documents: [document], national_id: "new-national-id"}
+        %{person | documents: [document], unzr: "20160828-33445"}
         |> Poison.encode!()
         |> Poison.decode!()
 
@@ -219,36 +181,16 @@ defmodule MPI.Web.PersonControllerTest do
         |> post(person_path(conn, :create), person_data)
         |> json_response(200)
 
-      assert "new-national-id" == person_updated["data"]["national_id"]
+      assert "20160828-33445" == person_updated["data"]["unzr"]
       assert_person(person_updated["data"])
 
       assert person_updated["data"]["inserted_by"] == inserted_by_id
       assert person_updated["data"]["updated_by"] == update_by_id
     end
 
-    # TODO: cast national id according  to new rules in feature
-    # test "success update person and national_id stau unchanged if national_id is nil in new enity and documents has no national id",
-    #      %{conn: conn} do
-    #   document = build(:document, type: "PASSPORT")
-    #   person = insert(:person, national_id: "national-id")
-    #
-    #   person_data =
-    #     %{person | documents: [document], national_id: nil}
-    #     |> Poison.encode!()
-    #     |> Poison.decode!()
-    #
-    #   person_updated =
-    #     conn
-    #     |> post(person_path(conn, :create), person_data)
-    #     |> json_response(200)
-    #
-    #   assert person_updated["data"]["national_id"] == "national-id"
-    #   assert_person(person_updated["data"])
-    # end
-
-    test "success update person documents without national_id do not change person's national_id", %{conn: conn} do
+    test "success update person documents without unzr do not change person's unzr", %{conn: conn} do
       document = build(:document, type: "PASSPORT")
-      person = insert(:person, national_id: "national-id")
+      person = insert(:person, unzr: "20160303-33445")
 
       person_data =
         %{person | documents: [document]}
@@ -260,8 +202,47 @@ defmodule MPI.Web.PersonControllerTest do
         |> post(person_path(conn, :create), person_data)
         |> json_response(200)
 
-      assert "national-id" == person_updated["data"]["national_id"]
+      assert "20160303-33445" == person_updated["data"]["unzr"]
       assert_person(person_updated["data"])
+    end
+  end
+
+  describe "test first API declaration requests eheath" do
+    test "success create person without no_tax_id", %{conn: conn} do
+      expect(KafkaMock, :publish_person_event, fn _, _, _ -> :ok end)
+
+      person_data =
+        :person
+        |> build()
+        |> Poison.encode!()
+        |> Poison.decode!()
+        |> Map.delete("no_tax_id")
+
+      person_created =
+        conn
+        |> post(person_path(conn, :create), person_data)
+        |> json_response(201)
+
+      assert_person(person_created["data"])
+    end
+
+    test "success create person without without unzr with NATIONAL_ID document", %{conn: conn} do
+      expect(KafkaMock, :publish_person_event, fn _, _, _ -> :ok end)
+      document = build(:document, type: "NATIONAL_ID")
+      person = build(:person, documents: [document])
+
+      person_data =
+        person
+        |> Poison.encode!()
+        |> Poison.decode!()
+        |> Map.delete("unzr")
+
+      person_created =
+        conn
+        |> post(person_path(conn, :create), person_data)
+        |> json_response(201)
+
+      assert_person(person_created["data"])
     end
   end
 
@@ -636,7 +617,7 @@ defmodule MPI.Web.PersonControllerTest do
              "inserted_by" => _,
              "is_active" => true,
              "birth_date" => _,
-             "national_id" => _,
+             "unzr" => _,
              "death_date" => _,
              "preferred_way_communication" => _,
              "tax_id" => _,
@@ -665,12 +646,9 @@ defmodule MPI.Web.PersonControllerTest do
   end
 
   defp assert_document(document) do
-    Enum.each(
-      ~w(type number issued_by issued_at),
-      fn field ->
-        assert Map.has_key?(document, field)
-      end
-    )
+    Enum.each(~w(type number issued_by issued_at), fn field ->
+      assert Map.has_key?(document, field)
+    end)
   end
 
   defp assert_person_search(data) do

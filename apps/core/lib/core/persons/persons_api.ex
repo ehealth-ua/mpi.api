@@ -18,34 +18,9 @@ defmodule Core.Persons.PersonsAPI do
     |> cast(params, Person.fields())
     |> cast_assoc(:phones)
     |> cast_assoc(:documents, required: true)
-    # TODO: cast national id according  to new rules in feature
-    # |> cast_national_id(params)
     |> validate_required(Person.fields_required())
     |> unique_constraint(:last_name, name: :persons_first_name_last_name_second_name_tax_id_birth_date_inde)
   end
-
-  defp cast_national_id(%Changeset{changes: changes = %{national_id: nil}} = changeset, params),
-    do: cast_national_id(%{changeset | changes: Map.delete(changes, :national_id)}, params)
-
-  defp cast_national_id(changeset, %{"national_id" => national_id})
-       when not is_nil(national_id),
-       do: cast(changeset, %{national_id: national_id}, [:national_id])
-
-  defp cast_national_id(%Changeset{changes: %{documents: documents}} = changeset, _) do
-    case get_national_id(documents) do
-      nil ->
-        changeset
-
-      national_id ->
-        cast(changeset, %{national_id: national_id}, [:national_id])
-    end
-  end
-
-  defp cast_national_id(changes, _), do: changes
-
-  defp get_national_id([]), do: nil
-  defp get_national_id([%Changeset{changes: %{type: "NATIONAL_ID", number: national_id}} | _]), do: national_id
-  defp get_national_id([_ | documents]), do: get_national_id(documents)
 
   def get_by_id(id) do
     Person
@@ -179,7 +154,7 @@ defmodule Core.Persons.PersonsAPI do
   end
 
   defp with_type_number(query, %{"type" => type, "number" => number})
-       when type in ~w(tax_id national_id) and not is_nil(number) do
+       when type in ~w(tax_id unzr) and not is_nil(number) do
     where(query, [p], field(p, ^String.to_atom(type)) == ^number)
   end
 

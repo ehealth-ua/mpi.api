@@ -35,7 +35,7 @@ config :core, Core.Deduplication.Match,
     second_name: %{match: 0.1, no_match: -0.1},
     birth_date: %{match: 0.5, no_match: -0.1},
     documents: %{match: 0.3, no_match: -0.1},
-    national_id: %{match: 0.4, no_match: -0.1},
+    unzr: %{match: 0.4, no_match: -0.1},
     phones: %{match: 0.3, no_match: -0.1}
   }
 
