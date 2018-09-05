@@ -8,6 +8,9 @@ defmodule PersonUpdateProducer.WorkerTest do
   alias Ecto.UUID
   alias PersonUpdatesProducer.Worker
   import Core.Factory
+  import Mox
+
+  setup :set_mox_global
 
   setup do
     :ok = Sandbox.checkout(Repo)
@@ -16,9 +19,10 @@ defmodule PersonUpdateProducer.WorkerTest do
 
   describe "worker tests" do
     test "success start worker" do
+      expect(WorkerMock, :stop_application, fn -> :ok end)
       person_id = UUID.generate()
       insert(:person_update, person_id: person_id)
-      Process.flag(:trap_exit, true)
+      assert [_] = Repo.all(PersonUpdate)
       {:ok, _pid} = GenServer.start_link(Worker, [])
       :timer.sleep(100)
       assert [] = Repo.all(PersonUpdate)

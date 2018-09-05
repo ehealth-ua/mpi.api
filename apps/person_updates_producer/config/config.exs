@@ -13,7 +13,8 @@ config :logger, :console,
 config :person_updates_producer,
   kafka: [
     producer: PersonUpdatesProducer.Kafka.Producer
-  ]
+  ],
+  worker: PersonUpdatesProducer.Worker
 
 config :person_updates_producer, PersonUpdatesProducer.Worker, batch_size: 100
 config :person_updates_producer, PersonUpdatesProducer.Application, env: Mix.env()

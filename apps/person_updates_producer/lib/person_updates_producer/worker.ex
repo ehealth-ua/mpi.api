@@ -10,6 +10,9 @@ defmodule PersonUpdatesProducer.Worker do
   alias PersonUpdatesProducer.Kafka.Producer
   require Logger
 
+  @behaviour PersonUpdatesProducer.Behaviours.WorkerBehaviour
+  @worker Application.get_env(:person_updates_producer, :worker)
+
   def start_link do
     GenServer.start_link(__MODULE__, nil)
   end
@@ -27,7 +30,7 @@ defmodule PersonUpdatesProducer.Worker do
 
     if Enum.empty?(updates) do
       pid = Process.whereis(PersonUpdatesProducer.Supervisor)
-      Process.exit(pid, :normal)
+      @worker.stop_application()
       {:stop, :normal, state}
     else
       Enum.each(updates, fn %PersonUpdate{person_id: id, status: status, updated_by: updated_by} ->
@@ -41,5 +44,9 @@ defmodule PersonUpdatesProducer.Worker do
 
       {:noreply, state}
     end
+  end
+
+  def stop_application do
+    System.halt(0)
   end
 end
