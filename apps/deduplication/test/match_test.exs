@@ -1,4 +1,4 @@
-defmodule Core.Deduplication.MatchTest do
+defmodule Deduplication.MatchTest do
   use Core.ModelCase, async: true
   import Mox
 
@@ -7,11 +7,11 @@ defmodule Core.Deduplication.MatchTest do
   alias Core.PersonDocument
   alias Core.PersonPhone
   alias Core.MergeCandidate
-  alias Core.Deduplication.Match, as: Deduplication
   alias Core.Factory
+  alias Deduplication.Match, as: Deduplication
 
   setup do
-    expect(DeduplicationClientMock, :post!, fn _url, _body, _headers -> %HTTPoison.Response{status_code: 200} end)
+    expect(ClientMock, :post!, fn _url, _body, _headers -> %HTTPoison.Response{status_code: 200} end)
     :ok
   end
 
@@ -43,7 +43,7 @@ defmodule Core.Deduplication.MatchTest do
       Deduplication.run()
       assert 2 = Repo.one(from(mc in MergeCandidate, select: count(1)))
 
-      verify!(DeduplicationClientMock)
+      verify!(ClientMock)
     end
 
     test "multiple diplicates of same records were created during depth window" do
@@ -83,7 +83,7 @@ defmodule Core.Deduplication.MatchTest do
           )
 
         assert Repo.one(query)
-        verify!(DeduplicationClientMock)
+        verify!(ClientMock)
       end)
     end
 
@@ -139,7 +139,7 @@ defmodule Core.Deduplication.MatchTest do
       person2_dup = insert(person2_attrs_dup, %{inserted_at: within_hours(73)})
 
       Deduplication.run()
-      verify!(DeduplicationClientMock)
+      verify!(ClientMock)
 
       valid_pairs = [
         [older: person1_dup, newer: person1],

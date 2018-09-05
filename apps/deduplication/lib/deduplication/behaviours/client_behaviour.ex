@@ -1,4 +1,4 @@
-defmodule Core.Deduplication.DeduplicationClientBehaviour do
+defmodule Deduplication.Behaviours.ClientBehaviour do
   @moduledoc false
 
   @callback post!(url :: binary(), body :: any(), headers :: HTTPoison.Base.headers()) ::

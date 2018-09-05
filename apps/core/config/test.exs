@@ -12,8 +12,3 @@ config :core, Core.Repo,
   pool: Ecto.Adapters.SQL.Sandbox,
   database: "mpi_test",
   ownership_timeout: 120_000_000
-
-config :core, Core.Deduplication.Match,
-  subscribers: {:system, "DEDUPLICATION_SUBSCRIBERS_LIST", ["http://no-http-call-expected"]}
-
-config :core, :deduplication_client, DeduplicationClientMock

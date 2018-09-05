@@ -1,7 +1,7 @@
-defmodule Core.Deduplication.Match do
+defmodule Deduplication.Match do
   @moduledoc false
 
-  use Confex, otp_app: :core
+  use Confex, otp_app: :deduplication
 
   require Logger
   import Ecto.Query
@@ -16,7 +16,7 @@ defmodule Core.Deduplication.Match do
   alias Ecto.Multi
   alias Ecto.UUID
 
-  @deduplication_client Application.get_env(:core, :deduplication_client)
+  @deduplication_client Application.get_env(:deduplication, :client)
   @person_status_inactive Person.status(:inactive)
 
   def run do
