@@ -7,11 +7,6 @@ use Mix.Config
 # watchers to your application. For example, we use it
 # with brunch.io to recompile .js and .css sources.
 
-config :core, Core.Deduplication.Match,
-  subscribers: [
-    {:system, "DEDUPLICATION_SUBSCRIBER_IL", "http://localhost:4000/internal/deduplication/found_duplicates"}
-  ]
-
 # ## SSL Support
 #
 # In order to use HTTPS in development, a self-signed

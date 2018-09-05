@@ -51,3 +51,19 @@ release :person_updates_producer do
     ]
   )
 end
+
+release :deduplication do
+  set(version: current_version(:deduplication))
+
+  set(
+    applications: [
+      deduplication: :permanent
+    ]
+  )
+
+  set(
+    config_providers: [
+      {Toml.Provider, [path: "/app/config.toml"]}
+    ]
+  )
+end

@@ -6,7 +6,6 @@ defmodule Core.Persons.PersonsAPI do
   alias Core.Person
   alias Core.PersonDocument
   alias Core.PersonPhone
-  alias Core.PersonUpdate
   alias Core.Repo
   alias Ecto.Changeset
 
@@ -34,24 +33,8 @@ defmodule Core.Persons.PersonsAPI do
 
     with %Person{is_active: true, status: @person_status_active} = person <- get_by_id(id),
          %Changeset{valid?: true} = changeset <- changeset(person, Map.delete(params, "id")),
-         {:ok, result} <-
-           Repo.transaction(fn ->
-             case fetch_change(changeset, :status) do
-               {:ok, new_status} ->
-                 Repo.insert(%PersonUpdate{
-                   person_id: id,
-                   updated_by: consumer_id,
-                   updated_at: DateTime.utc_now(),
-                   status: new_status
-                 })
-
-               _ ->
-                 nil
-             end
-
-             Repo.update_and_log(changeset, consumer_id)
-           end) do
-      {:ok, result}
+         {:ok, person} <- Repo.update_and_log(changeset, consumer_id) do
+      {:ok, {:ok, person}}
     else
       %Person{is_active: false} -> {:error, {:conflict, "person is not active"}}
       %Person{status: _} -> {:error, {:conflict, "person is not active"}}
@@ -63,22 +46,7 @@ defmodule Core.Persons.PersonsAPI do
     params = Map.merge(params, %{"inserted_by" => consumer_id, "updated_by" => consumer_id})
 
     with %Changeset{valid?: true} = changeset <- changeset(%Person{}, params),
-         {:ok, person} <-
-           Repo.transaction(fn ->
-             with {:ok, person} <- Repo.insert_and_log(changeset, consumer_id) do
-               Repo.insert(%PersonUpdate{
-                 person_id: person.id,
-                 updated_by: consumer_id,
-                 updated_at: DateTime.utc_now(),
-                 status: person.status
-               })
-
-               person
-             else
-               {:error, error} ->
-                 Repo.rollback(error)
-             end
-           end) do
+         {:ok, person} <- Repo.insert_and_log(changeset, consumer_id) do
       {:created, {:ok, person}}
     end
   end
@@ -91,25 +59,7 @@ defmodule Core.Persons.PersonsAPI do
            |> preprocess_params(params)
            |> Map.put("updated_by", consumer_id),
          %Changeset{valid?: true} = changeset <- changeset(person, params),
-         {:ok, person} <-
-           Repo.transaction(fn ->
-             case fetch_change(changeset, :status) do
-               {:ok, new_status} ->
-                 Repo.insert(%PersonUpdate{
-                   person_id: id,
-                   updated_by: consumer_id,
-                   updated_at: DateTime.utc_now(),
-                   status: new_status
-                 })
-
-               _ ->
-                 nil
-             end
-
-             with {:ok, person} <- Repo.update_and_log(changeset, consumer_id) do
-               person
-             end
-           end) do
+         {:ok, person} <- Repo.update_and_log(changeset, consumer_id) do
       {:ok, person}
     end
   end

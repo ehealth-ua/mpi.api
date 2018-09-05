@@ -16,6 +16,9 @@ defmodule Core.Persons.PersonTest do
   @test_consumer_first_name_original "Bob"
   @test_consumer_first_name_changed "Robbie"
 
+  @active Person.status(:active)
+  @inactive Person.status(:inactive)
+
   test "inserts person in DB successfully" do
     %Ecto.Changeset{valid?: true} = changeset = PersonsAPI.changeset(%Person{}, build_person_map())
     assert {:ok, _record} = Repo.insert(changeset)
@@ -28,17 +31,19 @@ defmodule Core.Persons.PersonTest do
   end
 
   test "updates person" do
-    inactive = Person.status(:inactive)
-    insert_person_test_data()
+    insert_person_test_data(%{updated_by: @test_consumer_id})
 
     person_map =
       build_person_map()
-      |> Map.merge(%{"id" => @test_person_id, "first_name" => @test_consumer_first_name_changed, "status" => inactive})
+      |> Map.merge(%{"id" => @test_person_id, "first_name" => @test_consumer_first_name_changed, "status" => @inactive})
 
     assert {:ok, {:ok, %Person{id: id, first_name: @test_consumer_first_name_changed}}} =
              PersonsAPI.create(person_map, @test_consumer_id)
 
-    assert [%PersonUpdate{person_id: ^id, updated_by: @test_consumer_id, status: ^inactive}] = Repo.all(PersonUpdate)
+    assert [
+             %PersonUpdate{person_id: ^id, updated_by: @test_consumer_id, status: @active},
+             %PersonUpdate{person_id: ^id, updated_by: @test_consumer_id, status: @inactive}
+           ] = Repo.all(PersonUpdate)
   end
 
   test "show errors on update inactive person" do

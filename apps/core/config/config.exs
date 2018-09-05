@@ -18,24 +18,6 @@ config :logger, :console,
   handle_otp_reports: true,
   level: :info
 
-config :core, Core.Deduplication.Match,
-  subscribers: [
-    {:system, "DEDUPLICATION_SUBSCRIBER_IL", "http://api-svc.il/internal/deduplication/found_duplicates"}
-  ],
-  schedule: {:system, "DEDUPLICATION_SCHEDULE", "* * * * *"},
-  depth: {:system, :integer, "DEDUPLICATION_DEPTH", 20},
-  score: {:system, "DEDUPLICATION_SCORE", "0.8"},
-  fields: %{
-    tax_id: %{match: 0.5, no_match: -0.1},
-    first_name: %{match: 0.1, no_match: -0.1},
-    last_name: %{match: 0.2, no_match: -0.1},
-    second_name: %{match: 0.1, no_match: -0.1},
-    birth_date: %{match: 0.5, no_match: -0.1},
-    documents: %{match: 0.3, no_match: -0.1},
-    unzr: %{match: 0.4, no_match: -0.1},
-    phones: %{match: 0.3, no_match: -0.1}
-  }
-
 config :core, Core.Repo,
   adapter: Ecto.Adapters.Postgres,
   username: "postgres",
@@ -52,8 +34,6 @@ config :core, Core.Repo,
 # here (which is why it is important to import them last).
 
 config :ecto_trail, table_name: "audit_log_mpi"
-
-config :core, :deduplication_client, HTTPoison
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
