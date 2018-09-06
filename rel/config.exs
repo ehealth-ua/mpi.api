@@ -8,7 +8,6 @@ use Mix.Releases.Config,
 # |> Base.encode64
 
 environment :default do
-  set(pre_start_hooks: "bin/hooks/")
   set(dev_mode: false)
   set(include_erts: true)
   set(include_src: false)
@@ -21,6 +20,7 @@ environment :default do
 end
 
 release :mpi do
+  set(pre_start_hooks: "bin/hooks/")
   set(version: current_version(:mpi))
 
   set(
