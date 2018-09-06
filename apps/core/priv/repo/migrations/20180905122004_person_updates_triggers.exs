@@ -1,7 +1,7 @@
 defmodule Core.Repo.Migrations.PersonUpdatesTriggers do
   use Ecto.Migration
 
-  @disable_ddl_transaction
+  @disable_ddl_transaction true
 
   def up do
     execute("""
