@@ -50,7 +50,6 @@ defmodule Core.MixProject do
       {:poison, "~> 3.1", override: true},
       {:postgrex, ">= 0.0.0"},
       {:timex, "~> 3.3.0"},
-      {:quantum, "~> 2.2.0"},
       {:ecto_logger_json, "~> 0.1"},
       {:mox, "~> 0.3", only: [:test]},
       {:ex_machina, "~> 2.0", only: [:dev, :test]}
