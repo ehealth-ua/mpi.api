@@ -29,7 +29,6 @@ defmodule PersonUpdatesProducer.Worker do
     updates = PersonUpdate |> limit(^limit) |> Repo.all()
 
     if Enum.empty?(updates) do
-      pid = Process.whereis(PersonUpdatesProducer.Supervisor)
       @worker.stop_application()
       {:stop, :normal, state}
     else
@@ -46,6 +45,7 @@ defmodule PersonUpdatesProducer.Worker do
     end
   end
 
+  @impl true
   def stop_application do
     System.halt(0)
   end

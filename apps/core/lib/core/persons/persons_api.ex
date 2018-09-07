@@ -8,6 +8,7 @@ defmodule Core.Persons.PersonsAPI do
   alias Core.PersonPhone
   alias Core.Repo
   alias Ecto.Changeset
+  alias Scrivener.Page
 
   @person_status_active Person.status(:active)
 
@@ -71,6 +72,23 @@ defmodule Core.Persons.PersonsAPI do
          %Changeset{valid?: true} = changeset <- changeset(person, params),
          {:ok, %Person{} = person} <- Repo.update_and_log(changeset, consumer_id) do
       {:ok, person}
+    end
+  end
+
+  defp search_by_unzr(unzr) do
+    Person
+    |> preload([:documents, :phones])
+    |> where([p], p.unzr == ^unzr)
+    |> Repo.one()
+  end
+
+  def search(%{"unzr" => unzr} = params) do
+    person = search_by_unzr(unzr)
+
+    if person do
+      %Page{entries: [person], page_size: 1, page_number: 1, total_entries: 1, total_pages: 1}
+    else
+      params |> Map.delete("unzr") |> search()
     end
   end
 
