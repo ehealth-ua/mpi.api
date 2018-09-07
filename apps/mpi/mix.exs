@@ -47,7 +47,6 @@ defmodule MPI.Mixfile do
       {:eview, ">= 0.0.0"},
       {:postgrex, ">= 0.0.0"},
       {:timex, "~> 3.3.0"},
-      {:quantum, "~> 2.2.0"},
       {:plug_logger_json, "~> 0.5"},
       {:core, in_umbrella: true}
     ]
