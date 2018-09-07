@@ -469,6 +469,75 @@ defmodule MPI.Web.PersonControllerTest do
     end)
   end
 
+  test "successful persons search by unzr as type number", %{conn: conn} do
+    person = insert(:person)
+    unzr = person.unzr
+
+    conn =
+      get(
+        conn,
+        person_path(
+          conn,
+          :index,
+          number: unzr,
+          type: "unzr"
+        )
+      )
+
+    data = json_response(conn, 200)["data"]
+    assert 1 == length(data)
+
+    Enum.each(data, fn person ->
+      assert unzr == person["unzr"]
+    end)
+  end
+
+  test "successful persons search by unzr as parametr", %{conn: conn} do
+    person = insert(:person)
+    unzr = person.unzr
+
+    conn =
+      get(
+        conn,
+        person_path(
+          conn,
+          :index,
+          unzr: unzr
+        )
+      )
+
+    data = json_response(conn, 200)["data"]
+    assert 1 == length(data)
+
+    Enum.each(data, fn person ->
+      assert unzr == person["unzr"]
+    end)
+  end
+
+  test "successful persons search by unzr, tax_id, birthday as parameters when person has no unzr but has tax_id", %{
+    conn: conn
+  } do
+    person = insert(:person, unzr: nil)
+    tax_id = person.tax_id
+
+    conn =
+      get(
+        conn,
+        person_path(
+          conn,
+          :index,
+          tax_id: tax_id
+        )
+      )
+
+    data = json_response(conn, 200)["data"]
+    assert 1 == length(data)
+
+    Enum.each(data, fn person ->
+      assert tax_id == person["tax_id"]
+    end)
+  end
+
   test "successful persons search by ids", %{conn: conn} do
     %{id: id_1} = insert(:person)
     %{id: id_2} = insert(:person)
