@@ -1,5 +1,5 @@
 defmodule Core.Persons.PersonTest do
-  use Core.ModelCase, async: true
+  use Core.ModelCase, async: false
 
   import Core.Factory
   alias Core.Person
@@ -20,14 +20,20 @@ defmodule Core.Persons.PersonTest do
   @inactive Person.status(:inactive)
 
   test "inserts person in DB successfully" do
-    %Ecto.Changeset{valid?: true} = changeset = PersonsAPI.changeset(%Person{}, build_person_map())
+    %Ecto.Changeset{valid?: true} =
+      changeset = PersonsAPI.changeset(%Person{}, build_person_map())
+
     assert {:ok, _record} = Repo.insert(changeset)
   end
 
   test "creates person" do
     active = Person.status(:active)
-    assert {:created, {:ok, %Person{id: id}}} = PersonsAPI.create(build_person_map(), @test_consumer_id)
-    assert [%PersonUpdate{person_id: ^id, updated_by: @test_consumer_id, status: ^active}] = Repo.all(PersonUpdate)
+
+    assert {:created, {:ok, %Person{id: id}}} =
+             PersonsAPI.create(build_person_map(), @test_consumer_id)
+
+    assert [%PersonUpdate{person_id: ^id, updated_by: @test_consumer_id, status: ^active}] =
+             Repo.all(PersonUpdate)
   end
 
   test "updates person" do
@@ -35,7 +41,11 @@ defmodule Core.Persons.PersonTest do
 
     person_map =
       build_person_map()
-      |> Map.merge(%{"id" => @test_person_id, "first_name" => @test_consumer_first_name_changed, "status" => @inactive})
+      |> Map.merge(%{
+        "id" => @test_person_id,
+        "first_name" => @test_consumer_first_name_changed,
+        "status" => @inactive
+      })
 
     assert {:ok, {:ok, %Person{id: id, first_name: @test_consumer_first_name_changed}}} =
              PersonsAPI.create(person_map, @test_consumer_id)
@@ -56,7 +66,8 @@ defmodule Core.Persons.PersonTest do
     ]
 
     for person_data <- inactive_persons do
-      assert {:error, {:conflict, "person is not active"}} = PersonsAPI.create(person_data, @test_consumer_id)
+      assert {:error, {:conflict, "person is not active"}} =
+               PersonsAPI.create(person_data, @test_consumer_id)
     end
   end
 
@@ -80,7 +91,9 @@ defmodule Core.Persons.PersonTest do
            } = PersonsAPI.search(%{"birth_certificate" => @test_document_number})
 
     expected_entries_count = 2
-    assert expected_entries_count === PersonsAPI.search(%{"birth_certificate" => nil}).total_entries
+
+    assert expected_entries_count ===
+             PersonsAPI.search(%{"birth_certificate" => nil}).total_entries
   end
 
   test "searches with birth certificate escape" do
@@ -136,6 +149,64 @@ defmodule Core.Persons.PersonTest do
     for {params, expected_count} <- test_params_to_entries_count do
       assert PersonsAPI.search(params).total_entries === expected_count
     end
+  end
+
+  test "searches by unzr first when unzr in not set, then with tax_id and birthday ordered by inserted_at" do
+    ordered_ids =
+      Enum.reduce(1..100, [], fn _, acc ->
+        %Person{id: id} =
+          insert(
+            :person,
+            tax_id: "0123456789",
+            birth_date: ~D[1996-12-12],
+            unzr: nil
+          )
+
+        [id | acc]
+      end)
+
+    assert %Scrivener.Page{
+             entries: persons
+           } =
+             PersonsAPI.search(%{
+               "page_size" => "200",
+               "unzr" => "19961212-01234",
+               "tax_id" => "0123456789",
+               birth_date: ~D[1996-12-12]
+             })
+
+    searched_ids = Enum.map(persons, fn %Person{id: id} -> id end)
+    assert searched_ids == ordered_ids
+  end
+
+  test "searches by unzr, with tax_id and birthday presence" do
+    %Person{id: id} =
+      insert(
+        :person,
+        tax_id: "0123456789",
+        birth_date: ~D[1996-12-12],
+        unzr: "19961212-01234"
+      )
+
+    Enum.each(1..100, fn _ ->
+      insert(
+        :person,
+        tax_id: "0123456789",
+        birth_date: ~D[1996-12-12],
+        unzr: nil
+      )
+    end)
+
+    assert %Scrivener.Page{
+             entries: [%Person{id: s_id}]
+           } =
+             PersonsAPI.search(%{
+               "unzr" => "19961212-01234",
+               "tax_id" => "0123456789",
+               birth_date: ~D[1996-12-12]
+             })
+
+    assert id == s_id
   end
 
   def insert_person_test_data(args \\ %{}) do
