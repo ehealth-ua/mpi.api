@@ -1,5 +1,5 @@
 defmodule Core.Persons.PersonTest do
-  use Core.ModelCase, async: false
+  use Core.ModelCase, async: true
 
   import Core.Factory
   alias Core.Person
