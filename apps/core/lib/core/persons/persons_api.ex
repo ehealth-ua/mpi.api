@@ -19,7 +19,10 @@ defmodule Core.Persons.PersonsAPI do
     |> cast_assoc(:phones)
     |> cast_assoc(:documents, required: true)
     |> validate_required(Person.fields_required())
-    |> unique_constraint(:last_name, name: :persons_first_name_last_name_second_name_tax_id_birth_date_inde)
+    |> unique_constraint(
+      :last_name,
+      name: :persons_first_name_last_name_second_name_tax_id_birth_date_inde
+    )
   end
 
   def get_by_id(id) do
@@ -93,7 +96,8 @@ defmodule Core.Persons.PersonsAPI do
   end
 
   def search(params) do
-    paging_params = Map.merge(%{"page_size" => Confex.get_env(:core, :max_persons_result)}, params)
+    paging_params =
+      Map.merge(%{"page_size" => Confex.get_env(:core, :max_persons_result)}, params)
 
     direct_params =
       params
@@ -102,13 +106,17 @@ defmodule Core.Persons.PersonsAPI do
 
     subquery =
       Person
-      |> where([p], ^Enum.into(direct_params, Keyword.new(), fn {k, v} -> {String.to_atom(k), v} end))
+      |> where(
+        [p],
+        ^Enum.into(direct_params, Keyword.new(), fn {k, v} -> {String.to_atom(k), v} end)
+      )
       |> where([p], p.is_active)
       |> with_names(Map.take(params, ~w(first_name last_name second_name)))
       |> with_ids(Map.take(params, ~w(ids)))
       |> with_type_number(Map.take(params, ~w(type number)))
       |> with_birth_certificate(Map.take(params, ~w(birth_certificate)))
       |> with_phone_number(Map.take(params, ~w(phone_number)))
+      |> order_by([p], desc: p.inserted_at)
 
     try do
       Person
@@ -126,9 +134,17 @@ defmodule Core.Persons.PersonsAPI do
     where(query, [p], field(p, ^String.to_atom(type)) == ^number)
   end
 
-  defp with_type_number(query, %{"type" => type, "number" => number}) when not is_nil(type) and not is_nil(number) do
+  defp with_type_number(query, %{"type" => type, "number" => number})
+       when not is_nil(type) and not is_nil(number) do
     type = String.upcase(type)
-    join(query, :inner, [p], d in PersonDocument, d.person_id == p.id and d.type == ^type and d.number == ^number)
+
+    join(
+      query,
+      :inner,
+      [p],
+      d in PersonDocument,
+      d.person_id == p.id and d.type == ^type and d.number == ^number
+    )
   end
 
   defp with_type_number(query, _), do: query
@@ -145,7 +161,8 @@ defmodule Core.Persons.PersonsAPI do
 
   defp with_phone_number(query, _), do: query
 
-  defp with_birth_certificate(query, %{"birth_certificate" => birth_certificate}) when not is_nil(birth_certificate) do
+  defp with_birth_certificate(query, %{"birth_certificate" => birth_certificate})
+       when not is_nil(birth_certificate) do
     join(
       query,
       :inner,
@@ -159,7 +176,11 @@ defmodule Core.Persons.PersonsAPI do
 
   defp with_names(query, params) do
     Enum.reduce(params, query, fn {key, value}, query ->
-      where(query, [p], fragment("lower(?)", field(p, ^String.to_atom(key))) == ^String.downcase(value))
+      where(
+        query,
+        [p],
+        fragment("lower(?)", field(p, ^String.to_atom(key))) == ^String.downcase(value)
+      )
     end)
   end
 
