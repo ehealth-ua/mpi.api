@@ -37,6 +37,7 @@ defmodule PersonUpdatesProducer.Mixfile do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:kafka_ex, "~> 0.8.3"},
       {:core, in_umbrella: true}
     ]
   end
