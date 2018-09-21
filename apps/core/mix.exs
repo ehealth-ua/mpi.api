@@ -42,7 +42,6 @@ defmodule Core.MixProject do
   defp deps do
     [
       {:toml, "~> 0.3.0"},
-      {:kafka_ex, "~> 0.8.3"},
       {:confex, ">= 0.0.0"},
       {:scrivener_ecto, "~> 1.2"},
       {:ecto_trail, "~> 0.2.4"},
