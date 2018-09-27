@@ -20,7 +20,7 @@ defmodule Deduplication.Match do
   @person_status_inactive Person.status(:inactive)
 
   def run do
-    Logger.info("Starting to look for duplicates...")
+    Logger.info("Starting to look for duplicates at...")
     config = config()
 
     depth = -config[:depth]
@@ -100,8 +100,11 @@ defmodule Deduplication.Match do
 
         @deduplication_client.post!(url, "", [{"Content-Type", "application/json"}])
       end)
+
+      Logger.info("Finished to look for duplicates at...")
     else
       Logger.info("Found no duplicates.")
+      Logger.info("Finished to look for duplicates at...")
     end
   end
 
