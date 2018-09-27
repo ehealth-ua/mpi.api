@@ -66,11 +66,10 @@ defmodule Core.Factory do
   end
 
   def person_document_factory do
-    %PersonDocument{
-      person_id: UUID.generate(),
-      type: Enum.random(["PASSPORT", "NATIONAL_ID", "BIRTH_CERTIFICATE"]),
-      number: sequence(:document_number, &"document-number-#{&1}")
-    }
+    Map.merge(
+      %PersonDocument{},
+      make_document(Enum.random(~w(PASSPORT NATIONAL_ID BIRTH_CERTIFICATE)))
+    )
   end
 
   def person_phone_factory do
@@ -126,10 +125,7 @@ defmodule Core.Factory do
   end
 
   def document_factory do
-    %{
-      type: Enum.random(["PASSPORT", "NATIONAL_ID", "BIRTH_CERTIFICATE"]),
-      number: sequence(:document_number, &"document-number-#{&1}")
-    }
+    make_document(Enum.random(~w(PASSPORT NATIONAL_ID BIRTH_CERTIFICATE)))
   end
 
   def phone_factory do
@@ -144,5 +140,53 @@ defmodule Core.Factory do
       type: Enum.random(["OTP", "OFFLINE"]),
       phone_number: "+38#{Enum.random(1_000_000_000..9_999_999_999)}"
     }
+  end
+
+  defp make_document("NATIONAL_ID") do
+    %{
+      type: "NATIONAL_ID",
+      number: document_number(9),
+      issued_by: document_number(4),
+      issued_at: add_random_years(0, 2, -1),
+      expiration_date: add_random_years(10, 12)
+    }
+  end
+
+  defp make_document("PASSPORT") do
+    %{
+      type: "PASSPORT",
+      number: "#{random_letter()}#{random_letter()}#{document_number(6)}",
+      issued_by: "#{city()} РОУ ВМУ МВС в #{region()} області",
+      issued_at: add_random_years(2, 10, -1)
+    }
+  end
+
+  defp make_document("BIRTH_CERTIFICATE") do
+    %{
+      type: "BIRTH_CERTIFICATE",
+      number:
+        1..16
+        |> Enum.map(fn _ -> random_letter() end)
+        |> Enum.join(random_letter()),
+      issued_by: "#{city()} РОУ ВМУ МВС в #{region()} області",
+      issued_at: add_random_years(0, 16, -1),
+      expiration_date: add_random_years(0, 16)
+    }
+  end
+
+  defp city, do: Enum.random(~w(Десняньским Яворівським))
+  defp region, do: Enum.random(~w(Чернігівській Львівській))
+
+  defp add_random_years(min, max, koef \\ 1),
+    do: Date.utc_today() |> Date.add(koef * Enum.random(min..max) * 365) |> Date.to_string()
+
+  defp document_number(length) do
+    min = Kernel.trunc(:math.pow(10, length - 1))
+    max = Kernel.trunc(:math.pow(10, length)) - 1
+    min..max |> Enum.random() |> Integer.to_string()
+  end
+
+  defp random_letter do
+    List.to_string([Enum.random(?А..?Я)])
   end
 end

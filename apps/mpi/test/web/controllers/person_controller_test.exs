@@ -36,7 +36,8 @@ defmodule MPI.Web.PersonControllerTest do
   end
 
   def json_person_attributes?(data) do
-    is_equal("phones", :phones, ["number", "type"], data) && is_equal("documents", :documents, ["number", "type"], data)
+    is_equal("phones", :phones, ["number", "type"], data) &&
+      is_equal("documents", :documents, ["number", "type"], data)
   end
 
   test "successful show person", %{conn: conn} do
@@ -70,6 +71,8 @@ defmodule MPI.Web.PersonControllerTest do
       |> Poison.encode!()
       |> Poison.decode!()
 
+    person_data["documents"]
+
     res =
       conn
       |> post(person_path(conn, :create), person_data)
@@ -83,6 +86,8 @@ defmodule MPI.Web.PersonControllerTest do
       |> json_response(200)
 
     json_person_attributes?(res["data"])
+
+    res["data"]["documents"]
     assert_person(res["data"])
   end
 
@@ -162,9 +167,10 @@ defmodule MPI.Web.PersonControllerTest do
   end
 
   describe "create or update person with unzr" do
-    test "success update person and update unzr ignore documents and check updated_by and inserted_by user", %{
-      conn: conn
-    } do
+    test "success update person and update unzr ignore documents and check updated_by and inserted_by user",
+         %{
+           conn: conn
+         } do
       inserted_by_id = UUID.generate()
       update_by_id = UUID.generate()
       document = build(:document, type: "NATIONAL_ID")
@@ -416,7 +422,11 @@ defmodule MPI.Web.PersonControllerTest do
     merged_id2 = UUID.generate()
     person = insert(:person, merged_ids: [merged_id1])
 
-    patch(conn, person_path(conn, :update, person.id), Poison.encode!(%{merged_ids: [merged_id2]}))
+    patch(
+      conn,
+      person_path(conn, :update, person.id),
+      Poison.encode!(%{merged_ids: [merged_id2]})
+    )
 
     assert [^merged_id1, ^merged_id2] = Repo.get(Person, person.id).merged_ids
   end
@@ -514,9 +524,10 @@ defmodule MPI.Web.PersonControllerTest do
     end)
   end
 
-  test "successful persons search by unzr, tax_id, birthday as parameters when person has no unzr but has tax_id", %{
-    conn: conn
-  } do
+  test "successful persons search by unzr, tax_id, birthday as parameters when person has no unzr but has tax_id",
+       %{
+         conn: conn
+       } do
     person = insert(:person, unzr: nil)
     tax_id = person.tax_id
 
@@ -547,7 +558,9 @@ defmodule MPI.Web.PersonControllerTest do
 
     ids = [id_1, id_2, id_3, id_4, id_5]
 
-    conn = get(conn, person_path(conn, :index, ids: Enum.join(ids, ","), status: "active", limit: 3))
+    conn =
+      get(conn, person_path(conn, :index, ids: Enum.join(ids, ","), status: "active", limit: 3))
+
     data = json_response(conn, 200)["data"]
     assert 2 == length(data)
 
@@ -658,7 +671,9 @@ defmodule MPI.Web.PersonControllerTest do
 
     assert 1 == Enum.count(data)
     params = Map.delete(search_params, "phone_number")
-    assert Enum.into(params, %{}, fn {k, v} -> {k, String.downcase(v)} end) == data |> hd |> Map.take(Map.keys(params))
+
+    assert Enum.into(params, %{}, fn {k, v} -> {k, String.downcase(v)} end) ==
+             data |> hd |> Map.take(Map.keys(params))
 
     search_params =
       search_params
@@ -715,7 +730,7 @@ defmodule MPI.Web.PersonControllerTest do
   end
 
   defp assert_document(document) do
-    Enum.each(~w(type number issued_by issued_at), fn field ->
+    Enum.each(~w(type number issued_by issued_at expiration_date), fn field ->
       assert Map.has_key?(document, field)
     end)
   end
