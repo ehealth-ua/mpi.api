@@ -5,7 +5,7 @@ defmodule Core.PersonDocument do
   import Ecto.Changeset
   alias Core.Person
 
-  @derive {Poison.Encoder, only: [:type, :number, :issued_by, :issued_at]}
+  @derive {Poison.Encoder, only: [:type, :number, :issued_by, :issued_at, :expiration_date]}
   @primary_key {:id, Ecto.UUID, autogenerate: true}
   @foreign_key_type Ecto.UUID
   schema "person_documents" do
