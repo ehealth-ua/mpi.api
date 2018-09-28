@@ -20,7 +20,13 @@ defmodule Deduplication.Match do
   @person_status_inactive Person.status(:inactive)
 
   def run do
-    Logger.info("Starting to look for duplicates at...")
+    Logger.info(fn ->
+      Jason.encode!(%{
+        "log_type" => "info",
+        "message" => "Starting to look for duplicates at #{DateTime.utc_now()}..."
+      })
+    end)
+
     config = config()
 
     depth = -config[:depth]
@@ -49,12 +55,12 @@ defmodule Deduplication.Match do
     candidates =
       candidates_query
       |> preload([:documents, :phones])
-      |> Repo.all()
+      |> Repo.all(timeout: :infinity)
 
     persons =
       persons_query
       |> preload([:documents, :phones])
-      |> Repo.all()
+      |> Repo.all(timeout: :infinity)
 
     pairs =
       find_duplicates(candidates, persons, fn candidate, person ->
@@ -65,9 +71,13 @@ defmodule Deduplication.Match do
     if length(pairs) > 0 do
       short_pairs = Enum.map(pairs, &{elem(&1, 1).id, elem(&1, 2).id})
 
-      Logger.info(
-        "Found duplicates. Will insert the following {master_person_id, person_id} pairs: #{inspect(short_pairs)}"
-      )
+      Logger.info(fn ->
+        Jason.encode!(%{
+          "log_type" => "info",
+          "message" =>
+            "Found duplicates. Will insert the following {master_person_id, person_id} pairs: #{inspect(short_pairs)}"
+        })
+      end)
 
       merge_candidates =
         Enum.map(pairs, fn {{_, details}, master_person, person} ->
@@ -101,10 +111,27 @@ defmodule Deduplication.Match do
         @deduplication_client.post!(url, "", [{"Content-Type", "application/json"}])
       end)
 
-      Logger.info("Finished to look for duplicates at...")
+      Logger.info(fn ->
+        Jason.encode!(%{
+          "log_type" => "info",
+          "message" => "Finished to look for duplicates at #{DateTime.utc_now()}"
+        })
+      end)
     else
-      Logger.info("Found no duplicates.")
-      Logger.info("Finished to look for duplicates at...")
+      Enum.each(
+        [
+          "Found no duplicates.",
+          "Finished to look for duplicates at #{DateTime.utc_now()}"
+        ],
+        fn message ->
+          Logger.info(fn ->
+            Jason.encode!(%{
+              "log_type" => "info",
+              "message" => message
+            })
+          end)
+        end
+      )
     end
   end
 
@@ -131,20 +158,12 @@ defmodule Deduplication.Match do
   end
 
   def match_score(candidate, person, comparison_fields) do
-    matched? = fn field_name, candidate_field, person_field ->
-      if field_name == :documents || field_name == :phones do
-        compare_lists(candidate_field, person_field)
-      else
-        if candidate_field == person_field, do: :match, else: :no_match
-      end
-    end
-
     {score, details} =
       Enum.reduce(comparison_fields, {0.0, %{}}, fn {field_name, coeficients}, {score, details} ->
         candidate_field = process_field(candidate, field_name)
         person_field = process_field(person, field_name)
 
-        weight = coeficients[matched?.(field_name, candidate_field, person_field)]
+        weight = coeficients[matched?(field_name, candidate_field, person_field)]
 
         details =
           Map.put_new(details, field_name, %{
@@ -157,6 +176,15 @@ defmodule Deduplication.Match do
       end)
 
     {Float.round(score, 2), details}
+  end
+
+  def matched?(field_name, candidate_field, person_field) do
+    cond do
+      field_name == :documents || field_name == :phones -> compare_lists(candidate_field, person_field)
+      is_nil(candidate_field) && is_nil(person_field) -> :no_match
+      candidate_field == person_field -> :match
+      true -> :no_match
+    end
   end
 
   defp process_field(struct, field_name) do
@@ -192,7 +220,7 @@ defmodule Deduplication.Match do
     end
   end
 
-  def compare_lists([], []), do: :match
+  def compare_lists([], []), do: :no_match
 
   def compare_lists(candidate_field, person_field) when is_list(candidate_field) and is_list(person_field) do
     common_items =
@@ -205,7 +233,7 @@ defmodule Deduplication.Match do
     if List.first(common_items), do: :match, else: :no_match
   end
 
-  def compare_lists(nil, nil), do: :match
+  def compare_lists(nil, nil), do: :no_match
   def compare_lists(field, field), do: :match
   def compare_lists(_, _), do: :no_match
 
