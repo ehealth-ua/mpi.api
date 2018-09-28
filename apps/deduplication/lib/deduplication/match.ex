@@ -21,7 +21,7 @@ defmodule Deduplication.Match do
 
   def run do
     Logger.info(fn ->
-      Jason.encode!(%{
+      Poison.encode!(%{
         "log_type" => "info",
         "message" => "Starting to look for duplicates at #{DateTime.utc_now()}..."
       })
@@ -72,7 +72,7 @@ defmodule Deduplication.Match do
       short_pairs = Enum.map(pairs, &{elem(&1, 1).id, elem(&1, 2).id})
 
       Logger.info(fn ->
-        Jason.encode!(%{
+        Poison.encode!(%{
           "log_type" => "info",
           "message" =>
             "Found duplicates. Will insert the following {master_person_id, person_id} pairs: #{inspect(short_pairs)}"
@@ -112,7 +112,7 @@ defmodule Deduplication.Match do
       end)
 
       Logger.info(fn ->
-        Jason.encode!(%{
+        Poison.encode!(%{
           "log_type" => "info",
           "message" => "Finished to look for duplicates at #{DateTime.utc_now()}"
         })
@@ -125,7 +125,7 @@ defmodule Deduplication.Match do
         ],
         fn message ->
           Logger.info(fn ->
-            Jason.encode!(%{
+            Poison.encode!(%{
               "log_type" => "info",
               "message" => message
             })
