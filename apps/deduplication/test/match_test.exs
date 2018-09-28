@@ -106,11 +106,30 @@ defmodule Deduplication.MatchTest do
 
       list1 = nil
       list2 = nil
-      assert :match = Deduplication.compare_lists(list1, list2)
+      assert :no_match = Deduplication.compare_lists(list1, list2)
 
       list1 = []
       list2 = []
-      assert :match = Deduplication.compare_lists(list1, list2)
+      assert :no_match = Deduplication.compare_lists(list1, list2)
+    end
+
+    test "match?/3" do
+      assert :no_match == Deduplication.matched?(:documents, nil, nil)
+      assert :no_match == Deduplication.matched?(:documents, [], [])
+
+      assert :no_match ==
+               Deduplication.matched?(:documents, [%PersonDocument{number: "111115", type: "BIRTH_CERTIFICATE"}], [
+                 %PersonDocument{number: "111111", type: "BIRTH_CERTIFICATE"}
+               ])
+
+      assert :match ==
+               Deduplication.matched?(:documents, [%PersonDocument{number: "111115", type: "BIRTH_CERTIFICATE"}], [
+                 %PersonDocument{number: "111115", type: "BIRTH_CERTIFICATE"}
+               ])
+
+      assert :no_match == Deduplication.matched?(:tax_id, nil, nil)
+      assert :match == Deduplication.matched?(:tax_id, "3087232628", "3087232628")
+      assert :no_match == Deduplication.matched?(:tax_id, "3087232628", "0087232628")
     end
 
     test "pulls candidates and runs them through score matching" do
@@ -256,7 +275,7 @@ defmodule Deduplication.MatchTest do
       assert {0.0, _} = Deduplication.match_score(person1, person4, comparison_fields)
       assert {0.0, _} = Deduplication.match_score(person2, person3, comparison_fields)
       assert {0.6, _} = Deduplication.match_score(person2, person4, comparison_fields)
-      assert {0.2, _} = Deduplication.match_score(person3, person4, comparison_fields)
+      assert {0.0, _} = Deduplication.match_score(person3, person4, comparison_fields)
       assert {0.8, _} = Deduplication.match_score(person1, person1, comparison_fields)
     end
 
