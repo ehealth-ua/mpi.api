@@ -82,6 +82,7 @@ defmodule Core.Persons.PersonsAPI do
     Person
     |> preload([:documents, :phones])
     |> where([p], p.unzr == ^unzr)
+    |> where([p], p.status == @person_status_active)
     |> Repo.one()
   end
 
