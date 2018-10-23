@@ -3,6 +3,7 @@ defmodule Core.Persons.PersonsAPI do
 
   import Ecto.Changeset
   import Ecto.Query
+  alias Core.Maybe
   alias Core.Person
   alias Core.PersonDocument
   alias Core.PersonPhone
@@ -12,10 +13,19 @@ defmodule Core.Persons.PersonsAPI do
 
   @person_status_active Person.status(:active)
 
+  defp trim_spaces(input_string), do: input_string |> String.split() |> Enum.join(" ")
+
+  defp trim_name_spaces(params) do
+    params
+    |> Map.take(~w(first_name second_name last_name))
+    |> Enum.reduce(%{}, fn {key, value}, acc -> Map.put(acc, key, Maybe.map(value, &trim_spaces/1)) end)
+    |> Map.merge(params, fn _key, value1, _value2 -> value1 end)
+  end
+
   def changeset(%Person{} = person, params) do
     person
     |> Repo.preload([:phones, :documents])
-    |> cast(params, Person.fields())
+    |> cast(trim_name_spaces(params), Person.fields())
     |> cast_assoc(:phones)
     |> cast_assoc(:documents, required: true)
     |> validate_required(Person.fields_required())
