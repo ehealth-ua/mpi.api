@@ -43,14 +43,14 @@ defmodule MPI.Web.PersonControllerTest do
   test "successful show person", %{conn: conn} do
     person = insert(:person)
 
-    res =
+    resp =
       conn
       |> get(person_path(conn, :show, person.id))
       |> json_response(200)
 
-    assert res["data"]["id"] == person.id
-    json_person_attributes?(res["data"])
-    assert_person(res["data"])
+    assert resp["data"]["id"] == person.id
+    json_person_attributes?(resp["data"])
+    assert_person(resp["data"])
   end
 
   test "person is not found", %{conn: conn} do
@@ -66,29 +66,56 @@ defmodule MPI.Web.PersonControllerTest do
   test "successful create person", %{conn: conn} do
     expect(KafkaMock, :publish_person_event, fn _, _, _ -> :ok end)
 
-    person_data =
-      build(:person)
-      |> Poison.encode!()
-      |> Poison.decode!()
+    person_data = string_params_for(:person)
 
     person_data["documents"]
 
-    res =
+    resp =
       conn
       |> post(person_path(conn, :create), person_data)
       |> json_response(201)
 
-    assert_person(res["data"])
+    assert_person(resp["data"])
 
-    res =
+    resp =
       conn
-      |> get(person_path(conn, :show, res["data"]["id"]))
+      |> get(person_path(conn, :show, resp["data"]["id"]))
       |> json_response(200)
 
-    json_person_attributes?(res["data"])
+    json_person_attributes?(resp["data"])
 
-    res["data"]["documents"]
-    assert_person(res["data"])
+    resp["data"]["documents"]
+    assert_person(resp["data"])
+  end
+
+  test "spaces are trimmed when person is created", %{conn: conn} do
+    expect(KafkaMock, :publish_person_event, fn _, _, _ -> :ok end)
+
+    person_data =
+      string_params_for(:person, %{
+        first_name: "   first   name ",
+        second_name: "  second name",
+        last_name: "last name  "
+      })
+
+    resp =
+      conn
+      |> post(person_path(conn, :create), person_data)
+      |> json_response(201)
+
+    assert_person(resp["data"])
+
+    resp =
+      conn
+      |> get(person_path(conn, :show, resp["data"]["id"]))
+      |> json_response(200)
+
+    json_person_attributes?(resp["data"])
+
+    assert_person(resp["data"])
+    assert "first name" == resp["data"]["first_name"]
+    assert "second name" == resp["data"]["second_name"]
+    assert "last name" == resp["data"]["last_name"]
   end
 
   test "successful create person with inserted_by, updayed_by by x-consumer-id", %{conn: conn} do
@@ -96,55 +123,52 @@ defmodule MPI.Web.PersonControllerTest do
     user_id = UUID.generate()
 
     person_data =
-      build(:person)
-      |> Poison.encode!()
-      |> Poison.decode!()
+      :person
+      |> string_params_for()
       |> Map.delete("phones")
 
-    res =
+    resp =
       conn
       |> put_req_header("x-consumer-id", user_id)
       |> post(person_path(conn, :create), person_data)
       |> json_response(201)
 
-    assert_person(res["data"])
-    assert res["data"]["inserted_by"] == user_id
-    assert res["data"]["updated_by"] == user_id
+    assert_person(resp["data"])
+    assert resp["data"]["inserted_by"] == user_id
+    assert resp["data"]["updated_by"] == user_id
   end
 
   test "successful create person without phones", %{conn: conn} do
     expect(KafkaMock, :publish_person_event, fn _, _, _ -> :ok end)
 
     person_data =
-      build(:person)
-      |> Poison.encode!()
-      |> Poison.decode!()
+      :person
+      |> string_params_for()
       |> Map.delete("phones")
 
-    res =
+    resp =
       conn
       |> post(person_path(conn, :create), person_data)
       |> json_response(201)
 
-    assert_person(res["data"])
+    assert_person(resp["data"])
 
-    res =
+    resp =
       conn
-      |> get(person_path(conn, :show, res["data"]["id"]))
+      |> get(person_path(conn, :show, resp["data"]["id"]))
       |> json_response(200)
 
-    json_person_attributes?(res["data"])
-    assert_person(res["data"])
+    json_person_attributes?(resp["data"])
+    assert_person(resp["data"])
   end
 
   test "creation person without documents failed", %{conn: conn} do
     person_data =
-      build(:person)
-      |> Poison.encode!()
-      |> Poison.decode!()
+      :person
+      |> string_params_for()
       |> Map.delete("documents")
 
-    res =
+    resp =
       conn
       |> post(person_path(conn, :create), person_data)
       |> json_response(422)
@@ -163,7 +187,7 @@ defmodule MPI.Web.PersonControllerTest do
                }
              ],
              "type" => "validation_failed"
-           } = res["error"]
+           } = resp["error"]
   end
 
   describe "create or update person with unzr" do
@@ -219,9 +243,7 @@ defmodule MPI.Web.PersonControllerTest do
 
       person_data =
         :person
-        |> build()
-        |> Poison.encode!()
-        |> Poison.decode!()
+        |> string_params_for()
         |> Map.delete("no_tax_id")
 
       person_created =
@@ -235,17 +257,15 @@ defmodule MPI.Web.PersonControllerTest do
     test "success create person without without unzr with NATIONAL_ID document", %{conn: conn} do
       expect(KafkaMock, :publish_person_event, fn _, _, _ -> :ok end)
       document = build(:document, type: "NATIONAL_ID")
-      person = build(:person, documents: [document])
 
-      person_data =
-        person
-        |> Poison.encode!()
-        |> Poison.decode!()
+      person =
+        :person
+        |> string_params_for(documents: [document])
         |> Map.delete("unzr")
 
       person_created =
         conn
-        |> post(person_path(conn, :create), person_data)
+        |> post(person_path(conn, :create), person)
         |> json_response(201)
 
       assert_person(person_created["data"])
@@ -258,9 +278,7 @@ defmodule MPI.Web.PersonControllerTest do
 
       person_data =
         :person
-        |> build()
-        |> Poison.encode!()
-        |> Poison.decode!()
+        |> string_params_for()
         |> Map.put("first_name", "test1")
 
       person_created =
@@ -301,21 +319,21 @@ defmodule MPI.Web.PersonControllerTest do
         ])
         |> Map.put("id", person_created["data"]["id"])
 
-      res =
+      resp =
         conn
         |> post(person_path(conn, :create), person_data)
         |> json_response(200)
 
-      assert_person(res["data"])
+      assert_person(resp["data"])
 
-      res =
+      resp =
         conn
         |> get(person_path(conn, :show, person_created["data"]["id"]))
         |> json_response(200)
 
-      assert res["data"]
-      json_person_attributes?(res["data"])
-      assert res["data"]["birth_country"] == "some-changed-birth-country"
+      assert resp["data"]
+      json_person_attributes?(resp["data"])
+      assert resp["data"]["birth_country"] == "some-changed-birth-country"
     end
 
     test "person not found", %{conn: conn} do
@@ -366,34 +384,53 @@ defmodule MPI.Web.PersonControllerTest do
   test "successful update person", %{conn: conn} do
     person = insert(:person)
 
-    person_data =
-      :person
-      |> build()
-      |> Poison.encode!()
-      |> Poison.decode!()
+    person_data = string_params_for(:person)
 
-    res =
+    resp =
       conn
       |> put(person_path(conn, :update, person.id), person_data)
       |> json_response(200)
 
-    assert res["data"]
-    json_person_attributes?(res["data"])
-    assert_person(res["data"])
+    assert resp["data"]
+    json_person_attributes?(resp["data"])
+    assert_person(resp["data"])
+  end
+
+  test "spaces are trimmed when person is updated", %{conn: conn} do
+    person = insert(:person)
+
+    person_data =
+      string_params_for(:person, %{
+        first_name: "   first   name ",
+        second_name: "  second name",
+        last_name: "last name  "
+      })
+
+    resp =
+      conn
+      |> put(person_path(conn, :update, person.id), person_data)
+      |> json_response(200)
+
+    assert resp["data"]
+    json_person_attributes?(resp["data"])
+    assert_person(resp["data"])
+    assert "first name" == resp["data"]["first_name"]
+    assert "second name" == resp["data"]["second_name"]
+    assert "last name" == resp["data"]["last_name"]
   end
 
   describe "reset auth method" do
     test "success", %{conn: conn} do
       person = insert(:person)
 
-      res =
+      resp =
         conn
         |> patch(person_path(conn, :reset_auth_method, person.id))
         |> json_response(200)
 
-      assert res["data"]
-      assert_person(res["data"])
-      assert [%{"type" => "NA"}] == res["data"]["authentication_methods"]
+      assert resp["data"]
+      assert_person(resp["data"])
+      assert [%{"type" => "NA"}] == resp["data"]["authentication_methods"]
     end
 
     test "invalid status", %{conn: conn} do

@@ -218,10 +218,5 @@ defmodule Core.Persons.PersonTest do
     |> Repo.preload(:documents)
   end
 
-  defp build_person_map do
-    :person
-    |> build()
-    |> Poison.encode!()
-    |> Poison.decode!()
-  end
+  defp build_person_map, do: string_params_for(:person)
 end
