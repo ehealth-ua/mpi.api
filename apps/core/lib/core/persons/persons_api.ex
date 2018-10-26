@@ -107,6 +107,8 @@ defmodule Core.Persons.PersonsAPI do
   end
 
   def search(params) do
+    params = trim_name_spaces(params)
+
     paging_params =
       Map.merge(%{"page_size" => Confex.get_env(:core, :max_persons_result)}, params)
 
