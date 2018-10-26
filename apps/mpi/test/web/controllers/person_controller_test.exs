@@ -609,6 +609,35 @@ defmodule MPI.Web.PersonControllerTest do
     end)
   end
 
+  test "successful persons search by first_name, second_name and last_name with extra spaces", %{conn: conn} do
+    person = insert(:person,
+      first_name: "first name",
+      second_name: "second name",
+      last_name: "last name"
+    )
+
+    conn =
+      get(
+        conn,
+        person_path(
+          conn,
+          :index,
+          first_name: "   first   name ",
+          second_name: "  second name",
+          last_name: "last name  "
+        )
+      )
+
+    data = json_response(conn, 200)["data"]
+    assert 1 == length(data)
+
+    Enum.each(data, fn found_person ->
+      assert person.first_name == found_person["first_name"]
+      assert person.second_name == found_person["second_name"]
+      assert person.last_name == found_person["last_name"]
+    end)
+  end
+
   test "empty search", %{conn: conn} do
     conn = get(conn, person_path(conn, :index, ids: ""))
     assert [] == json_response(conn, 200)["data"]
