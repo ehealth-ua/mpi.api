@@ -434,7 +434,7 @@ defmodule MPI.Web.PersonControllerTest do
     end
 
     test "invalid status", %{conn: conn} do
-      person = insert(:person, status: "INACTIVE")
+      person = insert(:person, status: Person.status(:inactive))
 
       conn
       |> patch(person_path(conn, :reset_auth_method, person.id))
@@ -514,6 +514,26 @@ defmodule MPI.Web.PersonControllerTest do
     Enum.each(data, fn person ->
       assert tax_id == person["tax_id"]
     end)
+  end
+
+  test "successful persons search by auth_phone_number", %{conn: conn} do
+    %{id: person_id} = person = insert(:person)
+
+    auth_phone_number =
+      person
+      |> Map.get(:authentication_methods)
+      |> Enum.random()
+      |> Map.get(:phone_number)
+
+    insert(:person, authentication_methods: [%{phone_number: auth_phone_number}], status: Person.status(:inactive))
+
+    resp_data =
+      conn
+      |> get(person_path(conn, :index, auth_phone_number: auth_phone_number))
+      |> json_response(200)
+      |> Map.get("data")
+
+    assert [%{"id" => ^person_id}] = resp_data
   end
 
   test "successful persons search by unzr as type number", %{conn: conn} do

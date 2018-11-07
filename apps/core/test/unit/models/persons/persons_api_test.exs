@@ -12,6 +12,8 @@ defmodule Core.Persons.PersonTest do
   @test_person_id2 "ce377777-d8c4-4dd8-9328-de24b1ee3880"
   @test_consumer_id "ce377888-d8c4-4dd8-9328-de24b1ee3881"
   @test_document_number "document-number-99999"
+  @test_phone_number "phone-number-1"
+  @test_phone_number2 "phone-number-2"
 
   @test_consumer_first_name_original "Bob"
   @test_consumer_first_name_changed "Robbie"
@@ -147,7 +149,48 @@ defmodule Core.Persons.PersonTest do
     ]
 
     for {params, expected_count} <- test_params_to_entries_count do
-      assert PersonsAPI.search(params).total_entries === expected_count
+      %Scrivener.Page{total_entries: ^expected_count} = PersonsAPI.search(params)
+    end
+  end
+
+  test "searches with auth phone number" do
+    insert_person_test_data(%{
+      id: @test_person_id,
+      authentication_methods: [%{type: "OTP", phone_number: @test_phone_number}]
+    })
+
+    insert_person_test_data(%{
+      id: @test_consumer_id,
+      authentication_methods: [%{type: "OTP", phone_number: @test_phone_number}],
+      status: Person.status(:inactive)
+    })
+
+    insert_person_test_data(%{
+      id: @test_person_id2,
+      authentication_methods: [
+        %{type: "OTP", phone_number: @test_phone_number2},
+        %{type: "OFFLINE"}
+      ]
+    })
+
+    assert %Scrivener.Page{
+             entries: [
+               %Person{
+                 id: @test_person_id,
+                 authentication_methods: [
+                   %{"type" => "OTP", "phone_number" => @test_phone_number}
+                 ]
+               }
+             ]
+           } = PersonsAPI.search(%{"auth_phone_number" => @test_phone_number})
+
+    test_params_to_entries_count = [
+      {%{"auth_phone_number" => @test_phone_number2}, 1},
+      {%{}, 3}
+    ]
+
+    for {params, expected_count} <- test_params_to_entries_count do
+      %Scrivener.Page{total_entries: ^expected_count} = PersonsAPI.search(params)
     end
   end
 

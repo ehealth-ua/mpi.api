@@ -129,6 +129,7 @@ defmodule Core.Persons.PersonsAPI do
       |> with_type_number(Map.take(params, ~w(type number)))
       |> with_birth_certificate(Map.take(params, ~w(birth_certificate)))
       |> with_phone_number(Map.take(params, ~w(phone_number)))
+      |> with_auth_phone_number(Map.take(params, ~w(auth_phone_number)))
       |> order_by([p], desc: p.inserted_at)
 
     try do
@@ -173,6 +174,17 @@ defmodule Core.Persons.PersonsAPI do
   end
 
   defp with_phone_number(query, _), do: query
+
+  defp with_auth_phone_number(query, %{"auth_phone_number" => auth_phone_number}) do
+    query
+    |> where([p], p.status == @person_status_active)
+    |> where(
+      [p],
+      fragment("? @> ?", p.authentication_methods, ^[%{"phone_number" => auth_phone_number}])
+    )
+  end
+
+  defp with_auth_phone_number(query, _), do: query
 
   defp with_birth_certificate(query, %{"birth_certificate" => birth_certificate})
        when not is_nil(birth_certificate) do
