@@ -92,7 +92,6 @@ defmodule Core.Person do
     :patient_signed,
     :process_disclosure_data_consent,
     :status,
-    :no_tax_id,
     :inserted_by,
     :updated_by
   ]
