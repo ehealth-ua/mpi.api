@@ -41,7 +41,7 @@ defmodule Core.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:toml, "~> 0.3.0"},
+      {:confex_config_provider, "~> 0.1.0"},
       {:confex, ">= 0.0.0"},
       {:scrivener_ecto, "~> 1.2"},
       {:ecto_trail, "~> 0.2.4"},

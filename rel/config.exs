@@ -29,11 +29,7 @@ release :mpi do
     ]
   )
 
-  set(
-    config_providers: [
-      {Toml.Provider, [path: "/app/config.toml"]}
-    ]
-  )
+  set(config_providers: [ConfexConfigProvider])
 end
 
 release :person_updates_producer do
@@ -45,11 +41,7 @@ release :person_updates_producer do
     ]
   )
 
-  set(
-    config_providers: [
-      {Toml.Provider, [path: "/app/config.toml"]}
-    ]
-  )
+  set(config_providers: [ConfexConfigProvider])
 end
 
 release :deduplication do
@@ -61,9 +53,5 @@ release :deduplication do
     ]
   )
 
-  set(
-    config_providers: [
-      {Toml.Provider, [path: "/app/config.toml"]}
-    ]
-  )
+  set(config_providers: [ConfexConfigProvider])
 end

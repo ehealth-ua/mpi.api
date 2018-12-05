@@ -9,6 +9,11 @@ config :logger, level: :warn
 # Configure your database
 config :core, Core.Repo,
   adapter: Ecto.Adapters.Postgres,
-  pool: Ecto.Adapters.SQL.Sandbox,
+  username: "postgres",
+  password: "postgres",
   database: "mpi_test",
-  ownership_timeout: 120_000_000
+  hostname: "localhost",
+  port: 5432,
+  pool: Ecto.Adapters.SQL.Sandbox,
+  ownership_timeout: 120_000_000,
+  loggers: [{Ecto.LoggerJSON, :log, [:info]}]

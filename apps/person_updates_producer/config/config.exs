@@ -16,7 +16,7 @@ config :person_updates_producer,
   ],
   worker: PersonUpdatesProducer.Worker
 
-config :person_updates_producer, PersonUpdatesProducer.Worker, batch_size: 100
+config :person_updates_producer, PersonUpdatesProducer.Worker, batch_size: {:system, :integer, "BATCH_SIZE", 100}
 config :person_updates_producer, PersonUpdatesProducer.Application, env: Mix.env()
 
 config :kafka_ex,

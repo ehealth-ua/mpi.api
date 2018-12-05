@@ -37,7 +37,6 @@ defmodule MPI.Mixfile do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:toml, "~> 0.3.0"},
       {:cowboy, "~> 1.1"},
       {:phoenix, "~> 1.3.3"},
       {:phoenix_ecto, "~> 3.2"},
