@@ -19,6 +19,11 @@ config :person_updates_producer,
 config :person_updates_producer, PersonUpdatesProducer.Worker, batch_size: {:system, :integer, "BATCH_SIZE", 100}
 config :person_updates_producer, PersonUpdatesProducer.Application, env: Mix.env()
 
+config :person_updates_producer, PersonUpdatesProducer.Kafka.Producer,
+  partitions: %{
+    "person_events" => {:system, :integer, "PERSON_EVENTS_PARTITIONS"}
+  }
+
 config :kafka_ex,
   # A list of brokers to connect to. This can be in either of the following formats
   #

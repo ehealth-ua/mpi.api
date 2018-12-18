@@ -20,6 +20,7 @@ defmodule PersonUpdateProducer.WorkerTest do
   describe "worker tests" do
     test "success start worker" do
       expect(WorkerMock, :stop_application, fn -> :ok end)
+      expect(KafkaMock, :publish_person_event, fn _, _, _ -> :ok end)
       person_id = UUID.generate()
       insert(:person_update, person_id: person_id)
       assert [_] = Repo.all(PersonUpdate)

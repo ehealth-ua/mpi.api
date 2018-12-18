@@ -4,13 +4,13 @@ defmodule PersonUpdatesProducer.Worker do
   use GenServer
   use Confex, otp_app: :person_updates_producer
 
-  import Ecto.Query
   alias Core.PersonUpdate
   alias Core.Repo
-  alias PersonUpdatesProducer.Kafka.Producer
+  import Ecto.Query
   require Logger
 
   @behaviour PersonUpdatesProducer.Behaviours.WorkerBehaviour
+  @kafka_producer Application.get_env(:person_updates_producer, :kafka)[:producer]
   @worker Application.get_env(:person_updates_producer, :worker)
 
   def start_link do
@@ -33,7 +33,7 @@ defmodule PersonUpdatesProducer.Worker do
       {:stop, :normal, state}
     else
       Enum.each(updates, fn %PersonUpdate{person_id: id, status: status, updated_by: updated_by} ->
-        :ok = Producer.publish_person_event(id, status, updated_by)
+        :ok = @kafka_producer.publish_person_event(id, status, updated_by)
       end)
 
       ids = Enum.map(updates, &Map.get(&1, :id))
