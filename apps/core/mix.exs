@@ -51,6 +51,7 @@ defmodule Core.MixProject do
       {:timex, "~> 3.3.0"},
       {:ecto_logger_json, "~> 0.1"},
       {:mox, "~> 0.3", only: [:test]},
+      {:ex_doc, "~> 0.19", only: :dev, runtime: false},
       {:ex_machina, "~> 2.0", only: [:dev, :test]}
     ]
   end

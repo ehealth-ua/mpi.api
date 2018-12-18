@@ -3,22 +3,13 @@ defmodule MPI.Web.PersonView do
 
   use MPI.Web, :view
   alias Core.Person
+  alias Core.Persons.Renderer
 
   def render("person.json", %{person: %Person{} = person}) do
-    convert_merged_ids(person)
+    Renderer.render("person.json", person)
   end
 
   def render("persons.json", %{persons: persons}) do
     render_many(persons, __MODULE__, "person.json", as: :person)
   end
-
-  defp convert_merged_ids(
-         %Person{person_addresses: person_addresses, addresses: addresses, merged_ids: merged_ids} =
-           person
-       ),
-       do:
-         Map.merge(person, %{
-           merged_ids: merged_ids || [],
-           addresses: addresses ++ person_addresses
-         })
 end

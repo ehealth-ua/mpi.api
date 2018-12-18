@@ -133,6 +133,7 @@ defmodule Core.Persons.PersonsAPI do
       |> with_birth_certificate(Map.take(params, ~w(birth_certificate)))
       |> with_phone_number(Map.take(params, ~w(phone_number)))
       |> with_auth_phone_number(Map.take(params, ~w(auth_phone_number)))
+      |> with_documents(Map.take(params, ~w(documents)))
       |> order_by([p], desc: p.inserted_at)
 
     try do
@@ -160,11 +161,38 @@ defmodule Core.Persons.PersonsAPI do
       :inner,
       [p],
       d in PersonDocument,
-      d.person_id == p.id and d.type == ^type and d.number == ^number
+      d.person_id == p.id and d.type == ^type and fragment("lower(?) = lower(?)", d.number, ^number)
     )
   end
 
   defp with_type_number(query, _), do: query
+
+  defp with_documents(query, %{"documents" => []}), do: query
+
+  defp with_documents(query, %{"documents" => [document | documents]}) do
+    query =
+      join(query,
+        :inner,
+        [p],
+        d in PersonDocument,
+        d.person_id == p.id
+      )
+
+    documents_query = document_search_query(document["type"], document["number"])
+    documents_query = Enum.reduce(documents, documents_query,
+      fn document, acc -> dynamic([p, d], ^acc or ^document_search_query(document["type"], document["number"])) end)
+
+    query
+    |> from()
+    |> where(^documents_query)
+    |> distinct(true)
+  end
+
+  defp with_documents(query, _), do: query
+
+  defp document_search_query(type, number) do
+    dynamic([p, d], d.type == ^type and fragment("lower(?) = lower(?)", d.number, ^number))
+  end
 
   defp with_phone_number(query, %{"phone_number" => phone_number}) do
     join(

@@ -123,7 +123,7 @@ defmodule Core.Persons.PersonTest do
            } == PersonsAPI.search(%{"birth_certificate" => "АК \"27"})
   end
 
-  test "searches with type and nubmer" do
+  test "searches with type and number" do
     insert_person_test_data(%{
       id: @test_person_id,
       documents: [%{type: "PASSPORT", number: @test_document_number}]
