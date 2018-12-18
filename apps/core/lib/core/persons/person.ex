@@ -2,6 +2,7 @@ defmodule Core.Person do
   @moduledoc false
 
   use Ecto.Schema
+  alias Core.PersonAddress
   alias Core.PersonDocument
   alias Core.PersonPhone
 
@@ -9,7 +10,7 @@ defmodule Core.Person do
   @status_inactive "inactive"
 
   @primary_key {:id, Ecto.UUID, autogenerate: true}
-  @derive {Poison.Encoder, except: [:__meta__]}
+  @derive {Poison.Encoder, except: [:__meta__, :person_addresses]}
   schema "persons" do
     field(:version, :string, default: "default")
     field(:first_name, :string)
@@ -26,7 +27,7 @@ defmodule Core.Person do
     field(:preferred_way_communication, :string)
     field(:invalid_tax_id, :boolean, default: false)
     field(:is_active, :boolean, default: true)
-    field(:addresses, {:array, :map})
+    field(:person_addresses, {:array, :map})
     field(:secret, :string)
     field(:emergency_contact, :map)
     field(:confidant_person, {:array, :map})
@@ -38,9 +39,11 @@ defmodule Core.Person do
     field(:authentication_methods, {:array, :map})
     field(:merged_ids, {:array, :string})
     field(:no_tax_id, :boolean, default: false)
+    field(:merge_verified, :boolean)
 
     has_many(:documents, PersonDocument, on_delete: :delete_all, on_replace: :delete)
     has_many(:phones, PersonPhone, on_delete: :delete_all, on_replace: :delete)
+    has_many(:addresses, PersonAddress, on_delete: :delete_all, on_replace: :delete)
     timestamps(type: :utc_datetime)
   end
 
@@ -63,7 +66,7 @@ defmodule Core.Person do
     preferred_way_communication
     invalid_tax_id
     is_active
-    addresses
+    person_addresses
     secret
     emergency_contact
     confidant_person

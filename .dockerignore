@@ -30,3 +30,6 @@ Dockerfile
 # Ignore markdown description
 README.md
 LICENSE.md
+
+# Ignore Python artefacts
+__pycache__

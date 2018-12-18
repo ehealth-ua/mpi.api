@@ -1,6 +1,5 @@
-defmodule Deduplication.MatchTest do
+defmodule Deduplication.V1.MatchTest do
   use Core.ModelCase, async: true
-  import Mox
 
   alias Core.Repo
   alias Core.Person
@@ -8,12 +7,7 @@ defmodule Deduplication.MatchTest do
   alias Core.PersonPhone
   alias Core.MergeCandidate
   alias Core.Factory
-  alias Deduplication.Match, as: Deduplication
-
-  setup do
-    expect(ClientMock, :post!, fn _url, _body, _headers -> %HTTPoison.Response{status_code: 200} end)
-    :ok
-  end
+  alias Deduplication.V1.Match, as: Deduplication
 
   describe "run/0" do
     test "subsequent runs skip found duplicates" do
@@ -42,8 +36,6 @@ defmodule Deduplication.MatchTest do
 
       Deduplication.run()
       assert 2 = Repo.one(from(mc in MergeCandidate, select: count(1)))
-
-      verify!(ClientMock)
     end
 
     test "multiple diplicates of same records were created during depth window" do
@@ -83,7 +75,6 @@ defmodule Deduplication.MatchTest do
           )
 
         assert Repo.one(query)
-        verify!(ClientMock)
       end)
     end
 
@@ -118,14 +109,22 @@ defmodule Deduplication.MatchTest do
       assert :no_match == Deduplication.matched?(:documents, [], [])
 
       assert :no_match ==
-               Deduplication.matched?(:documents, [%PersonDocument{number: "111115", type: "BIRTH_CERTIFICATE"}], [
-                 %PersonDocument{number: "111111", type: "BIRTH_CERTIFICATE"}
-               ])
+               Deduplication.matched?(
+                 :documents,
+                 [%PersonDocument{number: "111115", type: "BIRTH_CERTIFICATE"}],
+                 [
+                   %PersonDocument{number: "111111", type: "BIRTH_CERTIFICATE"}
+                 ]
+               )
 
       assert :match ==
-               Deduplication.matched?(:documents, [%PersonDocument{number: "111115", type: "BIRTH_CERTIFICATE"}], [
-                 %PersonDocument{number: "111115", type: "BIRTH_CERTIFICATE"}
-               ])
+               Deduplication.matched?(
+                 :documents,
+                 [%PersonDocument{number: "111115", type: "BIRTH_CERTIFICATE"}],
+                 [
+                   %PersonDocument{number: "111115", type: "BIRTH_CERTIFICATE"}
+                 ]
+               )
 
       assert :no_match == Deduplication.matched?(:tax_id, nil, nil)
       assert :match == Deduplication.matched?(:tax_id, "3087232628", "3087232628")
@@ -158,7 +157,6 @@ defmodule Deduplication.MatchTest do
       person2_dup = insert(person2_attrs_dup, %{inserted_at: within_hours(73)})
 
       Deduplication.run()
-      verify!(ClientMock)
 
       valid_pairs = [
         [older: person1_dup, newer: person1],

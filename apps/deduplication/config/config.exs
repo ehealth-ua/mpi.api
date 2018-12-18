@@ -9,11 +9,21 @@ config :logger, :console,
 
 config :deduplication,
   worker: Deduplication.Worker,
-  client: HTTPoison
+  producer: Deduplication.Kafka.Producer,
+  client: HTTPoison,
+  py_weight: Deduplication.V2.PyWeight
 
 config :deduplication, Deduplication.Application, env: Mix.env()
 
-config :deduplication, Deduplication.Match,
+config :deduplication, Deduplication.Worker,
+  deduplication_persons_limit: {:system, :integer, "DEDUPLICATION_PERSON_LIMIT", 50},
+  parallel_tasks: {:system, :integer, "DEDUPLICATION_PARRALEL_TASKS", 10}
+
+config :deduplication, Deduplication.V2.Match,
+  score: {:system, "DEDUPLICATION_SCORE", "0.7"},
+  kafka_score: {:system, "DEDUPLICATION_SCORE", "0.9"}
+
+config :deduplication, Deduplication.V1.Match,
   subscribers: [
     {:system, "DEDUPLICATION_SUBSCRIBER_IL", "http://api-svc.il/internal/deduplication/found_duplicates"}
   ],
@@ -31,10 +41,16 @@ config :deduplication, Deduplication.Match,
     phones: %{match: 0.3, no_match: -0.1}
   }
 
-# It is also possible to import configuration files, relative to this
-# directory. For example, you can emulate configuration per environment
-# by uncommenting the line below and defining dev.exs, test.exs and such.
-# Configuration from the imported file will override the ones defined
-# here (which is why it is important to import them last).
-#
+config :kafka_ex,
+  brokers: "localhost:9092",
+  consumer_group: "deactivate_person_events",
+  disable_default_worker: false,
+  sync_timeout: 3000,
+  max_restarts: 10,
+  max_seconds: 60,
+  commit_interval: 5_000,
+  auto_offset_reset: :earliest,
+  commit_threshold: 100,
+  kafka_version: "1.1.0"
+
 import_config "#{Mix.env()}.exs"

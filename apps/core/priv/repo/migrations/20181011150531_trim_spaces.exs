@@ -6,14 +6,22 @@ defmodule Core.Repo.Migrations.TrimSpaces do
 
   def change, do: chunk_update(1000)
 
-  defp trim_name_spaces(limit, offset \\ 0) do
+  defp trim_name_spaces(limit, offset) do
     from(p in Person,
-      where: fragment("id in (select id from persons order by inserted_at offset ? limit ?)", ^offset, ^limit),
+      where:
+        fragment(
+          "id in (select id from persons order by inserted_at offset ? limit ?)",
+          ^offset,
+          ^limit
+        ),
       update: [
         set: [
-          first_name: fragment("array_to_string(regexp_split_to_array(TRIM(first_name), ' {2,}'), ' ')"),
-          second_name: fragment("array_to_string(regexp_split_to_array(TRIM(second_name), ' {2,}'), ' ')"),
-          last_name: fragment("array_to_string(regexp_split_to_array(TRIM(last_name), ' {2,}'), ' ')")
+          first_name:
+            fragment("array_to_string(regexp_split_to_array(TRIM(first_name), ' {2,}'), ' ')"),
+          second_name:
+            fragment("array_to_string(regexp_split_to_array(TRIM(second_name), ' {2,}'), ' ')"),
+          last_name:
+            fragment("array_to_string(regexp_split_to_array(TRIM(last_name), ' {2,}'), ' ')")
         ]
       ]
     )

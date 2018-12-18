@@ -1,4 +1,4 @@
-FROM elixir:1.6.6-alpine as builder
+FROM elixir:1.6.6 as builder
 
 ARG APP_NAME
 
@@ -8,7 +8,6 @@ WORKDIR /app
 
 ENV MIX_ENV=prod
 
-RUN apk add git
 RUN mix do \
   local.hex --force, \
   local.rebar --force, \
@@ -16,20 +15,28 @@ RUN mix do \
   deps.compile, \
   release --name=${APP_NAME}
 
-FROM alpine:3.8
+FROM debian:stretch
 
 ARG APP_NAME
 
-RUN apk add --no-cache \
-  ncurses-libs \
-  zlib \
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends \
   ca-certificates \
   openssl \
-  bash
+  python3 \
+  python3-pip
+
+# UTF-8
+ENV LANG="en_US.UTF-8"
+ENV LC_ALL="en_US.UTF-8"
 
 WORKDIR /app
 
 COPY --from=builder /app/_build/prod/rel/${APP_NAME}/releases/0.1.0/${APP_NAME}.tar.gz /app
+COPY --from=builder /app/python_requirements.txt /app
+
+RUN pip3 install --no-cache-dir setuptools wheel && \
+  pip3 install --no-cache-dir -r python_requirements.txt
 
 RUN tar -xzf ${APP_NAME}.tar.gz; rm ${APP_NAME}.tar.gz
 

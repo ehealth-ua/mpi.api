@@ -38,7 +38,8 @@ defmodule MPI.Web.PersonController do
   end
 
   def create(conn, params) do
-    with {status, {:ok, %Person{} = person}} <- PersonsAPI.create(params, ConnUtils.get_consumer_id(conn)) do
+    with {status, {:ok, %Person{} = person}} <-
+           PersonsAPI.create(params, ConnUtils.get_consumer_id(conn)) do
       conn
       |> put_status(status)
       |> render("person.json", %{person: person})

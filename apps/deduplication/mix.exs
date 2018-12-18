@@ -33,6 +33,10 @@ defmodule Deduplication.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
+      {:kafka_ex, "~> 0.8.3"},
+      {:simetric, "~> 0.2.0"},
+      {:erlport, "~> 0.10.0"},
+      {:poolboy, "~> 1.5"},
       {:core, in_umbrella: true}
     ]
   end

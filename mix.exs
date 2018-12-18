@@ -21,7 +21,7 @@ defmodule MPI.MixProject do
     [
       {:distillery, "~> 2.0", runtime: false},
       {:excoveralls, "~> 0.10.0", only: [:dev, :test]},
-      {:credo, "~> 0.10.0", only: [:dev, :test]}
+      {:credo, "~> 1.0", only: [:dev, :test]}
     ]
   end
 end

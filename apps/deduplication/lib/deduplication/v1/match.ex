@@ -1,13 +1,12 @@
-defmodule Deduplication.Match do
+defmodule Deduplication.V1.Match do
   @moduledoc false
 
   use Confex, otp_app: :deduplication
 
   require Logger
-  import Ecto.Query
   import Core.AuditLogs, only: [create_audit_logs: 1]
+  import Ecto.Query
 
-  alias Confex.Resolver
   alias Core.MergeCandidate
   alias Core.Person
   alias Core.PersonDocument
@@ -16,7 +15,6 @@ defmodule Deduplication.Match do
   alias Ecto.Multi
   alias Ecto.UUID
 
-  @deduplication_client Application.get_env(:deduplication, :client)
   @person_status_inactive Person.status(:inactive)
 
   def run do
@@ -75,7 +73,9 @@ defmodule Deduplication.Match do
         Poison.encode!(%{
           "log_type" => "info",
           "message" =>
-            "Found duplicates. Will insert the following {master_person_id, person_id} pairs: #{inspect(short_pairs)}"
+            "Found duplicates. Will insert the following {master_person_id, person_id} pairs: #{
+              inspect(short_pairs)
+            }"
         })
       end)
 
@@ -94,22 +94,23 @@ defmodule Deduplication.Match do
         end)
 
       stale_persons_query =
-        from(p in Person, where: p.id in ^Enum.map(pairs, fn {_, _master_person, person} -> person.id end))
+        from(
+          p in Person,
+          where: p.id in ^Enum.map(pairs, fn {_, _master_person, person} -> person.id end)
+        )
 
       system_user_id = Confex.fetch_env!(:core, :system_user)
 
       {:ok, _} =
         Multi.new()
         |> Multi.insert_all(:insert_candidates, MergeCandidate, merge_candidates, returning: true)
-        |> Multi.update_all(:update_stale_persons, stale_persons_query, set: [status: @person_status_inactive])
+        |> Multi.update_all(
+          :update_stale_persons,
+          stale_persons_query,
+          set: [status: @person_status_inactive]
+        )
         |> Multi.run(:log_inserts, &log_insert(&1.insert_candidates, system_user_id))
         |> Repo.transaction()
-
-      Enum.each(config[:subscribers], fn subscriber ->
-        url = Resolver.resolve!(subscriber)
-
-        @deduplication_client.post!(url, "", [{"Content-Type", "application/json"}])
-      end)
 
       Logger.info(fn ->
         Poison.encode!(%{
@@ -148,7 +149,8 @@ defmodule Deduplication.Match do
       matching_persons =
         persons
         |> Enum.reject(fn person ->
-          person == candidate || candidate_is_duplicate?.(person, acc) || pair_already_exists?.(person, candidate, acc)
+          person == candidate || candidate_is_duplicate?.(person, acc) ||
+            pair_already_exists?.(person, candidate, acc)
         end)
         |> Enum.map(fn person -> {comparison_function.(candidate, person), candidate, person} end)
         |> Enum.filter(fn {{a, _}, _, _} -> a end)
@@ -180,10 +182,17 @@ defmodule Deduplication.Match do
 
   def matched?(field_name, candidate_field, person_field) do
     cond do
-      field_name == :documents || field_name == :phones -> compare_lists(candidate_field, person_field)
-      is_nil(candidate_field) && is_nil(person_field) -> :no_match
-      candidate_field == person_field -> :match
-      true -> :no_match
+      field_name == :documents || field_name == :phones ->
+        compare_lists(candidate_field, person_field)
+
+      is_nil(candidate_field) && is_nil(person_field) ->
+        :no_match
+
+      candidate_field == person_field ->
+        :match
+
+      true ->
+        :no_match
     end
   end
 
@@ -206,7 +215,9 @@ defmodule Deduplication.Match do
           %{} ->
             item =
               for {key, val} <- item, into: %{} do
-                if is_binary(key), do: {String.to_atom(String.downcase(key)), val}, else: {key, val}
+                if is_binary(key),
+                  do: {String.to_atom(String.downcase(key)), val},
+                  else: {key, val}
               end
 
             Map.take(item, ~w(type number)a)
@@ -222,7 +233,8 @@ defmodule Deduplication.Match do
 
   def compare_lists([], []), do: :no_match
 
-  def compare_lists(candidate_field, person_field) when is_list(candidate_field) and is_list(person_field) do
+  def compare_lists(candidate_field, person_field)
+      when is_list(candidate_field) and is_list(person_field) do
     common_items =
       for item1 <- candidate_field,
           item2 <- person_field,

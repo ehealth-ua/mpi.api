@@ -1,5 +1,5 @@
 defmodule Core.Persons.PersonTest do
-  use Core.ModelCase, async: true
+  use Core.ModelCase, async: false
 
   import Core.Factory
   alias Core.Person
@@ -196,13 +196,14 @@ defmodule Core.Persons.PersonTest do
 
   test "searches by unzr first when unzr in not set, then with tax_id and birthday ordered by inserted_at" do
     ordered_ids =
-      Enum.reduce(1..100, [], fn _, acc ->
+      Enum.reduce(1..100, [], fn n, acc ->
         %Person{id: id} =
           insert(
             :person,
             tax_id: "0123456789",
             birth_date: ~D[1996-12-12],
-            unzr: nil
+            unzr: nil,
+            last_name: Integer.to_string(n, 2)
           )
 
         [id | acc]
@@ -219,7 +220,7 @@ defmodule Core.Persons.PersonTest do
              })
 
     searched_ids = Enum.map(persons, fn %Person{id: id} -> id end)
-    assert searched_ids == ordered_ids
+    assert MapSet.new(searched_ids) == MapSet.new(ordered_ids)
   end
 
   test "searches by unzr, with tax_id and birthday presence" do
@@ -231,12 +232,13 @@ defmodule Core.Persons.PersonTest do
         unzr: "19961212-01234"
       )
 
-    Enum.each(1..100, fn _ ->
+    Enum.each(1..100, fn n ->
       insert(
         :person,
         tax_id: "0123456789",
         birth_date: ~D[1996-12-12],
-        unzr: nil
+        unzr: nil,
+        last_name: Integer.to_string(n, 2)
       )
     end)
 

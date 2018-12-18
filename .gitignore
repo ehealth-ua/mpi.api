@@ -48,3 +48,6 @@ rel/*/
 # Don't commit file uploads
 uploads/
 !uploads/.gitkeep
+
+# Python
+__pycache__

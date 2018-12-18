@@ -7,6 +7,7 @@ defmodule Core.Factory do
   alias Ecto.UUID
   alias Core.MergeCandidate
   alias Core.Person
+  alias Core.PersonAddress
   alias Core.PersonDocument
   alias Core.PersonPhone
   alias Core.PersonUpdate
@@ -27,21 +28,21 @@ defmodule Core.Factory do
 
     %Person{
       version: "0.1",
-      first_name: sequence(:first_name, &"first_name-#{&1}"),
-      last_name: sequence(:last_name, &"last_name-#{&1}"),
-      second_name: sequence(:second_name, &"second_name-#{&1}"),
+      first_name: first_name(),
+      last_name: last_name(),
+      second_name: second_name(),
       birth_date: birthday,
       birth_country: sequence(:birth_country, &"birth_country-#{&1}"),
       birth_settlement: sequence(:birth_settlement, &"birth_settlement-#{&1}"),
       gender: Enum.random(["MALE", "FEMALE"]),
       email: sequence(:email, &"email#{&1}@mail.com"),
-      tax_id: sequence(:tax_id, &"tax_id-#{&1}"),
+      tax_id: document_number(9),
       no_tax_id: false,
       unzr: sequence(:unzr, &"#{birthday}-#{&1}"),
       death_date: ~D[2117-11-09],
       preferred_way_communication: "email",
       is_active: true,
-      addresses: build_list(2, :address),
+      person_addresses: build_list(2, :person_address),
       secret: sequence(:secret, &"secret-#{&1}"),
       emergency_contact: build(:emergency_contact),
       confidant_person: build_list(1, :confidant_person),
@@ -53,7 +54,9 @@ defmodule Core.Factory do
       authentication_methods: build_list(2, :authentication_method),
       merged_ids: [],
       phones: build_list(1, :person_phone),
-      documents: build_list(2, :person_document)
+      documents: build_list(2, :person_document),
+      addresses: build_list(2, :address),
+      merge_verified: nil
     }
   end
 
@@ -63,6 +66,14 @@ defmodule Core.Factory do
       status: Person.status(:active),
       updated_by: UUID.generate()
     }
+  end
+
+  def person_address_factory do
+    make_address()
+  end
+
+  def address_factory do
+    Map.merge(%PersonAddress{}, make_address())
   end
 
   def person_document_factory do
@@ -82,9 +93,9 @@ defmodule Core.Factory do
 
   def emergency_contact_factory do
     %{
-      first_name: sequence(:emergency_contact_first_name, &"first_name-#{&1}"),
-      last_name: sequence(:emergency_contact_last_name, &"last_name-#{&1}"),
-      second_name: sequence(:emergency_contact_second_name, &"second_name-#{&1}"),
+      first_name: first_name(),
+      last_name: last_name(),
+      second_name: second_name(),
       phones: build_list(1, :phone)
     }
   end
@@ -92,9 +103,9 @@ defmodule Core.Factory do
   def confidant_person_factory do
     %{
       relation_type: Enum.random(["PRIMARY", "SECONDARY"]),
-      first_name: sequence(:confidant_person_first_name, &"first_name-#{&1}"),
-      last_name: sequence(:confidant_person_last_name, &"last_name-#{&1}"),
-      second_name: sequence(:confidant_person_second_name, &"second_name-#{&1}"),
+      first_name: first_name(),
+      last_name: last_name(),
+      second_name: second_name(),
       birth_date: "1996-12-12",
       birth_country: sequence(:confidant_person_birth_country, &"birth_country-#{&1}"),
       birth_settlement: sequence(:confidant_person_birth_settlement, &"birth_settlement-#{&1}"),
@@ -104,23 +115,6 @@ defmodule Core.Factory do
       phones: build_list(1, :phone),
       documents_person: build_list(2, :document),
       documents_relationship: build_list(2, :document)
-    }
-  end
-
-  def address_factory do
-    %{
-      type: Enum.random(["RESIDENCE", "REGISTRATION"]),
-      country: Enum.random(["UA"]),
-      area: sequence(:area, &"address-area-#{&1}"),
-      region: sequence(:region, &"address-region-#{&1}"),
-      settlement: sequence(:settlement, &"address-settlement-#{&1}"),
-      settlement_type: Enum.random(["CITY"]),
-      settlement_id: UUID.generate(),
-      street_type: Enum.random(["STREET"]),
-      street: sequence(:street, &"address-street-#{&1}"),
-      building: sequence(:building, &"#{&1 + 1}а"),
-      apartment: sequence(:apartment, &"address-apartment-#{&1}"),
-      zip: to_string(Enum.random(10000..99999))
     }
   end
 
@@ -174,8 +168,22 @@ defmodule Core.Factory do
     }
   end
 
-  defp city, do: Enum.random(~w(Десняньским Яворівським))
-  defp region, do: Enum.random(~w(Чернігівській Львівській))
+  defp make_address do
+    %{
+      type: "RESIDENCE",
+      country: "UA",
+      area: region(),
+      region: region(),
+      settlement: city(),
+      settlement_type: "city",
+      settlement_id: "#{Enum.random(1..24)}",
+      street_type: street_type(),
+      street: street(),
+      building: "#{Enum.random(1..120)}",
+      apartment: "#{Enum.random(1..24)}",
+      zip: "#{Enum.random(10000..99999)}"
+    }
+  end
 
   defp add_random_years(min, max, koef \\ 1),
     do: Date.utc_today() |> Date.add(koef * Enum.random(min..max) * 365) |> Date.to_string()
@@ -188,5 +196,45 @@ defmodule Core.Factory do
 
   defp random_letter do
     List.to_string([Enum.random(?А..?Я)])
+  end
+
+  defp first_name do
+    Enum.random(
+      ~w(Абель Анатолій Богдана Володимир Денис Ґанна Едуард Леон Лук'ян Максім Мар'ян Наталія Назарій Олекса Орест Пилип Полина Пантелеймон Руслана Світлана Юлія Юрій Яків Ярослав)
+    )
+  end
+
+  defp last_name do
+    Enum.random(
+      ~w(Біланюк Бабенко Балясний Банах Бар'яхтар Басок Борис Бахрушин Бернацький Боголюбов Богорош Бойко Бойчук Борзяк Боровик Бурак Бушок
+      Самойлович Анатолій Григорович Сандул Сахнович Свідзинський Семиноженко  Синельников Ситенко Сігорський Скалозуб Скоробогатько Слободянюк Смакула Сминтина Смирнов Соколов Соколовський Стасів Стасюк Сторіжко Стріха Сукач
+      Файнберг Федоровський Федорченко Флейшман Фомін Фуртак Шайкевич Шелест Шиманський Шимон Шпак Шпачинський Шутенко)
+    )
+  end
+
+  defp second_name do
+    Enum.random(
+      ~w(Володимирович Григівна Євгенович Іванівна Йосипович Калістратрівна Костянтинович Корнелійович Миколаївна Олександрович Пилипівна Станіславович Степановна Терентійович Федорівна)
+    )
+  end
+
+  defp region do
+    Enum.random(
+      ~w(Київ Київська Черкаська Чернігівська Чернівецька Січеславська Донецька Івано-Франківська Харківська Херсонська Хмельницька Кропивницька Луганьска Львівська Міколаївська Одеська Полтавська Рівненська Сумська Тернопільска Вінницька Волиньска Закарпаться Запоріжська Житомирська)
+    )
+  end
+
+  defp city do
+    Enum.random(
+      ~w(Київ Черкаси Чернігів Чернівці Дніпро Донецьк Івано-Франківськ Харків Херсон Хмельницьк Кропивницький Луганьс Львів Міколаїв Одеса Полтава Рівне Суми Тернопіль Вінниця Луцьк Ужгород Запоріжжя Житомир)
+    )
+  end
+
+  defp street_type do
+    Enum.random(~w(проспект вулиця провулок))
+  end
+
+  defp street do
+    Enum.random(~w(Героїв Перемоги Бандери))
   end
 end

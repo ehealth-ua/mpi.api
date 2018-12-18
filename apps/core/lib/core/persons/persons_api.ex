@@ -18,14 +18,17 @@ defmodule Core.Persons.PersonsAPI do
   defp trim_name_spaces(params) do
     params
     |> Map.take(~w(first_name second_name last_name))
-    |> Enum.reduce(%{}, fn {key, value}, acc -> Map.put(acc, key, Maybe.map(value, &trim_spaces/1)) end)
+    |> Enum.reduce(%{}, fn {key, value}, acc ->
+      Map.put(acc, key, Maybe.map(value, &trim_spaces/1))
+    end)
     |> Map.merge(params, fn _key, value1, _value2 -> value1 end)
   end
 
   def changeset(%Person{} = person, params) do
     person
-    |> Repo.preload([:phones, :documents])
-    |> cast(trim_name_spaces(params), Person.fields())
+    |> Repo.preload([:phones, :documents, :addresses])
+    |> cast(trim_name_spaces(Map.put(params, "person_addresses", [])), Person.fields())
+    |> cast_assoc(:addresses)
     |> cast_assoc(:phones)
     |> cast_assoc(:documents, required: true)
     |> validate_required(Person.fields_required())
@@ -38,7 +41,7 @@ defmodule Core.Persons.PersonsAPI do
   def get_by_id(id) do
     Person
     |> where([p], p.id == ^id)
-    |> preload([:phones, :documents])
+    |> preload([:phones, :documents, :addresses])
     |> Repo.one()
   end
 
@@ -90,7 +93,7 @@ defmodule Core.Persons.PersonsAPI do
 
   defp search_by_unzr(unzr) do
     Person
-    |> preload([:documents, :phones])
+    |> preload([:documents, :phones, :addresses])
     |> where([p], p.unzr == ^unzr)
     |> where([p], p.status == @person_status_active)
     |> Repo.one()
@@ -134,7 +137,7 @@ defmodule Core.Persons.PersonsAPI do
 
     try do
       Person
-      |> preload([:documents, :phones])
+      |> preload([:documents, :phones, :addresses])
       |> join(:inner, [p], s in subquery(subquery), p.id == s.id)
       |> Repo.paginate(paging_params)
     rescue

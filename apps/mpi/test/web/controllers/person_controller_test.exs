@@ -6,6 +6,7 @@ defmodule MPI.Web.PersonControllerTest do
   import Mox
   alias Core.Repo
   alias Core.Person
+  alias Core.PersonAddress
   alias Core.Persons.PersonsAPI
   alias Ecto.UUID
 
@@ -38,6 +39,83 @@ defmodule MPI.Web.PersonControllerTest do
   def json_person_attributes?(data) do
     is_equal("phones", :phones, ["number", "type"], data) &&
       is_equal("documents", :documents, ["number", "type"], data)
+  end
+
+  def assert_person_addresses(person_addresses, data_addresses) do
+    ps =
+      person_addresses
+      |> Enum.map(fn
+        %PersonAddress{settlement: settlement} -> settlement
+        %{settlement: settlement} -> settlement
+      end)
+      |> MapSet.new()
+
+    ds = data_addresses |> Enum.map(&Map.get(&1, "settlement")) |> MapSet.new()
+    assert ds == ps
+  end
+
+  describe "addresses and person_adresses" do
+    test "new person", %{conn: conn} do
+      person =
+        insert(:person,
+          addresses: [build(:address, settlement: "Біла Церква")],
+          person_addresses: []
+        )
+
+      resp =
+        conn
+        |> get(person_path(conn, :show, person.id))
+        |> json_response(200)
+
+      assert resp["data"]["id"] == person.id
+      json_person_attributes?(resp["data"])
+      assert_person(resp["data"])
+      assert_person_addresses(person.addresses, resp["data"]["addresses"])
+    end
+
+    test "old not migrated person", %{conn: conn} do
+      person =
+        insert(:person,
+          addresses: [],
+          person_addresses: [build(:person_address, settlement: "Біла Церква")]
+        )
+
+      resp =
+        conn
+        |> get(person_path(conn, :show, person.id))
+        |> json_response(200)
+
+      assert resp["data"]["id"] == person.id
+      json_person_attributes?(resp["data"])
+      assert_person(resp["data"])
+      assert_person_addresses(person.person_addresses, resp["data"]["addresses"])
+    end
+
+    test "update adresses for existing person", %{conn: conn} do
+      person =
+        insert(:person,
+          addresses: [],
+          person_addresses: [build(:person_address, settlement: "Білка")]
+        )
+
+      addresses = [build(:person_address, settlement: "Біла Церква")]
+
+      conn
+      |> put(person_path(conn, :update, person.id), %{
+        addresses: addresses
+      })
+      |> json_response(200)
+
+      resp =
+        conn
+        |> get(person_path(conn, :show, person.id))
+        |> json_response(200)
+
+      assert resp["data"]["id"] == person.id
+      json_person_attributes?(resp["data"])
+      assert_person(resp["data"])
+      assert_person_addresses(addresses, resp["data"]["addresses"])
+    end
   end
 
   test "successful show person", %{conn: conn} do
@@ -525,7 +603,11 @@ defmodule MPI.Web.PersonControllerTest do
       |> Enum.random()
       |> Map.get(:phone_number)
 
-    insert(:person, authentication_methods: [%{phone_number: auth_phone_number}], status: Person.status(:inactive))
+    insert(
+      :person,
+      authentication_methods: [%{phone_number: auth_phone_number}],
+      status: Person.status(:inactive)
+    )
 
     resp_data =
       conn
@@ -629,12 +711,16 @@ defmodule MPI.Web.PersonControllerTest do
     end)
   end
 
-  test "successful persons search by first_name, second_name and last_name with extra spaces", %{conn: conn} do
-    person = insert(:person,
-      first_name: "first name",
-      second_name: "second name",
-      last_name: "last name"
-    )
+  test "successful persons search by first_name, second_name and last_name with extra spaces", %{
+    conn: conn
+  } do
+    person =
+      insert(
+        :person,
+        first_name: "first name",
+        second_name: "second name",
+        last_name: "last name"
+      )
 
     conn =
       get(
@@ -736,7 +822,10 @@ defmodule MPI.Web.PersonControllerTest do
     assert 1 == Enum.count(data)
 
     assert Enum.into(search_params, %{}, fn {k, v} -> {k, String.downcase(v)} end) ==
-             data |> hd |> Map.take(Map.keys(search_params))
+             data
+             |> hd
+             |> Map.take(Map.keys(search_params))
+             |> Enum.reduce(%{}, fn {k, v}, acc -> Map.put(acc, k, String.downcase(v)) end)
 
     # Getting mobile phone number because search uses just it
     phone_number =
@@ -759,7 +848,10 @@ defmodule MPI.Web.PersonControllerTest do
     params = Map.delete(search_params, "phone_number")
 
     assert Enum.into(params, %{}, fn {k, v} -> {k, String.downcase(v)} end) ==
-             data |> hd |> Map.take(Map.keys(params))
+             data
+             |> hd
+             |> Map.take(Map.keys(params))
+             |> Enum.reduce(%{}, fn {k, v}, acc -> Map.put(acc, k, String.downcase(v)) end)
 
     search_params =
       search_params

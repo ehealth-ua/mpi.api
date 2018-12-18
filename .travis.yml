@@ -1,3 +1,4 @@
+dist: xenial
 language: elixir
 sudo: required
 cache:
@@ -11,6 +12,7 @@ addons:
   apt:
     packages:
       - docker-ce
+      - python3-pip
 elixir:
   - 1.6.6
 otp_release:
@@ -49,7 +51,9 @@ jobs:
   include:
     - stage: "test and build"
       # run tests
-      script: 
+      script:
+      - pip3 install setuptools wheel
+      - pip3 install -r python_requirements.txt
       - (curl -s https://raw.githubusercontent.com/edenlabllc/ci-utils/umbrella_v2/tests.sh -o tests.sh; bash ./tests.sh) || travis_terminate 1
       # Build Docker container
     - stage: "test and build"
@@ -65,7 +69,7 @@ jobs:
       - openssl aes-256-cbc -K $encrypted_c0f7b939d2bc_key -iv $encrypted_c0f7b939d2bc_iv -in eHealth-8110bd102a69.json.enc -out eHealth-8110bd102a69.json -d
       - (curl -s https://raw.githubusercontent.com/edenlabllc/ci-utils/umbrella_v2/docker.sh -o docker.sh; bash ./docker.sh) || travis_terminate 1
     - stage: "test and build"
-      env: APPS='[{"app":"deduplication","chart":"mpi","namespace":"mpi","job":"true"}]'
+      env: APPS='[{"app":"deduplication","chart":"mpi","namespace":"mpi","job":"true","dockerfile":"Dockerfile.deduplication"}]'
       # "Decrypting deploy key..."
       script:
       - openssl aes-256-cbc -K $encrypted_c0f7b939d2bc_key -iv $encrypted_c0f7b939d2bc_iv -in eHealth-8110bd102a69.json.enc -out eHealth-8110bd102a69.json -d
