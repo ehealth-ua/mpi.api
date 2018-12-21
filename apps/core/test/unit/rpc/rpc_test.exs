@@ -133,6 +133,23 @@ defmodule Core.RpcTest do
       search_params = %{
         "documents" => [
           %{
+            "type" => "BIRTH_CERTIFICATE",
+            "digits" => "333"
+          }
+        ],
+        "status" => Person.status(:active)
+      }
+
+      %Page{entries: persons} = Rpc.search_persons(search_params)
+      person_ids = Enum.map(persons, fn person -> person.id end)
+
+      assert 1 == length(person_ids)
+
+      assert [person2_id] == person_ids
+
+      search_params = %{
+        "documents" => [
+          %{
             "type" => "PASSPORT",
             "number" => "АА777"
           }

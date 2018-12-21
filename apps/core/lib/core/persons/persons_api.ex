@@ -178,9 +178,9 @@ defmodule Core.Persons.PersonsAPI do
         d.person_id == p.id
       )
 
-    documents_query = document_search_query(document["type"], document["number"])
+    documents_query = document_search_query(document)
     documents_query = Enum.reduce(documents, documents_query,
-      fn document, acc -> dynamic([p, d], ^acc or ^document_search_query(document["type"], document["number"])) end)
+      fn document, acc -> dynamic([p, d], ^acc or ^document_search_query(document)) end)
 
     query
     |> from()
@@ -190,8 +190,12 @@ defmodule Core.Persons.PersonsAPI do
 
   defp with_documents(query, _), do: query
 
-  defp document_search_query(type, number) do
-    dynamic([p, d], d.type == ^type and fragment("lower(?) = lower(?)", d.number, ^number))
+  defp document_search_query(document) do
+    if document["type"] == "BIRTH_CERTIFICATE" and Map.has_key?(document, "digits") do
+      dynamic([p, d], d.type == ^document["type"] and fragment("regexp_replace(number, '[^[:digit:]]', '', 'g') = ?", ^document["digits"]))
+    else
+      dynamic([p, d], d.type == ^document["type"] and fragment("lower(?) = lower(?)", d.number, ^document["number"]))
+    end
   end
 
   defp with_phone_number(query, %{"phone_number" => phone_number}) do
