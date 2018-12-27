@@ -2,10 +2,13 @@ defmodule Core.RpcTest do
   @moduledoc false
 
   use Core.ModelCase, async: true
+
   import Core.Factory
+
   alias Core.Person
   alias Core.Rpc
   alias Scrivener.Page
+  alias Ecto.UUID
 
   describe "search_persons/2" do
     test "search person by documents list and status" do
@@ -161,6 +164,18 @@ defmodule Core.RpcTest do
       person_ids = Enum.map(persons, fn person -> person.id end)
 
       assert 0 == length(person_ids)
+    end
+  end
+
+  describe "get_person_by_id/1" do
+    test "success" do
+      %{id: id} = insert(:person)
+
+      assert {:ok, %Person{id: ^id}} = Rpc.get_person_by_id(id)
+    end
+
+    test "not found" do
+      refute Rpc.get_person_by_id(UUID.generate())
     end
   end
 end
