@@ -10,7 +10,7 @@ defmodule Core.RpcTest do
   alias Scrivener.Page
   alias Ecto.UUID
 
-  describe "search_persons/2" do
+  describe "search_persons/1" do
     test "search person by documents list and status" do
       %{id: person1_id} = insert(:person, documents: [
         build(:document, type: "BIRTH_CERTIFICATE", number: "АА111"),
@@ -164,6 +164,36 @@ defmodule Core.RpcTest do
       person_ids = Enum.map(persons, fn person -> person.id end)
 
       assert 0 == length(person_ids)
+    end
+  end
+
+  describe "search_persons/3" do
+    test "success" do
+      tax_id = "0123456789"
+      birth_date = "1990-10-10"
+      phone_number = "+3809900011122"
+      document_number = "АА444009"
+
+      insert_list(10, :person)
+
+      insert_list(3, :person,
+        status: Person.status(:active),
+        documents: [build(:document, type: "PASSPORT", number: document_number)],
+        birth_date: birth_date,
+        tax_id: tax_id,
+        authentication_methods: build_list(1, :authentication_method, phone_number: phone_number)
+      )
+
+      search_params = %{
+        "auth_phone_number" => phone_number,
+        "tax_id" => tax_id,
+        "birth_date" => birth_date,
+        "documents" => [%{"type" => "PASSPORT", "number" => document_number}]
+      }
+
+      {:ok, persons} = Rpc.search_persons(search_params, [asc: :birth_date], {0, 10})
+
+      assert 3 == length(persons)
     end
   end
 

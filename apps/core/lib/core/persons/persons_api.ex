@@ -13,6 +13,8 @@ defmodule Core.Persons.PersonsAPI do
 
   @person_status_active Person.status(:active)
 
+  @sort_attributes ~w(birth_date inserted_at tax_id inserted_at)a
+
   defp trim_spaces(input_string), do: input_string |> String.split() |> Enum.join(" ")
 
   defp trim_name_spaces(params) do
@@ -110,31 +112,12 @@ defmodule Core.Persons.PersonsAPI do
   end
 
   def search(params) do
-    params = trim_name_spaces(params)
-
-    paging_params =
-      Map.merge(%{"page_size" => Confex.get_env(:core, :max_persons_result)}, params)
-
-    direct_params =
-      params
-      |> Map.drop(~w(type birth_certificate phone_number ids first_name last_name second_name))
-      |> Map.take(Enum.map(Person.__schema__(:fields), &to_string(&1)))
-
     subquery =
-      Person
-      |> where(
-        [p],
-        ^Enum.into(direct_params, Keyword.new(), fn {k, v} -> {String.to_atom(k), v} end)
-      )
-      |> where([p], p.is_active)
-      |> with_names(Map.take(params, ~w(first_name last_name second_name)))
-      |> with_ids(Map.take(params, ~w(ids)))
-      |> with_type_number(Map.take(params, ~w(type number)))
-      |> with_birth_certificate(Map.take(params, ~w(birth_certificate)))
-      |> with_phone_number(Map.take(params, ~w(phone_number)))
-      |> with_auth_phone_number(Map.take(params, ~w(auth_phone_number)))
-      |> with_documents(Map.take(params, ~w(documents)))
+      params
+      |> person_search_query()
       |> order_by([p], desc: p.inserted_at)
+
+    paging_params = Map.merge(%{"page_size" => Confex.get_env(:core, :max_persons_result)}, params)
 
     try do
       Person
@@ -145,6 +128,48 @@ defmodule Core.Persons.PersonsAPI do
       _ in Postgrex.Error ->
         {:query_error, "invalid search characters"}
     end
+  end
+
+  def search(params, [{direction, attribute}] = _order_by, {offset, limit}) when attribute in @sort_attributes do
+    subquery =
+      params
+      |> person_search_query()
+      |> order_by([p], [{^direction, field(p, ^attribute)}])
+
+    try do
+      Person
+      |> preload([:documents, :phones, :addresses])
+      |> join(:inner, [p], s in subquery(subquery), p.id == s.id)
+      |> offset(^offset)
+      |> limit(^limit)
+      |> Repo.all()
+    rescue
+      _ in Postgrex.Error ->
+        {:query_error, "invalid search characters"}
+    end
+  end
+
+  def person_search_query(params) do
+    params = trim_name_spaces(params)
+
+    direct_params =
+      params
+      |> Map.drop(~w(type birth_certificate phone_number ids first_name last_name second_name))
+      |> Map.take(Enum.map(Person.__schema__(:fields), &to_string(&1)))
+
+    Person
+    |> where(
+      [p],
+      ^Enum.into(direct_params, Keyword.new(), fn {k, v} -> {String.to_atom(k), v} end)
+    )
+    |> where([p], p.is_active)
+    |> with_names(Map.take(params, ~w(first_name last_name second_name)))
+    |> with_ids(Map.take(params, ~w(ids)))
+    |> with_type_number(Map.take(params, ~w(type number)))
+    |> with_birth_certificate(Map.take(params, ~w(birth_certificate)))
+    |> with_phone_number(Map.take(params, ~w(phone_number)))
+    |> with_auth_phone_number(Map.take(params, ~w(auth_phone_number)))
+    |> with_documents(Map.take(params, ~w(documents)))
   end
 
   defp with_type_number(query, %{"type" => type, "number" => number})
