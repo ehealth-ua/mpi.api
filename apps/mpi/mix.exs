@@ -40,7 +40,7 @@ defmodule MPI.Mixfile do
       {:cowboy, "~> 1.1"},
       {:phoenix, "~> 1.3.3"},
       {:phoenix_ecto, "~> 3.2"},
-      {:confex, ">= 0.0.0"},
+      {:confex, "~> 3.4"},
       {:httpoison, ">= 0.0.0"},
       {:poison, "~> 3.1", override: true},
       {:eview, ">= 0.0.0"},
