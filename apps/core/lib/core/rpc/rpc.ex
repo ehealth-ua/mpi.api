@@ -175,75 +175,12 @@ defmodule Core.Rpc do
   """
 
   @spec search_persons(map(), Keyword.t(), {integer(), integer()}) :: {:error, any()} | {:ok, list(person)}
-  def search_persons(%{} = params, [{_direction, _attribute}] = order_by, {_offset, _limit} = offset_limit) do
-    with persons <- PersonsAPI.search(params, order_by, offset_limit) do
+  def search_persons(%{} = params, [{_direction, _attribute}] = order_by, {_offset, _limit} = opts) do
+    with persons when is_list(persons) <- PersonsAPI.search(params, order_by, opts) do
       {:ok, Enum.map(persons, &Renderer.render("person.json", &1))}
-    end
-  end
-
-  @doc """
-  Resolves person by id
-
-  ## Examples
-
-      iex> Core.Rpc.get_person_by_id("26e673e1-1d68-413e-b96c-407b45d9f572")
-      {
-        :ok,
-        %Core.Person{
-          id: "26e673e1-1d68-413e-b96c-407b45d9f572",
-          first_name: "Петро",
-          last_name: "Іванов",
-          second_name: "Миколайович",
-          birth_country: "Ukraine",
-          inserted_at: #DateTime<2018-11-05 09:54:49.406483Z>,
-          updated_at: #DateTime<2018-11-05 09:54:49.406486Z>,
-          inserted_by: "bc11085d-3e47-49a5-90c4-c787ee41c1ba",
-          updated_by: "d221d7f1-81cb-44d3-b6d4-8d7e42f97ff9",
-          invalid_tax_id: false,
-          email: "petroivanov@email.com",
-          unzr: "19900101-0001",
-          process_disclosure_data_consent: true,
-          addresses: [],
-          person_addresses: [%{
-            "APARTMENT" => "",
-            "BUILDING" => "48а",
-            "COUNTRY" => "UA",
-            "SETTLEMENT" => "ХАРКІВ",
-            "SETTLEMENT_ID" => "1241d1f9-ae81-4fe5-b614-f4f780a5acf0",
-            "SETTLEMENT_TYPE" => "CITY",
-            "STREET" => "Героїв Праці",
-            "STREET_TYPE" => " STREET",
-            "TYPE" => "REGISTRATION",
-            "area" => "ХАРКІВСЬКА"
-          }],
-          merge_verified: nil,
-          death_date: nil,
-          birth_settlement: "Київ",
-          preferred_way_communication: nil,
-          merged_ids: [],
-          documents: [],
-          gender: "MALE",
-          patient_signed: true,
-          no_tax_id: false,
-          secret: "sEcReT",
-          birth_date: ~D[1991-08-27],
-          is_active: true,
-          version: "1",
-          emergency_contact: %{},
-          tax_id: "3126509816",
-          confidant_person: nil,
-          authentication_methods: [
-            %{"phone_number" => "+380508887700", "type" => "OTP"}
-          ],
-          phones: [],
-          status: "active"
-        }
-      }
-  """
-  @spec get_person_by_id(id :: binary()) :: nil | {:ok, person()}
-  def get_person_by_id(id) do
-    with %Person{} = person <- PersonsAPI.get_by_id(id) do
-      {:ok, person}
+    else
+      {:query_error, reason} -> {:error, reason}
+      err -> err
     end
   end
 
