@@ -1,7 +1,5 @@
 defmodule Core.Repo.Migrations.CleanupPassportNumbers do
   use Ecto.Migration
-
-  use Ecto.Migration
   import Ecto.Query
   alias Core.Repo
   alias Core.PersonDocument
