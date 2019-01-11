@@ -20,7 +20,6 @@ priv/static/*
 uploads/files/*
 
 # Ignore git artifacts
-.git
 .gitignore
 
 # Ignore Docker artifacts
