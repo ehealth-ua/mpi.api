@@ -3,6 +3,7 @@ defmodule Deduplication.V2.ModelTest do
   import Core.Factory
 
   alias Core.Person
+  alias Deduplication.V2.Match
   alias Deduplication.V2.Model
 
   describe "regexp" do
@@ -65,23 +66,35 @@ defmodule Deduplication.V2.ModelTest do
       )
 
       Enum.each(
-        ["м Тернопіль", "M.Тернопіль", "м,Тернопіль", "MICTO Тернопіль", "Micто,Тернопіль", "місто. Тернопіль"],
+        [
+          "м Тернопіль",
+          "M.Тернопіль",
+          "м,Тернопіль",
+          "MICTO Тернопіль",
+          "Micто,Тернопіль",
+          "місто. Тернопіль"
+        ],
         &assert(Model.normalize_birth_settlement(&1) == "тернопіль")
       )
     end
   end
 
   describe "unverified person by tax_id" do
+    setup do
+      Match.set_current_verified_ts(DateTime.utc_now())
+      :ok
+    end
+
     test "get unverified person works" do
       person = insert(:person, tax_id: "123456789")
-      [unverified_person] = Model.get_unverified_persons(1, 0)
+      [unverified_person] = Model.get_unverified_persons(1)
 
       assert person.id == unverified_person.id
     end
 
     test "normalize unverified person works" do
       person = insert(:person, tax_id: "123456789")
-      [unverified_person] = Model.get_unverified_persons(10, 0)
+      [unverified_person] = Model.get_unverified_persons(10)
       unverified_person = Model.normalize_person(unverified_person)
       assert person.id == unverified_person.id
 
@@ -90,37 +103,52 @@ defmodule Deduplication.V2.ModelTest do
       end)
     end
 
-    test "unverified persons limit / offset" do
-      insert(:person, merge_verified: true)
-      assert [] == Model.get_unverified_persons(1, 0)
+    test "unverified persons limit" do
+      insert(:person)
+      Match.set_current_verified_ts(DateTime.utc_now())
+      assert [] == Model.get_unverified_persons(1)
 
+      Match.set_current_verified_ts(DateTime.utc_now())
       person = insert(:person)
-      assert [%Person{id: id}] = Model.get_unverified_persons(1, 0)
+      assert [%Person{id: id}] = Model.get_unverified_persons(1)
       assert id == person.id
-      assert [] == Model.get_unverified_persons(1, 1)
+      assert [%Person{}] = Model.get_unverified_persons(5)
     end
 
     test "get candidates works" do
-      insert(:person, tax_id: "123456789", documents: [build(:document, number: "1")])
-      insert(:person, tax_id: "123456789", documents: [build(:document, number: "2")])
-      insert(:person, tax_id: "123456789", merge_verified: true)
-      insert(:person, tax_id: "000000000", documents: [build(:document, number: "3")])
-      insert(:person, tax_id: "000000000", documents: [build(:document, number: "4")])
-      insert(:person, tax_id: "000000000", merge_verified: true)
-      insert(:person, tax_id: "999999999", merge_verified: true)
+      p00 = insert(:person, tax_id: "000000000").id
+      insert(:person, tax_id: "999999999")
+      p10 = insert(:person, tax_id: "123456789").id
 
-      unverified_persons = Model.get_unverified_persons(100, 0)
+      Match.set_current_verified_ts(DateTime.utc_now())
+
+      p11 = insert(:person, tax_id: "123456789", documents: [build(:document, number: "1")]).id
+      insert(:person, tax_id: "123456789", documents: [build(:document, number: "2")])
+      p01 = insert(:person, tax_id: "000000000", documents: [build(:document, number: "3")]).id
+      insert(:person, tax_id: "000000000", documents: [build(:document, number: "4")])
+      unverified_persons = Model.get_unverified_persons(100)
 
       Enum.reduce(unverified_persons, 1, fn unverified_person, i ->
         case i do
           1 ->
-            assert [%Person{tax_id: "000000000"}] = Model.get_candidates(unverified_person)
+            assert [%Person{id: ^p10, tax_id: "123456789"}] =
+                     Model.get_candidates(unverified_person)
+
+          2 ->
+            assert [
+                     %Person{id: ^p10, tax_id: "123456789"},
+                     %Person{id: ^p11, tax_id: "123456789"}
+                   ] = Model.get_candidates(unverified_person)
 
           3 ->
-            assert [%Person{tax_id: "123456789"}] = Model.get_candidates(unverified_person)
+            assert [%Person{id: ^p00, tax_id: "000000000"}] =
+                     Model.get_candidates(unverified_person)
 
-          n when n == 2 or n == 4 ->
-            assert [] == Model.get_candidates(unverified_person)
+          4 ->
+            assert [
+                     %Person{id: ^p00, tax_id: "000000000"},
+                     %Person{id: ^p01, tax_id: "000000000"}
+                   ] = Model.get_candidates(unverified_person)
         end
 
         i + 1

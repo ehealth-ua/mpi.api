@@ -102,6 +102,8 @@ defmodule MPI.Web.PersonControllerTest do
 
       conn
       |> put(person_path(conn, :update, person.id), %{
+        first_name: "Ольга",
+        last_name: "Ігорівна",
         addresses: addresses
       })
       |> json_response(200)
@@ -115,6 +117,15 @@ defmodule MPI.Web.PersonControllerTest do
       json_person_attributes?(resp["data"])
       assert_person(resp["data"])
       assert_person_addresses(addresses, resp["data"]["addresses"])
+
+      assert %{
+               "person_first_name" => "Ольга",
+               "person_last_name" => "Ігорівна",
+               "settlement" => "Біла Церква"
+             } ==
+               resp["data"]["addresses"]
+               |> hd
+               |> Map.take(~w(person_first_name person_last_name settlement))
     end
   end
 

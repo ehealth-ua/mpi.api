@@ -2,6 +2,7 @@ defmodule Deduplication.V2.MatchTest do
   @moduledoc false
 
   use Core.ModelCase, async: false
+  use Confex, otp_app: :deduplication
   import Ecto.Query
   import Core.Factory
   import Mox
@@ -11,16 +12,16 @@ defmodule Deduplication.V2.MatchTest do
   alias Core.PersonAddress
   alias Core.PersonDocument
   alias Core.Repo
+  alias Deduplication.Producer
   alias Deduplication.V2.Match
-  alias Deduplication.Worker
+  alias Deduplication.V2.Model
 
   setup :verify_on_exit!
   setup :set_mox_global
 
   setup do
-    stub(DeduplicationWorkerMock, :run_deduplication, fn -> :ok end)
-    stub(DeduplicationWorkerMock, :stop_application, fn -> :ok end)
-    {:ok, _pid} = Worker.start_link()
+    GenStage.start_link(Producer, %{offset: 0}, name: Producer)
+    Match.set_current_verified_ts(DateTime.utc_now())
     :ok
   end
 
@@ -32,136 +33,35 @@ defmodule Deduplication.V2.MatchTest do
     candidate_count(n - 1, n - 1 + acc)
   end
 
-  describe "tests kafka send" do
-    test "no match merge" do
-      expect(PyWeightMock, :weight, fn %{} -> 0.5 end)
-
-      Enum.each(0..1, fn i ->
-        insert(:person, tax_id: "123456789", first_name: "#{i}")
-      end)
-
-      assert 2 = Match.deduplicate_person(100, 0)
-
-      assert [] =
-               MergeCandidate
-               |> Repo.all()
-    end
-
-    test "no automated merge" do
-      expect(PyWeightMock, :weight, fn %{} -> 0.8 end)
-
-      Enum.each(0..1, fn i ->
-        insert(:person, tax_id: "123456789", first_name: "#{i}")
-      end)
-
-      assert 2 = Match.deduplicate_person(100, 0)
-
-      assert [_m] =
-               MergeCandidate
-               |> Repo.all()
-    end
-
-    test "automated merge" do
-      expect(PyWeightMock, :weight, fn %{} -> 0.9 end)
-      expect(DeduplicationKafkaMock, :publish_person_merged_event, fn _, _ -> :ok end)
-
-      Enum.each(0..1, fn i ->
-        insert(:person, tax_id: "123456789", first_name: "#{i}")
-      end)
-
-      assert 2 = Match.deduplicate_person(100, 0)
-
-      assert [_m] =
-               MergeCandidate
-               |> Repo.all()
-    end
-  end
-
-  describe "test :run" do
-    setup do
-      stub(DeduplicationKafkaMock, :publish_person_merged_event, fn _, _ -> :ok end)
+  describe "retrieve_candidates" do
+    test "number of candidates > candidates_batch_size  works" do
       stub(PyWeightMock, :weight, fn %{} -> 1 end)
-      :ok
-    end
 
-    @tag :pending
-    test "for completed db works" do
-      pid = self()
+      batch_size =
+        Confex.fetch_env!(:deduplication, Deduplication.V2.Model)[:candidates_batch_size]
 
-      expect(DeduplicationWorkerMock, :stop_application, fn ->
-        send(pid, :mock_done)
-        :ok
+      n = batch_size * 5
+
+      Enum.map(1..n, fn _ ->
+        insert(:person, tax_id: "000000000")
       end)
 
-      Enum.map(1..300, fn _ -> insert(:person, merge_verified: true) end)
-      send(Worker, :run)
-      assert_receive :mock_done, 1000
-    end
-
-    @tag :pending
-    test "for random persons works" do
-      pid = self()
-
-      expect(DeduplicationWorkerMock, :stop_application, fn ->
-        send(pid, :mock_done)
-        :ok
-      end)
-
-      Enum.map(1..100, fn _ -> insert(:person) end)
-      send(Worker, :run)
-      assert_receive :mock_done, 5000
-    end
-
-    @tag :pending
-    test "for existing unverified persons works" do
-      pid = self()
-
-      expect(DeduplicationWorkerMock, :stop_application, fn ->
-        send(pid, :mock_done)
-        :ok
-      end)
-
-      n1 = 100
-      n2 = 100
-
-      Enum.each(1..n1, fn i ->
-        insert(:person,
-          tax_id: "123456789",
-          first_name: "#{i}",
-          documents: [build(:document, number: "#{i}")],
-          authentication_methods: [build(:authentication_method, type: "OFFLINE")]
-        )
-      end)
-
-      Enum.each(1..n2, fn i ->
-        insert(:person,
-          tax_id: "000000000",
-          first_name: "#{i}",
-          documents: [build(:document, number: "999#{i}")],
-          authentication_methods: [build(:authentication_method, type: "OFFLINE")]
-        )
-      end)
-
-      send(Worker, :run)
-      assert_receive :mock_done, 20_000
+      persons = Model.get_unverified_persons(n)
+      assert n == Match.deduplicate_persons(persons)
+      assert [] == Model.get_unverified_persons(1)
 
       merge_candidates_number =
         MergeCandidate
-        |> preload([:master_person, :person])
         |> Repo.all()
-        |> Enum.map(fn %MergeCandidate{master_person: mp, person: p} ->
-          assert mp.tax_id == p.tax_id
-        end)
         |> Enum.count()
 
-      assert candidate_count(n1) + candidate_count(n2) == merge_candidates_number
+      assert candidate_count(n) == merge_candidates_number
     end
   end
 
-  describe "test deduplicate_person/0 by tax_id + auth phone + documents" do
+  describe "test Match.deduplicate_persons by tax_id + auth phone + documents" do
     setup do
       stub(PyWeightMock, :weight, fn %{} -> 1 end)
-      stub(DeduplicationKafkaMock, :publish_person_merged_event, fn _, _ -> :ok end)
       :ok
     end
 
@@ -183,8 +83,9 @@ defmodule Deduplication.V2.MatchTest do
           p.id
         end)
 
-      assert 5 = Match.deduplicate_person(100, 0)
-      assert 0 = Match.deduplicate_person(1, 0)
+      persons = Model.get_unverified_persons(5)
+      assert 5 = Match.deduplicate_persons(persons)
+      assert [] == Model.get_unverified_persons(13)
 
       candidates =
         MergeCandidate
@@ -234,8 +135,9 @@ defmodule Deduplication.V2.MatchTest do
         p.id
       end)
 
-      assert 10 = Match.deduplicate_person(100, 0)
-      assert 0 = Match.deduplicate_person(1, 0)
+      persons = Model.get_unverified_persons(10)
+      assert 10 = Match.deduplicate_persons(persons)
+      assert [] == Model.get_unverified_persons(13)
 
       candidates =
         MergeCandidate
@@ -255,11 +157,10 @@ defmodule Deduplication.V2.MatchTest do
   describe "auth phone number + document number only" do
     setup do
       stub(PyWeightMock, :weight, fn %{} -> 1 end)
-      stub(DeduplicationKafkaMock, :publish_person_merged_event, fn _, _ -> :ok end)
       :ok
     end
 
-    test "test deduplicate_person/0 document number + auth phone number " do
+    test "test Worker.deduplicate/0 document number + auth phone number " do
       t_person_ids =
         Enum.map(1..5, fn i ->
           p =
@@ -307,8 +208,9 @@ defmodule Deduplication.V2.MatchTest do
         )
       end)
 
-      assert 13 = Match.deduplicate_person(100, 0)
-      assert 0 = Match.deduplicate_person(1, 0)
+      persons = Model.get_unverified_persons(13)
+      assert 13 = Match.deduplicate_persons(persons)
+      assert [] == Model.get_unverified_persons(1)
 
       candidates =
         MergeCandidate
@@ -326,10 +228,9 @@ defmodule Deduplication.V2.MatchTest do
     end
   end
 
-  describe "test deduplicate_person/0 by tax_id + auth documents only" do
+  describe "test Worker.deduplicate/0 by tax_id + auth documents only" do
     setup do
       stub(PyWeightMock, :weight, fn %{} -> 1 end)
-      stub(DeduplicationKafkaMock, :publish_person_merged_event, fn _, _ -> :ok end)
       :ok
     end
 
@@ -364,8 +265,9 @@ defmodule Deduplication.V2.MatchTest do
         )
       end)
 
-      assert 10 = Match.deduplicate_person(100, 0)
-      assert 0 = Match.deduplicate_person(1, 0)
+      persons = Model.get_unverified_persons(10)
+      assert 10 = Match.deduplicate_persons(persons)
+      assert [] == Model.get_unverified_persons(1)
 
       candidates =
         MergeCandidate
@@ -381,7 +283,7 @@ defmodule Deduplication.V2.MatchTest do
       end)
     end
 
-    test "test deduplicate_person/0 document number + tax_id" do
+    test "test Worker.deduplicate/0 document number + tax_id" do
       t_person_ids =
         Enum.map(1..5, fn i ->
           p =
@@ -429,8 +331,9 @@ defmodule Deduplication.V2.MatchTest do
         )
       end)
 
-      assert 13 = Match.deduplicate_person(100, 0)
-      assert 0 = Match.deduplicate_person(1, 0)
+      persons = Model.get_unverified_persons(13)
+      assert 13 = Match.deduplicate_persons(persons)
+      assert [] == Model.get_unverified_persons(13)
 
       candidates =
         MergeCandidate
@@ -449,10 +352,9 @@ defmodule Deduplication.V2.MatchTest do
     end
   end
 
-  describe "test deduplicate_person/0 by tax_id + auth phone only" do
+  describe "test Worker.deduplicate/0 by tax_id + auth phone only" do
     setup do
       stub(PyWeightMock, :weight, fn %{} -> 1 end)
-      stub(DeduplicationKafkaMock, :publish_person_merged_event, fn _, _ -> :ok end)
       :ok
     end
 
@@ -487,8 +389,9 @@ defmodule Deduplication.V2.MatchTest do
         )
       end)
 
-      assert 10 = Match.deduplicate_person(100, 0)
-      assert 0 = Match.deduplicate_person(1, 0)
+      persons = Model.get_unverified_persons(10)
+      assert 10 = Match.deduplicate_persons(persons)
+      assert [] == Model.get_unverified_persons(1)
 
       candidates =
         MergeCandidate
@@ -504,7 +407,7 @@ defmodule Deduplication.V2.MatchTest do
       end)
     end
 
-    test "test deduplicate_person/0 auth phone + tax_id" do
+    test "test Worker.deduplicate/0 auth phone + tax_id" do
       t_person_ids =
         Enum.map(1..5, fn i ->
           p =
@@ -552,8 +455,9 @@ defmodule Deduplication.V2.MatchTest do
         )
       end)
 
-      assert 13 = Match.deduplicate_person(100, 0)
-      assert 0 = Match.deduplicate_person(1, 0)
+      persons = Model.get_unverified_persons(13)
+      assert 13 = Match.deduplicate_persons(persons)
+      assert [] == Model.get_unverified_persons(1)
 
       candidates =
         MergeCandidate
@@ -571,23 +475,33 @@ defmodule Deduplication.V2.MatchTest do
     end
   end
 
-  describe "test deduplicate_person/0 by tax_id only" do
+  describe "test Worker.deduplicate/0 by tax_id only" do
     setup do
       stub(PyWeightMock, :weight, fn %{} -> 1 end)
-      stub(DeduplicationKafkaMock, :publish_person_merged_event, fn _, _ -> :ok end)
       :ok
     end
 
     test "no persons" do
-      assert 0 == Match.deduplicate_person(10, 0)
-      insert(:person, merge_verified: true)
-      assert 0 == Match.deduplicate_person(1, 0)
+      persons = Model.get_unverified_persons(0)
+      assert 0 = Match.deduplicate_persons(persons)
+      insert(:person)
+      Match.set_current_verified_ts(DateTime.utc_now())
+      persons = Model.get_unverified_persons(0)
+      assert 0 = Match.deduplicate_persons(persons)
     end
 
-    test "one person no duplicates" do
-      insert(:person, tax_id: "0987654321")
-      insert(:person, tax_id: "0987654321")
-      assert 1 = Match.deduplicate_person(1, 1)
+    test "one person one duplicates" do
+      stale = insert(:person, tax_id: "0987654321", first_name: "Stale")
+      actual = insert(:person, tax_id: "0987654321", first_name: "Actual")
+      persons = Model.get_unverified_persons(2)
+      assert 2 = Match.deduplicate_persons(persons)
+      assert [] == Model.get_unverified_persons(1)
+
+      assert [%MergeCandidate{master_person_id: actual_id, person_id: stale_id}] =
+               Repo.all(MergeCandidate)
+
+      assert stale_id == stale.id
+      assert actual_id == actual.id
     end
 
     test "duplicates persons with rest persons" do
@@ -610,8 +524,9 @@ defmodule Deduplication.V2.MatchTest do
         )
       end)
 
-      assert 4 = Match.deduplicate_person(100, 0)
-      assert 0 = Match.deduplicate_person(1, 0)
+      persons = Model.get_unverified_persons(10)
+      assert 4 = Match.deduplicate_persons(persons)
+      assert [] == Model.get_unverified_persons(1)
 
       candidates =
         MergeCandidate
@@ -636,8 +551,9 @@ defmodule Deduplication.V2.MatchTest do
         )
       end)
 
-      assert 10 = Match.deduplicate_person(10, 0)
-      assert 0 = Match.deduplicate_person(1, 0)
+      persons = Model.get_unverified_persons(10)
+      assert 10 = Match.deduplicate_persons(persons)
+      assert [] == Model.get_unverified_persons(10)
 
       candidates =
         MergeCandidate
@@ -661,30 +577,111 @@ defmodule Deduplication.V2.MatchTest do
     end
   end
 
-  describe "match_candidates" do
+  describe "settlement_id" do
     setup do
-      expect(DeduplicationKafkaMock, :publish_person_merged_event, fn _, _ -> :ok end)
+      stub(PyWeightMock, :weight, fn %{} -> 1 end)
       :ok
     end
 
+    test "settlement_id + first name with rest persons" do
+      Enum.each(1..3, fn i ->
+        insert(:person,
+          tax_id: "#{i}",
+          first_name: "Iv",
+          documents: [build(:document, number: "999#{i}")],
+          addresses: [
+            build(:address,
+              settlement_id: "012345",
+              person_first_name: "Iv"
+            )
+          ]
+        )
+      end)
+
+      Enum.each(1..3, fn i ->
+        insert(:person,
+          tax_id: "#{i / 100}",
+          documents: [
+            build(:document, number: "#{i}")
+          ],
+          authentication_methods: [build(:authentication_method, type: "OFFLINE")],
+          addresses: [build(:address, settlement_id: "#{i}")]
+        )
+      end)
+
+      persons = Model.get_unverified_persons(10)
+      assert 6 = Match.deduplicate_persons(persons)
+      assert [] == Model.get_unverified_persons(1)
+
+      candidates =
+        MergeCandidate
+        |> preload([:master_person, :person])
+        |> Repo.all()
+
+      assert candidate_count(3) == Enum.count(candidates)
+    end
+
+    test "settlement_id + last_name with tax_id" do
+      Enum.each(1..5, fn i ->
+        insert(:person,
+          tax_id: "#{i}",
+          last_name: "Kusto",
+          documents: [build(:document, number: "999#{i}")],
+          addresses: [
+            build(:address,
+              settlement_id: "012345",
+              person_last_name: "Kusto"
+            )
+          ]
+        )
+      end)
+
+      insert(:person,
+        tax_id: "#{3}",
+        documents: [build(:document, number: "0000")],
+        addresses: [build(:address, settlement_id: "set-id")]
+      )
+
+      Enum.each(1..3, fn i ->
+        insert(:person,
+          tax_id: "00000#{i}",
+          documents: [build(:document, number: "#{i}")],
+          authentication_methods: [build(:authentication_method, type: "OFFLINE")],
+          addresses: [build(:address, settlement_id: "#{i}")]
+        )
+      end)
+
+      persons = Model.get_unverified_persons(10)
+      assert 9 = Match.deduplicate_persons(persons)
+      assert [] == Model.get_unverified_persons(1)
+
+      candidates =
+        MergeCandidate
+        |> preload([:master_person, :person])
+        |> Repo.all()
+
+      assert candidate_count(5) + 1 == Enum.count(candidates)
+    end
+  end
+
+  describe "match_candidates" do
     test "with actual data results in correct woes case 1" do
-      expect(PyWeightMock, :weight, fn woes ->
+      expect(PyWeightMock, :weight, fn bins ->
         assert %{
-                 authentication_methods_flag_woe: -0.962223178,
-                 birth_settlement_substr_woe: -1.033368721,
+                 authentication_methods_flag_bin: 0,
+                 birth_settlement_substr_bin: 0,
                  candidate_id: "ebf38e27-7eda-48cd-8639-5b9ca66f9fe8",
-                 d_documents_woe: -2.12133861,
-                 d_first_name_woe: -1.379763317,
-                 d_last_name_woe: -1.181889463,
-                 d_second_name_woe: -1.405398133,
-                 d_tax_id_woe: -2.714837812,
-                 docs_same_number_woe: -2.065190805,
-                 gender_flag_woe: -0.43537168,
+                 d_documents_bin: 1,
+                 d_first_name_bin: 1,
+                 d_last_name_bin: 1,
+                 d_second_name_bin: 1,
+                 d_tax_id_bin: 0,
+                 docs_same_number_bin: 0,
+                 gender_flag_bin: 0,
                  person_id: "4b889b15-b4c9-4cf1-9cb7-2bbc245d676d",
-                 registration_address_settlement_flag_woe: -0.937089181,
-                 residence_settlement_flag_woe: -0.906624219,
-                 twins_flag_woe: -0.159950822
-               } == woes
+                 residence_settlement_flag_bin: 0,
+                 twins_flag_bin: 0
+               } == bins
 
         1
       end)
@@ -732,23 +729,22 @@ defmodule Deduplication.V2.MatchTest do
     end
 
     test "with actual data results in correct woes case 2" do
-      expect(PyWeightMock, :weight, fn woes ->
+      expect(PyWeightMock, :weight, fn bins ->
         assert %{
-                 authentication_methods_flag_woe: -0.962223178,
-                 birth_settlement_substr_woe: -1.033368721,
+                 authentication_methods_flag_bin: 0,
+                 birth_settlement_substr_bin: 0,
                  candidate_id: "04ca5d87-1918-4f3c-be29-606adf8dd53c",
-                 d_documents_woe: -2.12133861,
-                 d_first_name_woe: -2.801009159,
-                 d_last_name_woe: -1.181889463,
-                 d_second_name_woe: -1.405398133,
-                 d_tax_id_woe: -2.714837812,
-                 docs_same_number_woe: -2.065190805,
-                 gender_flag_woe: -0.43537168,
+                 d_documents_bin: 1,
+                 d_first_name_bin: 0,
+                 d_last_name_bin: 1,
+                 d_second_name_bin: 1,
+                 d_tax_id_bin: 0,
+                 docs_same_number_bin: 0,
+                 gender_flag_bin: 0,
                  person_id: "ebf38e27-7eda-48cd-8639-5b9ca66f9fe8",
-                 registration_address_settlement_flag_woe: -0.937089181,
-                 residence_settlement_flag_woe: -0.906624219,
-                 twins_flag_woe: -0.159950822
-               } == woes
+                 residence_settlement_flag_bin: 0,
+                 twins_flag_bin: 0
+               } == bins
 
         1
       end)
@@ -796,23 +792,22 @@ defmodule Deduplication.V2.MatchTest do
     end
 
     test "with actual data results in correct woes case 3" do
-      expect(PyWeightMock, :weight, fn woes ->
+      expect(PyWeightMock, :weight, fn bins ->
         assert %{
-                 authentication_methods_flag_woe: 1.242406002,
-                 birth_settlement_substr_woe: -1.033368721,
+                 authentication_methods_flag_bin: 1,
+                 birth_settlement_substr_bin: 0,
                  candidate_id: "5268b461-075e-4fc1-8efe-1fc73a4d00c0",
-                 d_documents_woe: 0.907611604,
-                 d_first_name_woe: -2.801009159,
-                 d_last_name_woe: 3.421035127,
-                 d_second_name_woe: -0.988391454,
-                 d_tax_id_woe: -0.217612736,
-                 docs_same_number_woe: 1.485675379,
-                 gender_flag_woe: 2.886330559,
+                 d_documents_bin: 2,
+                 d_first_name_bin: 0,
+                 d_last_name_bin: 3,
+                 d_second_name_bin: 2,
+                 d_tax_id_bin: 1,
+                 docs_same_number_bin: 1,
+                 gender_flag_bin: 1,
                  person_id: "eaa1e6cd-e6ad-4eef-8962-a15e702249e4",
-                 registration_address_settlement_flag_woe: 2.456584084,
-                 residence_settlement_flag_woe: 2.312877566,
-                 twins_flag_woe: -0.159950822
-               } == woes
+                 residence_settlement_flag_bin: 1,
+                 twins_flag_bin: 0
+               } == bins
 
         1
       end)

@@ -8,25 +8,23 @@ config :logger, :console,
   metadata: [:request_id]
 
 config :deduplication,
-  worker: Deduplication.Worker,
-  producer: Deduplication.Kafka.Producer,
+  producer: Deduplication.Producer,
   client: HTTPoison,
   py_weight: Deduplication.V2.PyWeight
 
-config :deduplication, Deduplication.Application, env: Mix.env()
+config :deduplication, Deduplication.Application,
+  env: Mix.env(),
+  parallel_consumers: {:system, :integer, "DEDUPLICATION_PARALLEL_TASKS", 40}
 
-config :deduplication, Deduplication.Worker,
-  deduplication_persons_limit: {:system, :integer, "DEDUPLICATION_PERSON_LIMIT", 50},
-  parallel_tasks: {:system, :integer, "DEDUPLICATION_PARRALEL_TASKS", 10}
+config :deduplication, Deduplication.Consumer,
+  deduplication_persons_limit: {:system, :integer, "DEDUPLICATION_PERSON_LIMIT", 400}
 
-config :deduplication, Deduplication.V2.Match,
-  score: {:system, "DEDUPLICATION_SCORE", "0.7"},
-  kafka_score: {:system, "DEDUPLICATION_SCORE", "0.9"}
+config :deduplication, Deduplication.V2.Model,
+  candidates_batch_size: {:system, :integer, "DEDUPLICATION_CANDIDATES_BATCH_SIZE", 4000}
+
+config :deduplication, Deduplication.V2.Match, score: {:system, "DEDUPLICATION_SCORE", "0.7"}
 
 config :deduplication, Deduplication.V1.Match,
-  subscribers: [
-    {:system, "DEDUPLICATION_SUBSCRIBER_IL", "http://api-svc.il/internal/deduplication/found_duplicates"}
-  ],
   schedule: {:system, "DEDUPLICATION_SCHEDULE", "* * * * *"},
   depth: {:system, :integer, "DEDUPLICATION_DEPTH", 20},
   score: {:system, "DEDUPLICATION_SCORE", "0.8"},
@@ -40,17 +38,5 @@ config :deduplication, Deduplication.V1.Match,
     unzr: %{match: 0.4, no_match: -0.1},
     phones: %{match: 0.3, no_match: -0.1}
   }
-
-config :kafka_ex,
-  brokers: "localhost:9092",
-  consumer_group: "deactivate_person_events",
-  disable_default_worker: false,
-  sync_timeout: 3000,
-  max_restarts: 10,
-  max_seconds: 60,
-  commit_interval: 5_000,
-  auto_offset_reset: :earliest,
-  commit_threshold: 100,
-  kafka_version: "1.1.0"
 
 import_config "#{Mix.env()}.exs"

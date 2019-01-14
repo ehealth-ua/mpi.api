@@ -55,3 +55,15 @@ release :deduplication do
 
   set(config_providers: [ConfexConfigProvider])
 end
+
+release :person_deactivator do
+  set(version: current_version(:person_deactivator))
+
+  set(
+    applications: [
+      person_deactivator: :permanent
+    ]
+  )
+
+  set(config_providers: [ConfexConfigProvider])
+end

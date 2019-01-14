@@ -42,15 +42,15 @@ defmodule Deduplication.V2.CandidatesDistanceTest do
     end
 
     test "match_document_levenshtein no match works" do
-      assert %{} = CandidatesDistance.match_document_levenshtein([], [])
+      assert %{levenshtein: nil, same_number: 1} = CandidatesDistance.match_document_levenshtein([], [])
 
-      assert %{} ==
+      assert %{levenshtein: nil, same_number: 1} ==
                CandidatesDistance.match_document_levenshtein(
                  [%{type: "TEMPORARY_CERTIFICATE"}, %{type: "PASSPORT"}],
                  []
                )
 
-      assert %{} ==
+      assert %{levenshtein: nil, same_number: 1} ==
                CandidatesDistance.match_document_levenshtein(
                  [%{type: "TEMPORARY_CERTIFICATE"}, %{type: "PASSPORT"}],
                  [%{type: "REFUGEE_CERTIFICATE"}, %{type: "NATIONAL_ID"}]
@@ -196,38 +196,37 @@ defmodule Deduplication.V2.CandidatesDistanceTest do
                )
     end
 
-    test "equal_addresses address not equal works" do
-      assert %{"RESIDENCE" => 1, "REGISTRATION" => 1} ==
-               CandidatesDistance.equal_addresses([], [])
+    test "equal_residence_addresses address not equal works" do
+      assert 1 == CandidatesDistance.equal_residence_addresses([], [])
 
-      assert %{"RESIDENCE" => 1, "REGISTRATION" => 1} ==
-               CandidatesDistance.equal_addresses(
+      assert 1 ==
+               CandidatesDistance.equal_residence_addresses(
                  [%{"type" => "RESIDENCE", "settlement" => "1234"}],
                  [%{"type" => "REGISTRATION", "settlement" => "4567"}]
                )
 
-      assert %{"RESIDENCE" => 1, "REGISTRATION" => 1} ==
-               CandidatesDistance.equal_addresses(
+      assert 1 ==
+               CandidatesDistance.equal_residence_addresses(
                  [%{"type" => "RESIDENCE", "settlement" => "1234"}],
                  [%{"type" => "RESIDENCE", "settlement" => "4567"}]
                )
 
-      assert %{"RESIDENCE" => 1, "REGISTRATION" => 1} ==
-               CandidatesDistance.equal_addresses(
+      assert 1 ==
+               CandidatesDistance.equal_residence_addresses(
                  [%{"type" => "RESIDENCE"}],
                  [%{"type" => "RESIDENCE"}]
                )
     end
 
-    test "equal_addresses address equal works" do
-      assert %{"RESIDENCE" => 0, "REGISTRATION" => 1} ==
-               CandidatesDistance.equal_addresses(
+    test "equal_residence_addresses address equal works" do
+      assert 0 ==
+               CandidatesDistance.equal_residence_addresses(
                  [%{type: "RESIDENCE", settlement: "4567"}],
                  [%{type: "RESIDENCE", settlement: "4567"}]
                )
 
-      assert %{"RESIDENCE" => 0, "REGISTRATION" => 0} ==
-               CandidatesDistance.equal_addresses(
+      assert 0 ==
+               CandidatesDistance.equal_residence_addresses(
                  [
                    %{type: "REGISTRATION", settlement: "0123"},
                    %{type: "RESIDENCE", settlement: "4567"}
@@ -382,7 +381,6 @@ defmodule Deduplication.V2.CandidatesDistanceTest do
                birth_settlement_substr: 0,
                distance_tax_id: 1,
                residence_settlement_flag: 0,
-               registration_address_settlement_flag: 0,
                authentication_methods_flag: 0,
                gender_flag: 0,
                twins_flag: 0
@@ -437,7 +435,6 @@ defmodule Deduplication.V2.CandidatesDistanceTest do
                birth_settlement_substr: 0,
                distance_tax_id: 1,
                residence_settlement_flag: 0,
-               registration_address_settlement_flag: 0,
                authentication_methods_flag: 1,
                gender_flag: 0,
                twins_flag: 1
@@ -446,95 +443,53 @@ defmodule Deduplication.V2.CandidatesDistanceTest do
   end
 
   describe "finalize distance functions" do
-    test "d_tax_id_woe works" do
-      assert -0.217612736 == CandidatesDistance.d_tax_id_woe(nil)
-      assert -2.714837812 == CandidatesDistance.d_tax_id_woe(0)
-      assert 2.305107806 == CandidatesDistance.d_tax_id_woe(1)
-      assert 2.305107806 == CandidatesDistance.d_tax_id_woe(2)
-      assert 2.305107806 == CandidatesDistance.d_tax_id_woe(3)
+    test "d_first_name_bin works" do
+      assert 0 == CandidatesDistance.d_first_name_bin(0)
+      assert 1 == CandidatesDistance.d_first_name_bin(1)
+      assert 2 == CandidatesDistance.d_first_name_bin(2)
+      assert 3 == CandidatesDistance.d_first_name_bin(3)
+      assert 3 == CandidatesDistance.d_first_name_bin(4)
     end
 
-    test "d_documents_woe works" do
-      assert -2.12133861 == CandidatesDistance.d_documents_woe(0)
-      assert 0.907611604 == CandidatesDistance.d_documents_woe(1)
-      assert 0.907611604 == CandidatesDistance.d_documents_woe(2)
-      assert 0.907611604 == CandidatesDistance.d_documents_woe(3)
-      assert 1.957050787 == CandidatesDistance.d_documents_woe(nil)
-      assert 1.957050787 == CandidatesDistance.d_documents_woe(4)
-      assert 1.957050787 == CandidatesDistance.d_documents_woe(5)
-      assert 1.957050787 == CandidatesDistance.d_documents_woe(6)
-      assert 2.559220981 == CandidatesDistance.d_documents_woe(7)
-      assert 2.559220981 == CandidatesDistance.d_documents_woe(110)
+    test "d_last_name_bin works" do
+      assert 1 == CandidatesDistance.d_last_name_bin(0)
+      assert 1 == CandidatesDistance.d_last_name_bin(1)
+      assert 2 == CandidatesDistance.d_last_name_bin(2)
+      assert 3 == CandidatesDistance.d_last_name_bin(nil)
+      assert 3 == CandidatesDistance.d_last_name_bin(3)
+      assert 3 == CandidatesDistance.d_last_name_bin(4)
     end
 
-    test "d_second_name_woe works" do
-      assert -0.988391454 == CandidatesDistance.d_second_name_woe(nil)
-      assert -1.405398133 == CandidatesDistance.d_second_name_woe(0)
-      assert -1.405398133 == CandidatesDistance.d_second_name_woe(1)
-      assert -1.405398133 == CandidatesDistance.d_second_name_woe(2)
-      assert 2.050493088 == CandidatesDistance.d_second_name_woe(3)
-      assert 2.050493088 == CandidatesDistance.d_second_name_woe(4)
-      assert 2.589141853 == CandidatesDistance.d_second_name_woe(5)
-      assert 2.589141853 == CandidatesDistance.d_second_name_woe(11)
+    test "d_second_name_bin works" do
+      assert 1 == CandidatesDistance.d_second_name_bin(0)
+      assert 1 == CandidatesDistance.d_second_name_bin(1)
+      assert 1 == CandidatesDistance.d_second_name_bin(2)
+      assert 2 == CandidatesDistance.d_second_name_bin(nil)
+      assert 3 == CandidatesDistance.d_second_name_bin(3)
+      assert 3 == CandidatesDistance.d_second_name_bin(4)
+      assert 4 == CandidatesDistance.d_second_name_bin(5)
+      assert 4 == CandidatesDistance.d_second_name_bin(11)
     end
 
-    test "d_last_name_woe works" do
-      assert -1.181889463 == CandidatesDistance.d_last_name_woe(0)
-      assert -1.181889463 == CandidatesDistance.d_last_name_woe(1)
-      assert -0.716750603 == CandidatesDistance.d_last_name_woe(2)
-      assert 3.421035127 == CandidatesDistance.d_last_name_woe(nil)
-      assert 3.421035127 == CandidatesDistance.d_last_name_woe(3)
-      assert 3.421035127 == CandidatesDistance.d_last_name_woe(4)
+    test "d_documents_bin works" do
+      assert 1 == CandidatesDistance.d_documents_bin(0)
+      assert 2 == CandidatesDistance.d_documents_bin(1)
+      assert 2 == CandidatesDistance.d_documents_bin(2)
+      assert 2 == CandidatesDistance.d_documents_bin(3)
+      assert 3 == CandidatesDistance.d_documents_bin(nil)
+      assert 3 == CandidatesDistance.d_documents_bin(4)
+      assert 3 == CandidatesDistance.d_documents_bin(5)
+      assert 3 == CandidatesDistance.d_documents_bin(6)
+      assert 4 == CandidatesDistance.d_documents_bin(7)
+      assert 4 == CandidatesDistance.d_documents_bin(110)
     end
 
-    test "d_first_name_woe works" do
-      assert -2.801009159 == CandidatesDistance.d_first_name_woe(0)
-      assert -1.379763317 == CandidatesDistance.d_first_name_woe(1)
-      assert 0.896797543 == CandidatesDistance.d_first_name_woe(2)
-      assert 4.278408035 == CandidatesDistance.d_first_name_woe(3)
-      assert 4.278408035 == CandidatesDistance.d_first_name_woe(4)
-    end
-
-    test "docs_same_number_woe works" do
-      assert -2.065190805 == CandidatesDistance.docs_same_number_woe(0)
-      assert 1.485675379 == CandidatesDistance.docs_same_number_woe(nil)
-      assert 1.485675379 == CandidatesDistance.docs_same_number_woe(1)
-    end
-
-    test "birth_settlement_substr_woe works" do
-      assert -1.033368721 == CandidatesDistance.birth_settlement_substr_woe(0)
-      assert 1.625216412 == CandidatesDistance.birth_settlement_substr_woe(nil)
-      assert 1.625216412 == CandidatesDistance.birth_settlement_substr_woe(42)
-    end
-
-    test "authentication_methods_flag_woe works" do
-      assert -0.962223178 == CandidatesDistance.authentication_methods_flag_woe(0)
-      assert 1.242406002 == CandidatesDistance.authentication_methods_flag_woe(nil)
-      assert 1.242406002 == CandidatesDistance.authentication_methods_flag_woe(1)
-    end
-
-    test "residence_settlement_flag_woe works" do
-      assert -0.906624219 == CandidatesDistance.residence_settlement_flag_woe(0)
-      assert 2.312877566 == CandidatesDistance.residence_settlement_flag_woe(nil)
-      assert 2.312877566 == CandidatesDistance.residence_settlement_flag_woe(1)
-    end
-
-    test "registration_address_settlement_flag_woe works" do
-      assert -0.937089181 == CandidatesDistance.registration_address_settlement_flag_woe(0)
-      assert 2.456584084 == CandidatesDistance.registration_address_settlement_flag_woe(nil)
-      assert 2.456584084 == CandidatesDistance.registration_address_settlement_flag_woe(1)
-    end
-
-    test "gender_flag_woe works" do
-      assert -0.43537168 == CandidatesDistance.gender_flag_woe(0)
-      assert 2.886330559 == CandidatesDistance.gender_flag_woe(nil)
-      assert 2.886330559 == CandidatesDistance.gender_flag_woe(1)
-    end
-
-    test "twins_flag_woe works" do
-      assert -0.159950822 == CandidatesDistance.twins_flag_woe(0)
-      assert 7.817262167 == CandidatesDistance.twins_flag_woe(nil)
-      assert 7.817262167 == CandidatesDistance.twins_flag_woe(1)
+    test "d_tax_id_bin works" do
+      assert 0 == CandidatesDistance.d_tax_id_bin(0)
+      assert 1 == CandidatesDistance.d_tax_id_bin(nil)
+      assert 2 == CandidatesDistance.d_tax_id_bin(1)
+      assert 2 == CandidatesDistance.d_tax_id_bin(2)
+      assert 2 == CandidatesDistance.d_tax_id_bin(3)
     end
   end
 
@@ -546,18 +501,17 @@ defmodule Deduplication.V2.CandidatesDistanceTest do
       assert %{
                person_id: person_id,
                candidate_id: candidate_id,
-               d_first_name_woe: 4.278408035,
-               d_second_name_woe: -0.988391454,
-               d_last_name_woe: -1.181889463,
-               d_documents_woe: -2.12133861,
-               docs_same_number_woe: -2.065190805,
-               birth_settlement_substr_woe: 1.625216412,
-               d_tax_id_woe: 2.305107806,
-               residence_settlement_flag_woe: 2.312877566,
-               registration_address_settlement_flag_woe: 2.456584084,
-               authentication_methods_flag_woe: -0.962223178,
-               gender_flag_woe: 2.886330559,
-               twins_flag_woe: -0.159950822
+               d_first_name_bin: 3,
+               d_last_name_bin: 1,
+               d_second_name_bin: 2,
+               d_documents_bin: 1,
+               docs_same_number_bin: 0,
+               birth_settlement_substr_bin: 1,
+               d_tax_id_bin: 2,
+               authentication_methods_flag_bin: 0,
+               residence_settlement_flag_bin: 1,
+               gender_flag_bin: 1,
+               twins_flag_bin: 0
              } ==
                CandidatesDistance.finalize_weight(%DistanceModel{
                  person_id: person_id,
@@ -567,10 +521,9 @@ defmodule Deduplication.V2.CandidatesDistanceTest do
                  distance_last_name: 0,
                  distance_documents: 0,
                  docs_same_number: 0,
-                 birth_settlement_substr: 42,
+                 birth_settlement_substr: 1,
                  distance_tax_id: 1,
-                 residence_settlement_flag: 4,
-                 registration_address_settlement_flag: 2,
+                 residence_settlement_flag: 1,
                  authentication_methods_flag: 0,
                  gender_flag: 1,
                  twins_flag: 0

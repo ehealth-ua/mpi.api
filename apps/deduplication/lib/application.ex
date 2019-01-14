@@ -1,37 +1,50 @@
 defmodule Deduplication.Application do
   @moduledoc false
   import Supervisor.Spec
+
   use Application
   use Confex, otp_app: :deduplication
+  alias Deduplication.Consumer
+  alias Deduplication.Producer
   alias Deduplication.V2.PythonWorker
-  alias Deduplication.Worker
 
   def start(_type, _args) do
-    gen_consumer_impl = Deduplication.Kafka.GenConsumer
-    consumer_group_name = Application.fetch_env!(:kafka_ex, :consumer_group)
-    topic_names = ["deactivate_person_events"]
+    poolboy_supervisor =
+      Supervisor.start_link([:poolboy.child_spec(:worker, poolboy_config())],
+        strategy: :one_for_one,
+        name: Deduplication.Supervisor
+      )
 
-    consumer_group_opts = [
-      heartbeat_interval: 1_000,
-      commit_interval: 1_000
-    ]
+    producer_id = String.to_atom("Producer#{0}")
+    parallel_consumers = config()[:parallel_consumers]
 
-    children = if config(:env) == :test, do: [], else: [worker(Worker, [], restart: :transient)]
+    worker_children =
+      if config(:env) == :test,
+        do: [],
+        else: [
+          worker(
+            Producer,
+            [%{id: producer_id}],
+            id: producer_id,
+            name: producer_id
+          )
+          | Enum.map(0..max(parallel_consumers - 1, 0), fn i ->
+              consumer_id = String.to_atom("Consumer#{0}_#{i}")
 
-    children =
-      children ++
-        [
-          supervisor(KafkaEx.ConsumerGroup, [
-            gen_consumer_impl,
-            consumer_group_name,
-            topic_names,
-            consumer_group_opts
-          ]),
-          :poolboy.child_spec(:worker, poolboy_config())
+              worker(Consumer, [%{producer_id: producer_id, id: consumer_id}],
+                id: consumer_id,
+                name: consumer_id
+              )
+            end)
         ]
 
-    opts = [strategy: :one_for_one, name: Deduplication.Supervisor]
-    Supervisor.start_link(children, opts)
+    {:ok, _} =
+      Supervisor.start_link(worker_children,
+        strategy: :one_for_one,
+        name: String.to_atom("Deduplication.Consumers#{0}Supervisor")
+      )
+
+    poolboy_supervisor
   end
 
   defp poolboy_config do

@@ -11,6 +11,7 @@ defmodule Core.Factory do
   alias Core.PersonDocument
   alias Core.PersonPhone
   alias Core.PersonUpdate
+  alias Core.VerifyingIds
 
   @person_status_active Core.Person.status(:active)
 
@@ -19,21 +20,24 @@ defmodule Core.Factory do
       status: "NEW",
       config: %{},
       person: build(:person),
-      master_person: build(:person)
+      master_person: build(:person),
+      score: 0.9
     }
   end
 
   def person_factory do
     birthday = ~D[1996-12-12]
+    first_name = first_name()
+    last_name = last_name()
 
     %Person{
       version: "0.1",
-      first_name: first_name(),
-      last_name: last_name(),
+      first_name: first_name,
+      last_name: last_name,
       second_name: second_name(),
       birth_date: birthday,
       birth_country: sequence(:birth_country, &"birth_country-#{&1}"),
-      birth_settlement: sequence(:birth_settlement, &"birth_settlement-#{&1}"),
+      birth_settlement: city(),
       gender: Enum.random(["MALE", "FEMALE"]),
       email: sequence(:email, &"email#{&1}@mail.com"),
       tax_id: document_number(9),
@@ -55,8 +59,8 @@ defmodule Core.Factory do
       merged_ids: [],
       phones: build_list(1, :person_phone),
       documents: build_list(2, :person_document),
-      addresses: build_list(2, :address),
-      merge_verified: nil
+      addresses:
+        build_list(2, :address, person_first_name: first_name, person_last_name: last_name)
     }
   end
 
@@ -69,11 +73,39 @@ defmodule Core.Factory do
   end
 
   def person_address_factory do
-    make_address()
+    %{
+      type: "RESIDENCE",
+      country: "UA",
+      area: region(),
+      region: region(),
+      settlement: city(),
+      settlement_type: "city",
+      settlement_id: UUID.generate(),
+      street_type: street_type(),
+      street: street(),
+      building: "#{Enum.random(1..120)}",
+      apartment: "#{Enum.random(1..24)}",
+      zip: "#{Enum.random(10000..99999)}"
+    }
   end
 
   def address_factory do
-    Map.merge(%PersonAddress{}, make_address())
+    %PersonAddress{
+      person_first_name: first_name(),
+      person_last_name: last_name(),
+      type: "RESIDENCE",
+      country: "UA",
+      area: region(),
+      region: region(),
+      settlement: city(),
+      settlement_type: "city",
+      settlement_id: UUID.generate(),
+      street_type: street_type(),
+      street: street(),
+      building: "#{Enum.random(1..120)}",
+      apartment: "#{Enum.random(1..24)}",
+      zip: "#{Enum.random(10000..99999)}"
+    }
   end
 
   def person_document_factory do
@@ -136,6 +168,10 @@ defmodule Core.Factory do
     }
   end
 
+  def verifying_ids_factory do
+    %VerifyingIds{id: UUID.generate()}
+  end
+
   defp make_document("NATIONAL_ID") do
     %{
       type: "NATIONAL_ID",
@@ -165,23 +201,6 @@ defmodule Core.Factory do
       issued_by: "#{city()} РОУ ВМУ МВС в #{region()} області",
       issued_at: add_random_years(0, 16, -1),
       expiration_date: add_random_years(0, 16)
-    }
-  end
-
-  defp make_address do
-    %{
-      type: "RESIDENCE",
-      country: "UA",
-      area: region(),
-      region: region(),
-      settlement: city(),
-      settlement_type: "city",
-      settlement_id: "#{Enum.random(1..24)}",
-      street_type: street_type(),
-      street: street(),
-      building: "#{Enum.random(1..120)}",
-      apartment: "#{Enum.random(1..24)}",
-      zip: "#{Enum.random(10000..99999)}"
     }
   end
 

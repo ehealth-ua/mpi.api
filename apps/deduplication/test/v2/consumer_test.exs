@@ -16,7 +16,7 @@ defmodule Deduplication.V2.ConsumerTest do
       actor_id = UUID.generate()
       assert :ok = GenConsumer.deactivate_person(person.id, actor_id)
 
-      assert %Person{updated_by: actor_id, status: @person_status_inactive} =
+      assert %Person{updated_by: ^actor_id, status: @person_status_inactive} =
                Repo.get!(Person, person.id)
     end
 

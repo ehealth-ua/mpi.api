@@ -1,6 +1,8 @@
 defmodule Core.Repo.Migrations.PersonAddresses do
   use Ecto.Migration
 
+  @disable_ddl_transaction true
+
   def change do
     rename(table(:persons), :addresses, to: :person_addresses)
 

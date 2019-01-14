@@ -39,7 +39,6 @@ defmodule Core.Person do
     field(:authentication_methods, {:array, :map})
     field(:merged_ids, {:array, :string})
     field(:no_tax_id, :boolean, default: false)
-    field(:merge_verified, :boolean)
 
     has_many(:documents, PersonDocument, on_delete: :delete_all, on_replace: :delete)
     has_many(:phones, PersonPhone, on_delete: :delete_all, on_replace: :delete)

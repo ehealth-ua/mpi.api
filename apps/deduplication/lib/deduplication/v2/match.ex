@@ -10,55 +10,45 @@ defmodule Deduplication.V2.Match do
   alias Core.MergeCandidate
   alias Core.Person
   alias Core.Repo
+  alias Core.VerifiedTs
   alias Deduplication.V2.CandidatesDistance
   alias Deduplication.V2.Model
   alias Ecto.UUID
 
-  @deduplication_client Application.get_env(:deduplication, :producer)
   @py_weight Application.get_env(:deduplication, :py_weight)
 
-  def deduplicate_person(limit, offset) do
-    persons = Model.get_unverified_persons(limit, offset)
-
+  def deduplicate_persons(persons) do
     persons
-    |> Task.async_stream(
-      fn person ->
-        with %Person{} <- person do
-          candidates =
-            person
-            |> Model.get_candidates()
-            |> match_candidates(person)
+    |> Enum.reduce(0, fn person, count ->
+      with %Person{} <- person do
+        candidates =
+          person
+          |> Model.get_candidates()
+          |> match_candidates(person)
 
-          {person, candidates}
+        if candidates == [] do
+          :ok
+        else
+          system_user_id = Confex.fetch_env!(:core, :system_user)
+          candidates_ids = Enum.map(candidates, & &1[:candidate].id)
+
+          Repo.transaction(fn ->
+            merge_candidates(person.id, candidates, system_user_id)
+            put_merge_candidates(person, candidates_ids, system_user_id)
+          end)
         end
-      end,
-      timeout: 300_000
-    )
-    |> Model.async_stream_filter()
-    |> set_merge_verified()
 
-    Enum.count(persons)
-  end
+        Model.unlock_person_after_verify(person.id)
+        set_current_verified_ts(person.inserted_at)
+      end
 
-  def set_merge_verified(persons_candidates) do
-    system_user_id = Confex.fetch_env!(:core, :system_user)
-
-    {:ok, _} =
-      Repo.transaction(fn ->
-        Enum.each(persons_candidates, fn {person, candidates} ->
-          candidates_ids = Enum.map(candidates, fn candidate -> candidate[:candidate].id end)
-
-          merge_candidates(person.id, candidates, system_user_id)
-          makr_persons_verified(person, candidates_ids, system_user_id)
-        end)
-      end)
+      count + 1
+    end)
   end
 
   def match_candidates(candidates, person) do
     config = config()
-    system_user_id = Confex.fetch_env!(:core, :system_user)
     score = String.to_float(config[:score])
-    kafka_score = String.to_float(config[:kafka_score])
     normalized_person = Model.normalize_person(person)
 
     candidates
@@ -72,21 +62,9 @@ defmodule Deduplication.V2.Match do
 
       pair_weight = @py_weight.weight(weigth_map)
 
-      cond do
-        pair_weight >= kafka_score ->
-          @deduplication_client.publish_person_merged_event(
-            candidate.id,
-            system_user_id
-          )
-
-          %{candidate: candidate, weight: pair_weight, matrix: weigth_map}
-
-        pair_weight >= score ->
-          %{candidate: candidate, weight: pair_weight, matrix: weigth_map}
-
-        true ->
-          :skip
-      end
+      if pair_weight >= score,
+        do: %{candidate: candidate, weight: pair_weight, matrix: weigth_map},
+        else: :skip
     end)
     |> Model.async_stream_filter()
   end
@@ -95,15 +73,17 @@ defmodule Deduplication.V2.Match do
     merge_candidates =
       candidates
       |> Task.async_stream(fn %{candidate: candidate, weight: score, matrix: weigth_map} ->
+        score = if is_integer(score), do: score / 1, else: score
+
         %{
           id: UUID.generate(),
           master_person_id: person_id,
           person_id: candidate.id,
           status: "NEW",
           config: weigth_map,
-          details: %{score: score},
           inserted_at: DateTime.utc_now(),
-          updated_at: DateTime.utc_now()
+          updated_at: DateTime.utc_now(),
+          score: score
         }
       end)
       |> Model.async_stream_filter()
@@ -112,7 +92,7 @@ defmodule Deduplication.V2.Match do
     log_insert(merge_candidates, system_user_id)
   end
 
-  defp log_insert(merge_candidates, system_user_id) do
+  def log_insert(merge_candidates, system_user_id) do
     changes =
       merge_candidates
       |> Task.async_stream(fn mc ->
@@ -128,19 +108,26 @@ defmodule Deduplication.V2.Match do
     create_audit_logs(changes)
   end
 
-  defp makr_persons_verified(person, candidates_ids, system_user_id) do
+  defp put_merge_candidates(person, candidates_ids, system_user_id) do
+    merged_ids =
+      (person.merged_ids || [])
+      |> List.flatten(candidates_ids)
+      |> MapSet.new()
+      |> MapSet.to_list()
+
     person_query =
       from(p in Person,
         where: p.id == ^person.id,
-        update: [
-          set: [
-            merged_ids: ^((person.merged_ids || []) ++ candidates_ids),
-            merge_verified: true,
-            updated_by: ^system_user_id
-          ]
-        ]
+        update: [set: [merged_ids: ^merged_ids, updated_by: ^system_user_id]]
       )
 
     {1, _} = Repo.update_all(person_query, [])
+  end
+
+  def set_current_verified_ts(inserted_at) do
+    query = from(p in VerifiedTs, where: p.id == ^0, update: [set: [inserted_at: ^inserted_at]])
+
+    {row_updated, _} = Repo.update_all(query, [])
+    true = row_updated in [0, 1]
   end
 end

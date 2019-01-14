@@ -8,10 +8,10 @@ defmodule Deduplication.V2.PyWeight do
   @timeout 5000
 
   @impl true
-  def weight(model) when is_map(model) do
+  def weight(bin_map) when is_map(bin_map) do
     :poolboy.transaction(
       :python_workers,
-      fn pid -> GenServer.call(pid, {:weight, model}) end,
+      fn pid -> GenServer.call(pid, {:weight, bin_map}) end,
       @timeout
     )
   end

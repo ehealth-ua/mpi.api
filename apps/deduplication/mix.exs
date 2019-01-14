@@ -9,7 +9,7 @@ defmodule Deduplication.MixProject do
       config_path: "../../config/config.exs",
       deps_path: "../../deps",
       lockfile: "../../mix.lock",
-      elixir: "~> 1.6",
+      elixir: "~> 1.7",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: Mix.compilers(),
       start_permanent: Mix.env() == :prod,
@@ -33,10 +33,10 @@ defmodule Deduplication.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:kafka_ex, "~> 0.8.3"},
       {:simetric, "~> 0.2.0"},
       {:erlport, "~> 0.10.0"},
       {:poolboy, "~> 1.5"},
+      {:gen_stage, "~> 0.14"},
       {:core, in_umbrella: true}
     ]
   end

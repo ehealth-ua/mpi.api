@@ -6,8 +6,7 @@
     "lib/mpi/repo.ex",
     "lib/mpi/web/web.ex",
     "lib/mpi/web/router.ex",
-    "lib/mpi/web/endpoint.ex",
-    "lib/mpi/deduplication/scheduler.ex"
+    "lib/mpi/web/endpoint.ex"
   ],
   "custom_stop_words": [
     "field",

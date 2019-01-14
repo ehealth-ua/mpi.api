@@ -17,9 +17,13 @@ defmodule Core.PersonAddress do
    street
    building
    apartment
-   zip)a
+   zip
+   person_last_name
+   person_first_name)a
 
   @fields_required ~w(
+  person_last_name
+  person_first_name
   type
   country
   area
@@ -44,9 +48,24 @@ defmodule Core.PersonAddress do
     field(:building, :string)
     field(:apartment, :string)
     field(:zip, :string)
+    field(:person_first_name, :string)
+    field(:person_last_name, :string)
 
     belongs_to(:person, Person)
     timestamps(type: :utc_datetime)
+  end
+
+  def cast_addresses(%__MODULE__{} = person_address, params \\ %{}, person_changeset, person) do
+    first_name = person_changeset.changes[:first_name] || person.first_name
+    last_name = person_changeset.changes[:last_name] || person.last_name
+
+    changeset(
+      person_address,
+      Map.merge(params, %{
+        "person_first_name" => first_name,
+        "person_last_name" => last_name
+      })
+    )
   end
 
   def changeset(%__MODULE__{} = person_address, params \\ %{}) do
@@ -54,4 +73,6 @@ defmodule Core.PersonAddress do
     |> cast(params, @fields)
     |> validate_required(@fields_required)
   end
+
+  def fields, do: @fields
 end

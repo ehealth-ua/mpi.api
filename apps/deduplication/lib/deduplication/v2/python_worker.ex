@@ -7,7 +7,8 @@ defmodule Deduplication.V2.PythonWorker do
 
   @app_name :deduplication
   @python_app_dir "python"
-  @python_model_file "model_not_scaled_boosted.sav"
+  @python_model "model_boosted_without_registration.sav"
+  @python_woe_dict "woe_boosted_without_registration.sav"
 
   def start_link(_) do
     GenServer.start_link(__MODULE__, nil, [])
@@ -17,42 +18,18 @@ defmodule Deduplication.V2.PythonWorker do
     with {:ok, priv_dir_path} <- get_priv_dir_path(@app_name),
          python_app_path = Path.join(priv_dir_path, @python_app_dir),
          {:ok, python} <- start_python(python_app_path),
-         {:ok, python_model} <- File.read(Path.join(python_app_path, @python_model_file)),
-         do: {:ok, {python, python_model}}
+         {:ok, model_bin} <- File.read(Path.join(python_app_path, @python_model)),
+         {:ok, woe_dict_bin} <- File.read(Path.join(python_app_path, @python_woe_dict)),
+         do: {:ok, {python, woe_dict_bin, model_bin}}
   end
 
-  def handle_call({:weight, model}, _from, {python, python_model} = state) when is_map(model) do
-    %{
-      d_first_name_woe: d_first_name_woe,
-      d_last_name_woe: d_last_name_woe,
-      d_second_name_woe: d_second_name_woe,
-      d_documents_woe: d_documents_woe,
-      docs_same_number_woe: docs_same_number_woe,
-      birth_settlement_substr_woe: birth_settlement_substr_woe,
-      d_tax_id_woe: d_tax_id_woe,
-      authentication_methods_flag_woe: authentication_methods_flag_woe,
-      residence_settlement_flag_woe: residence_settlement_flag_woe,
-      registration_address_settlement_flag_woe: registration_address_settlement_flag_woe,
-      gender_flag_woe: gender_flag_woe,
-      twins_flag_woe: twins_flag_woe
-    } = model
+  def handle_call({:weight, bin_map}, _from, {python, woe_dict_bin, model_bin} = state) do
+    bin_list =
+      bin_map
+      |> Map.drop([:person_id, :candidate_id])
+      |> Map.to_list()
 
-    with {:ok, res} <-
-           call_python(python, [
-             python_model,
-             d_first_name_woe,
-             d_last_name_woe,
-             d_second_name_woe,
-             d_documents_woe,
-             docs_same_number_woe,
-             birth_settlement_substr_woe,
-             d_tax_id_woe,
-             authentication_methods_flag_woe,
-             residence_settlement_flag_woe,
-             registration_address_settlement_flag_woe,
-             gender_flag_woe,
-             twins_flag_woe
-           ]),
+    with {:ok, res} <- call_python(python, [bin_list, woe_dict_bin, model_bin]),
          do: {:reply, res, state}
   end
 

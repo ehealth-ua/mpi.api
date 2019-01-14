@@ -2,14 +2,14 @@ defmodule Deduplication.V2.Model do
   @moduledoc """
   Quering persons and prepare data
   """
-
+  use Confex, otp_app: :deduplication
   import Ecto.Query
 
-  alias Core.MergeCandidate
   alias Core.Person
   alias Core.PersonAddress
   alias Core.PersonDocument
   alias Core.Repo
+  alias Core.VerifyingIds
 
   def async_stream_filter(streamlist) do
     Enum.reduce(streamlist, [], fn
@@ -53,75 +53,160 @@ defmodule Deduplication.V2.Model do
     end
   end
 
-  def get_unverified_persons(limit, offset) do
+  def lock_persons_on_verify(person_ids) do
+    {_, nil} = Repo.insert_all(VerifyingIds, Enum.map(person_ids, &%{id: &1}))
+  end
+
+  def unlock_person_after_verify(person_id) do
+    {_, nil} = Repo.delete_all(from(p in VerifyingIds, where: p.id == ^person_id))
+  end
+
+  def get_failed_unverified_persons(limit, offset) do
     Person
     |> preload([:documents, :addresses])
-    |> where([p], is_nil(p.merge_verified))
-    |> order_by([p], desc: p.inserted_at)
+    |> join(:inner, [p], v in VerifyingIds, v.id == p.id)
+    |> order_by([p, v], p.id)
     |> limit(^limit)
     |> offset(^offset)
     |> Repo.all()
   end
 
-  def match_candidates_query(query, _, nil), do: query
-
-  def match_candidates_query(query, :tax_id, tax_id) do
-    or_where(query, [p, m], p.tax_id == ^tax_id)
+  def get_unverified_persons(limit) do
+    Person
+    |> preload([:documents, :addresses])
+    |> join(:left, [p], v in VerifyingIds, v.id == p.id)
+    |> where(
+      [p, v],
+      is_nil(v.id) and
+        fragment(
+          "? > (select inserted_at from verified_ts)",
+          p.inserted_at
+        )
+    )
+    |> order_by([p], p.inserted_at)
+    |> limit(^limit)
+    |> Repo.all()
   end
 
-  def match_candidates_query(query, :auth_phone, auth_phone_number) do
-    or_where(
-      query,
-      [p, m],
-      fragment(
-        "? @> ?",
-        p.authentication_methods,
-        ^[%{"phone_number" => auth_phone_number, "type" => "OTP"}]
-      )
-    )
+  def settlement_name_query(query, :first_name, first_name) do
+    where(query, [p, a], p.first_name == ^first_name)
+  end
+
+  def settlement_name_query(query, :last_name, last_name) do
+    where(query, [p, a], p.last_name == ^last_name)
   end
 
   @doc """
-  Makes 3 query because plan is not optimal for one query
+  Makes union subqueries because plan is not optimal for one query
   """
   def get_candidates(%Person{} = person) do
-    dq_person_ids =
-      PersonDocument
-      |> select([d], d.person_id)
-      |> distinct(true)
-      |> where(
-        [d],
-        fragment("regexp_replace(?, '[^[:digit:]]', '', 'g' )", d.number) in ^Enum.map(
-          person.documents,
-          fn %PersonDocument{number: number} -> document_number(number) end
-        )
-      )
-      |> Repo.all()
+    documents_numbers =
+      person.documents
+      |> Enum.map(&document_number(&1.number))
+      |> Enum.uniq()
 
-    pq_dq_person_ids =
+    auth_phone_number = person_auth_phone(person.authentication_methods)
+
+    settlement_ids =
+      person.addresses
+      |> Enum.map(& &1.settlement_id)
+      |> Enum.uniq()
+
+    retrieve_candidates(person, documents_numbers, auth_phone_number, settlement_ids)
+  end
+
+  def retrieve_candidates(person, documents_numbers, auth_phone_number, settlement_ids) do
+    limit = config()[:candidates_batch_size]
+
+    retrieve_candidates(
+      [],
+      limit,
+      0,
+      person,
+      documents_numbers,
+      auth_phone_number,
+      settlement_ids
+    )
+  end
+
+  def retrieve_candidates(
+        accum,
+        limit,
+        offset,
+        person,
+        documents_numbers,
+        auth_phone_number,
+        settlement_ids
+      ) do
+    documents_numbers_only =
+      documents_numbers
+      |> Enum.filter(fn
+        "" -> false
+        _ -> true
+      end)
+      |> MapSet.new()
+      |> MapSet.to_list()
+
+    # add false if null - subquery parametrs can not be removed
+    current_candidates =
       Person
-      |> select([p, m], p.id)
-      |> distinct(true)
-      |> where([p, m], false)
-      |> match_candidates_query(:tax_id, person.tax_id)
-      |> match_candidates_query(:auth_phone, person_auth_phone(person.authentication_methods))
+      |> preload([p, ca], [:documents, :addresses])
+      |> join(
+        # allow right join, to avoid long nested loop
+        :right,
+        [p],
+        ca in fragment(
+          "
+          (SELECT DISTINCT person_id id
+             FROM person_documents WHERE (regexp_replace(number, '[^[:digit:]]', '', 'g') = ANY(?)))
+          UNION
+          (SELECT id FROM persons WHERE tax_id = ? and tax_id IS NOT NULL)
+          UNION
+          (SELECT id FROM persons WHERE authentication_methods @> ?)
+          UNION
+          (SELECT DISTINCT person_id id FROM person_addresses WHERE
+             person_first_name = ? and settlement_id = ANY(?))
+          UNION
+          (SELECT DISTINCT person_id id FROM person_addresses WHERE
+             person_last_name = ? and settlement_id = ANY(?))
+          ",
+          ^documents_numbers_only,
+          ^person.tax_id,
+          ^[%{"phone_number" => auth_phone_number, "type" => "OTP"}],
+          ^person.first_name,
+          ^settlement_ids,
+          ^person.last_name,
+          ^settlement_ids
+        ),
+        ca.id == p.id
+      )
+      # recheck id is not null after right join
+      |> where(
+        [p, ca],
+        p.id != ^person.id and p.inserted_at < ^person.inserted_at and not is_nil(p.id)
+      )
+      |> order_by([p, ca], p.inserted_at)
+      |> limit(^limit)
+      |> offset(^offset)
       |> Repo.all()
 
-    matched_ids = (pq_dq_person_ids ++ dq_person_ids) |> MapSet.new() |> MapSet.to_list()
+    candidates = current_candidates ++ accum
 
-    if matched_ids == [],
-      do: [],
-      else:
-        Person
-        |> distinct(true)
-        |> preload([:documents, :addresses])
-        |> join(:left, [p, d], m in MergeCandidate, m.master_person_id == p.id)
-        |> where(
-          [p, m],
-          p.id in ^matched_ids and p.id != ^person.id and p.inserted_at <= ^person.inserted_at and
-            is_nil(m.master_person_id)
+    case current_candidates do
+      [] ->
+        candidates
+
+      _ ->
+        retrieve_candidates(
+          candidates,
+          limit,
+          offset + limit,
+          person,
+          documents_numbers,
+          auth_phone_number,
+          settlement_ids
         )
-        |> Repo.all()
+    end
   end
 
   def get_candidates(_, _), do: []

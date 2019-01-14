@@ -5,6 +5,7 @@ defmodule Core.Persons.PersonsAPI do
   import Ecto.Query
   alias Core.Maybe
   alias Core.Person
+  alias Core.PersonAddress
   alias Core.PersonDocument
   alias Core.PersonPhone
   alias Core.Repo
@@ -27,10 +28,13 @@ defmodule Core.Persons.PersonsAPI do
   end
 
   def changeset(%Person{} = person, params) do
-    person
-    |> Repo.preload([:phones, :documents, :addresses])
-    |> cast(trim_name_spaces(Map.put(params, "person_addresses", [])), Person.fields())
-    |> cast_assoc(:addresses)
+    person_changes =
+      person
+      |> Repo.preload([:phones, :documents, :addresses])
+      |> cast(trim_name_spaces(Map.put(params, "person_addresses", [])), Person.fields())
+
+    person_changes
+    |> cast_assoc(:addresses, with: &PersonAddress.cast_addresses(&1, &2, person_changes, person))
     |> cast_assoc(:phones)
     |> cast_assoc(:documents, required: true)
     |> validate_required(Person.fields_required())
@@ -195,17 +199,13 @@ defmodule Core.Persons.PersonsAPI do
   defp with_documents(query, %{"documents" => []}), do: query
 
   defp with_documents(query, %{"documents" => [document | documents]}) do
-    query =
-      join(query,
-        :inner,
-        [p],
-        d in PersonDocument,
-        d.person_id == p.id
-      )
-
+    query = join(query, :inner, [p], d in PersonDocument, d.person_id == p.id)
     documents_query = document_search_query(document)
-    documents_query = Enum.reduce(documents, documents_query,
-      fn document, acc -> dynamic([p, d], ^acc or ^document_search_query(document)) end)
+
+    documents_query =
+      Enum.reduce(documents, documents_query, fn document, acc ->
+        dynamic([p, d], ^acc or ^document_search_query(document))
+      end)
 
     query
     |> from()
@@ -217,7 +217,11 @@ defmodule Core.Persons.PersonsAPI do
 
   defp document_search_query(document) do
     if document["type"] == "BIRTH_CERTIFICATE" and Map.has_key?(document, "digits") do
-      dynamic([p, d], d.type == ^document["type"] and fragment("regexp_replace(number, '[^[:digit:]]', '', 'g') = ?", ^document["digits"]))
+      dynamic(
+        [p, d],
+        d.type == ^document["type"] and
+          fragment("regexp_replace(number,'[^[:digit:]]','', 'g') = ?", ^document["digits"])
+      )
     else
       dynamic([p, d], d.type == ^document["type"] and fragment("lower(?) = lower(?)", d.number, ^document["number"]))
     end
@@ -261,11 +265,7 @@ defmodule Core.Persons.PersonsAPI do
 
   defp with_names(query, params) do
     Enum.reduce(params, query, fn {key, value}, query ->
-      where(
-        query,
-        [p],
-        fragment("lower(?)", field(p, ^String.to_atom(key))) == ^String.downcase(value)
-      )
+      where(query, [p], fragment("lower(?)", field(p, ^String.to_atom(key))) == ^String.downcase(value))
     end)
   end
 
