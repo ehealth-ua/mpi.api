@@ -125,7 +125,11 @@ defmodule Deduplication.V2.Match do
   end
 
   def set_current_verified_ts(inserted_at) do
-    query = from(p in VerifiedTs, where: p.id == ^0, update: [set: [inserted_at: ^inserted_at]])
+    query =
+      from(p in VerifiedTs,
+        where: p.id == ^0,
+        update: [set: [inserted_at: ^inserted_at, updated_at: ^DateTime.utc_now()]]
+      )
 
     {row_updated, _} = Repo.update_all(query, [])
     true = row_updated in [0, 1]

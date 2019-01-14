@@ -5,6 +5,7 @@ defmodule MPI.Web.PersonController do
   alias Core.Person
   alias Core.Persons.PersonsAPI
   alias MPI.ConnUtils
+  alias MPI.Web.PersonView
   alias Scrivener.Page
 
   action_fallback(MPI.Web.FallbackController)
@@ -13,6 +14,7 @@ defmodule MPI.Web.PersonController do
     with %Page{} = paging <- PersonsAPI.search(params) do
       conn
       |> put_status(:ok)
+      |> put_view(PersonView)
       |> render("persons.json", %{
         persons: paging.entries,
         paging: paging
@@ -33,6 +35,7 @@ defmodule MPI.Web.PersonController do
     with %Person{} = person <- PersonsAPI.get_by_id(id) do
       conn
       |> put_status(:ok)
+      |> put_view(PersonView)
       |> render("person.json", %{person: person})
     end
   end
@@ -42,6 +45,7 @@ defmodule MPI.Web.PersonController do
            PersonsAPI.create(params, ConnUtils.get_consumer_id(conn)) do
       conn
       |> put_status(status)
+      |> put_view(PersonView)
       |> render("person.json", %{person: person})
     end
   end
@@ -52,6 +56,7 @@ defmodule MPI.Web.PersonController do
     with {:ok, %Person{} = person} <- PersonsAPI.update(id, params, consumer_id) do
       conn
       |> put_status(:ok)
+      |> put_view(PersonView)
       |> render("person.json", %{person: person})
     end
   end
@@ -63,6 +68,7 @@ defmodule MPI.Web.PersonController do
     with {:ok, person} <- PersonsAPI.reset_auth_method(id, params, consumer_id) do
       conn
       |> put_status(:ok)
+      |> put_view(PersonView)
       |> render("person.json", %{person: person})
     else
       %Person{} -> {:error, {:conflict, "Invalid status MPI for this action"}}

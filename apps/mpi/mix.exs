@@ -37,8 +37,8 @@ defmodule MPI.Mixfile do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:cowboy, "~> 1.1"},
-      {:phoenix, "~> 1.3.3"},
+      {:plug_cowboy, "~> 2.0"},
+      {:phoenix, "~> 1.4"},
       {:phoenix_ecto, "~> 3.2"},
       {:confex, "~> 3.4"},
       {:httpoison, ">= 0.0.0"},
