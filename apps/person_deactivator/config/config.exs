@@ -5,7 +5,6 @@ config :person_deactivator,
   worker: PersonDeactivator.Worker
 
 config :person_deactivator, PersonDeactivator,
-  score: {:system, "DEACTIVATION_SCORE", "0.7"},
   kafka_score: {:system, "KAFKA_DEACTIVATION_SCORE", "0.9"},
   batch_size: {:system, :integer, "DEACTIVATION_BATCH_SIZE", 500},
   deactivation_limit: {:system, :integer, "DEACTIVATION_LIMIT", 1000}

@@ -17,11 +17,12 @@ defmodule PersonDeactivatorTest do
   describe "deactivate_persons/0" do
     test "deactivate_persons success" do
       Enum.each(1..3, fn _ -> insert(:merge_candidate, score: 0) end)
-      Enum.each(1..2, fn _ -> insert(:merge_candidate, score: 0.6) end)
+      Enum.each(1..5, fn _ -> insert(:merge_candidate, score: 0.6) end)
       Enum.each(1..2, fn _ -> insert(:merge_candidate, score: 0.8) end)
 
       expect(PersonDeactivatorKafkaMock, :publish_person_merged_event, 2, fn _, _ -> :ok end)
-      PersonDeactivator.deactivate_persons()
+      assert 2 == PersonDeactivator.deactivate_persons()
+      assert 0 == PersonDeactivator.deactivate_persons()
     end
   end
 
@@ -31,7 +32,7 @@ defmodule PersonDeactivatorTest do
         Enum.map(1..3, fn _ ->
           score = 1.0
           m = insert(:merge_candidate, score: score)
-          %{person_id: m.person_id, id: m.id, score: score}
+          %{person_id: m.person_id, id: m.id}
         end)
 
       Enum.each(1..3, fn _ -> insert(:merge_candidate, score: 0) end)
@@ -64,7 +65,7 @@ defmodule PersonDeactivatorTest do
 
       merge_candidates = PersonDeactivator.get_new_merge_candidates(1, 100)
 
-      PersonDeactivator.deactivate_candidates(system_user_id, merge_candidates)
+      PersonDeactivator.deactivate_candidates(merge_candidates, system_user_id)
 
       merged_candidates =
         MergeCandidate
