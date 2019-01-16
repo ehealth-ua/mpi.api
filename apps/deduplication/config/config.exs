@@ -22,7 +22,9 @@ config :deduplication, Deduplication.Consumer,
 config :deduplication, Deduplication.V2.Model,
   candidates_batch_size: {:system, :integer, "DEDUPLICATION_CANDIDATES_BATCH_SIZE", 4000}
 
-config :deduplication, Deduplication.V2.Match, score: {:system, "DEDUPLICATION_SCORE", "0.7"}
+config :deduplication, Deduplication.V2.Match,
+  score: {:system, "DEDUPLICATION_SCORE", "0.7"},
+  weight_count_timeout: {:system, :integer, "WEIGHT_COUNT_TIMEOUT", 20000}
 
 config :deduplication, Deduplication.V1.Match,
   schedule: {:system, "DEDUPLICATION_SCHEDULE", "* * * * *"},

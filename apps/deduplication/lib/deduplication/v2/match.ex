@@ -52,20 +52,23 @@ defmodule Deduplication.V2.Match do
     normalized_person = Model.normalize_person(person)
 
     candidates
-    |> Task.async_stream(fn candidate ->
-      normalized_candidate = Model.normalize_person(candidate)
+    |> Task.async_stream(
+      fn candidate ->
+        normalized_candidate = Model.normalize_person(candidate)
 
-      weigth_map =
-        normalized_person
-        |> CandidatesDistance.levenshtein_weight(normalized_candidate)
-        |> CandidatesDistance.finalize_weight()
+        weigth_map =
+          normalized_person
+          |> CandidatesDistance.levenshtein_weight(normalized_candidate)
+          |> CandidatesDistance.finalize_weight()
 
-      pair_weight = @py_weight.weight(weigth_map)
+        pair_weight = @py_weight.weight(weigth_map)
 
-      if pair_weight >= score,
-        do: %{candidate: candidate, weight: pair_weight, matrix: weigth_map},
-        else: :skip
-    end)
+        if pair_weight >= score,
+          do: %{candidate: candidate, weight: pair_weight, matrix: weigth_map},
+          else: :skip
+      end,
+      timeout: config[:weight_count_timeout]
+    )
     |> Model.async_stream_filter()
   end
 
