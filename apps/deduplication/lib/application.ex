@@ -40,7 +40,7 @@ defmodule Deduplication.Application do
 
     {:ok, _} =
       Supervisor.start_link(worker_children,
-        strategy: :one_for_one,
+        strategy: :one_for_all,
         name: String.to_atom("Deduplication.Consumers#{0}Supervisor")
       )
 

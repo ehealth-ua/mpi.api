@@ -14,13 +14,13 @@ config :deduplication,
 
 config :deduplication, Deduplication.Application,
   env: Mix.env(),
-  parallel_consumers: {:system, :integer, "DEDUPLICATION_PARALLEL_TASKS", 40}
+  parallel_consumers: {:system, :integer, "DEDUPLICATION_PARALLEL_TASKS", 10}
 
 config :deduplication, Deduplication.Consumer,
-  deduplication_persons_limit: {:system, :integer, "DEDUPLICATION_PERSON_LIMIT", 400}
+  deduplication_persons_limit: {:system, :integer, "DEDUPLICATION_PERSON_LIMIT", 1000}
 
 config :deduplication, Deduplication.V2.Model,
-  candidates_batch_size: {:system, :integer, "DEDUPLICATION_CANDIDATES_BATCH_SIZE", 4000}
+  candidates_batch_size: {:system, :integer, "DEDUPLICATION_CANDIDATES_BATCH_SIZE", 5000}
 
 config :deduplication, Deduplication.V2.Match,
   score: {:system, "DEDUPLICATION_SCORE", "0.7"},
