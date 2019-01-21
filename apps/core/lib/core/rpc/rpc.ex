@@ -128,11 +128,11 @@ defmodule Core.Rpc do
   end
 
   @doc """
-  Searches person by same parameters as &search_persons/1
+  Searches person by filtering params
 
   ## Examples
 
-      iex> Core.Rpc.search_persons(%{"last_name" => "Іванов"}, [asc: :inserted_at], {100, 50})
+      iex> Core.Rpc.search_persons([{:last_name, :equal, "Іванов"}], [asc: :inserted_at], {100, 50})
       {:ok, [
           %Core.Person{
             id: "26e673e1-1d68-413e-b96c-407b45d9f572",
@@ -174,9 +174,9 @@ defmodule Core.Rpc do
       }
   """
 
-  @spec search_persons(map(), Keyword.t(), {integer(), integer()}) :: {:error, any()} | {:ok, list(person)}
-  def search_persons(%{} = params, [{_direction, _attribute}] = order_by, {_offset, _limit} = opts) do
-    with persons when is_list(persons) <- PersonsAPI.search(params, order_by, opts) do
+  @spec search_persons(list(), Keyword.t(), nil | {integer(), integer()}) :: {:error, any()} | {:ok, list(person)}
+  def search_persons(filter, order_by \\ [], cursor \\ nil) when filter != [] do
+    with persons when is_list(persons) <- PersonsAPI.search(filter, order_by, cursor) do
       {:ok, Enum.map(persons, &Renderer.render("person.json", &1))}
     else
       {:query_error, reason} -> {:error, reason}

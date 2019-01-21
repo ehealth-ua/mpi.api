@@ -170,7 +170,7 @@ defmodule Core.RpcTest do
   describe "search_persons/3" do
     test "success" do
       tax_id = "0123456789"
-      birth_date = "1990-10-10"
+      birth_date = ~D[1990-10-10]
       phone_number = "+3809900011122"
       document_number = "АА444009"
 
@@ -184,14 +184,14 @@ defmodule Core.RpcTest do
         authentication_methods: build_list(1, :authentication_method, phone_number: phone_number)
       )
 
-      search_params = %{
-        "auth_phone_number" => phone_number,
-        "tax_id" => tax_id,
-        "birth_date" => birth_date,
-        "documents" => [%{"type" => "PASSPORT", "number" => document_number}]
-      }
+      filter = [
+        {:authentication_methods, :contains, [%{"phone_number" => phone_number}]},
+        {:tax_id, :equal, tax_id},
+        {:birth_date, :equal, birth_date},
+        {:documents, nil, [{:number, :equal, document_number}, {:type, :equal, "PASSPORT"}]}
+      ]
 
-      {:ok, persons} = Rpc.search_persons(search_params, [asc: :birth_date], {0, 10})
+      {:ok, persons} = Rpc.search_persons(filter, [asc: :birth_date], {0, 10})
 
       assert 3 == length(persons)
     end

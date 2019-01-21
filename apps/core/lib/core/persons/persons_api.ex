@@ -3,6 +3,8 @@ defmodule Core.Persons.PersonsAPI do
 
   import Ecto.Changeset
   import Ecto.Query
+
+  alias Core.Filters.Base, as: BaseFilter
   alias Core.Maybe
   alias Core.Person
   alias Core.PersonAddress
@@ -13,8 +15,6 @@ defmodule Core.Persons.PersonsAPI do
   alias Scrivener.Page
 
   @person_status_active Person.status(:active)
-
-  @sort_attributes ~w(birth_date inserted_at tax_id inserted_at)a
 
   defp trim_spaces(input_string), do: input_string |> String.split() |> Enum.join(" ")
 
@@ -134,24 +134,20 @@ defmodule Core.Persons.PersonsAPI do
     end
   end
 
-  def search(params, [{direction, attribute}] = _order_by, {offset, limit}) when attribute in @sort_attributes do
-    subquery =
-      params
-      |> person_search_query()
-      |> order_by([p], [{^direction, field(p, ^attribute)}])
-
-    try do
-      Person
-      |> preload([:documents, :phones, :addresses])
-      |> join(:inner, [p], s in subquery(subquery), p.id == s.id)
-      |> offset(^offset)
-      |> limit(^limit)
-      |> Repo.all()
-    rescue
-      _ in Postgrex.Error ->
-        {:query_error, "invalid search characters"}
-    end
+  def search(filter, order_by, cursor) do
+    Person
+    |> preload([:documents, :phones, :addresses])
+    |> BaseFilter.filter(filter)
+    |> apply_cursor(cursor)
+    |> order_by(^order_by)
+    |> Repo.all()
+  rescue
+    _ in Postgrex.Error ->
+      {:query_error, "invalid search characters"}
   end
+
+  defp apply_cursor(query, {offset, limit}), do: query |> offset(^offset) |> limit(^limit)
+  defp apply_cursor(query, _), do: query
 
   def person_search_query(params) do
     params = trim_name_spaces(params)
