@@ -121,7 +121,7 @@ defmodule Core.Rpc do
   """
 
   @spec search_persons(params :: map()) :: {:error, any()} | successfull_search_response
-  def search_persons(params) do
+  def search_persons(%{} = params) do
     with %Page{entries: entries} = page <- PersonsAPI.search(params) do
       %Page{page | entries: Enum.map(entries, fn entry -> Renderer.render("person.json", entry) end)}
     end

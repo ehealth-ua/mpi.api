@@ -195,6 +195,18 @@ defmodule Core.RpcTest do
 
       assert 3 == length(persons)
     end
+
+    test "success by persons id" do
+      insert_list(4, :person)
+
+      persons = insert_list(2, :person)
+      persons_ids = Enum.map(persons, & &1.id)
+
+      filter = [{:id, :in, persons_ids}]
+      {:ok, persons} = Rpc.search_persons(filter)
+
+      assert 2 == length(persons)
+    end
   end
 
   describe "get_person_by_id/1" do
