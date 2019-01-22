@@ -5,9 +5,9 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.19.1">
-    <title>API Reference –  vdev</title>
+    <title>API Reference – core v0.1.0</title>
     <link rel="stylesheet" href="dist/app-240d7fc7e5.css" />
-    <script src="dist/sidebar_items-c61bd5718e.js"></script>
+    <script src="dist/sidebar_items-89e8e45312.js"></script>
     
   </head>
   <body data-type="extras">
@@ -26,9 +26,9 @@
   <a href="api-reference.html" class="sidebar-projectLink">
     <div class="sidebar-projectDetails">
       <h1 class="sidebar-projectName">
-      </h1>
+core      </h1>
       <h2 class="sidebar-projectVersion">
-        vdev
+        v0.1.0
       </h2>
     </div>
   </a>
@@ -57,7 +57,7 @@
 
 
 <h1>
-  <small class="visible-xs"> vdev</small>
+  <small class="visible-xs">core v0.1.0</small>
   API Reference
 </h1>
 
@@ -73,6 +73,23 @@
     <a href="Core.Rpc.html">Core.Rpc</a>
   </div>
     <div class="summary-synopsis"><p>This module contains functions that are called from other pods via RPC</p>
+</div>
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Core.VerifiedTs.html">Core.VerifiedTs</a>
+  </div>
+    <div class="summary-synopsis"><p>Table verified_ts has only one row stores minimum inserted_at of verified persons.
+This table exists in postgres instead of one record in memory or mnesia because of
+deployment perspective. We do not get min inserted_at join on merge candidates, because a lot of records could have no merge candidates</p>
+</div>
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Core.VerifyingIds.html">Core.VerifyingIds</a>
+  </div>
+    <div class="summary-synopsis"><p>Table verifying_ids store ids of checking persons, to be sure after deduplication were no fail one of process
+in parallel execution while processes with latest persons were success. Implementation of more safe execution makes process of deduplication too slow</p>
 </div>
 </div>
     </div>

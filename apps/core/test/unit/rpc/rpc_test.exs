@@ -220,4 +220,18 @@ defmodule Core.RpcTest do
       refute Rpc.get_person_by_id(UUID.generate())
     end
   end
+
+  describe "reset_auth_method/2" do
+    test "success" do
+      %{id: id} = insert(:person, authentication_methods: [%{"type" => "PHONE"}])
+
+      person = Rpc.reset_auth_method(id, UUID.generate())
+
+      assert {:ok, %Person{id: ^id, authentication_methods: [%{"type" => "NA"}]}} = person
+    end
+
+    test "not found" do
+      refute Rpc.reset_auth_method(UUID.generate(), UUID.generate())
+    end
+  end
 end

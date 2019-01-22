@@ -249,4 +249,26 @@ defmodule Core.Rpc do
       {:ok, person}
     end
   end
+
+  @doc """
+  Reset authentication method for person by `id` with `actor_id` UUID
+
+  ## Examples
+
+      iex> Core.Rpc.reset_auth_method("26e673e1-1d68-413e-b96c-407b45d9f572", "22f673e1-1d68-413e-b96c-407b45d9ffa3")
+      {
+        :ok,
+        %Core.Person{
+          id: "26e673e1-1d68-413e-b96c-407b45d9f572",
+          authentication_methods: [
+            %{"type" => "NA"}
+          ],
+          ...
+        }
+      }
+  """
+  @spec reset_auth_method(id :: binary(), actor_id :: binary()) :: {:error, term()} | {:ok, person()}
+  def reset_auth_method(id, actor_id) do
+    PersonsAPI.reset_auth_method(id, %{"authentication_methods" => [%{"type" => "NA"}]}, actor_id)
+  end
 end
