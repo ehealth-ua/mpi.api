@@ -3,8 +3,10 @@ defmodule MPI.MixProject do
 
   use Mix.Project
 
+  @version "2.2.1"
   def project do
     [
+      version: @version,
       apps_path: "apps",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -24,7 +26,8 @@ defmodule MPI.MixProject do
     [
       {:distillery, "~> 2.0", runtime: false},
       {:excoveralls, "~> 0.10.0", only: [:dev, :test]},
-      {:credo, "~> 1.0", only: [:dev, :test]}
+      {:credo, "~> 1.0", only: [:dev, :test]},
+      {:git_ops, "~> 0.6.0", only: [:dev]}
     ]
   end
 end
