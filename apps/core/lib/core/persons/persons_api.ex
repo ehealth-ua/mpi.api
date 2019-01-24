@@ -94,6 +94,9 @@ defmodule Core.Persons.PersonsAPI do
          %Changeset{valid?: true} = changeset <- changeset(person, params),
          {:ok, %Person{} = person} <- Repo.update_and_log(changeset, consumer_id) do
       {:ok, person}
+    else
+      %Person{} -> {:error, {:conflict, "Invalid status MPI for this action"}}
+      err -> err
     end
   end
 

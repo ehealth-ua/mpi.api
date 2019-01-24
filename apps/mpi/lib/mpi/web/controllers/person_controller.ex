@@ -70,9 +70,6 @@ defmodule MPI.Web.PersonController do
       |> put_status(:ok)
       |> put_view(PersonView)
       |> render("person.json", %{person: person})
-    else
-      %Person{} -> {:error, {:conflict, "Invalid status MPI for this action"}}
-      err -> err
     end
   end
 end

@@ -12,23 +12,36 @@ defmodule Core.RpcTest do
 
   describe "search_persons/1" do
     test "search person by documents list and status" do
-      %{id: person1_id} = insert(:person, documents: [
-        build(:document, type: "BIRTH_CERTIFICATE", number: "АА111"),
-        build(:document, type: "PASSPORT", number: "аа222")
-      ])
+      %{id: person1_id} = insert(
+        :person,
+        documents: [
+          build(:document, type: "BIRTH_CERTIFICATE", number: "АА111"),
+          build(:document, type: "PASSPORT", number: "аа222")
+        ]
+      )
 
-      %{id: person2_id} = insert(:person, documents: [
-        build(:document, type: "BIRTH_CERTIFICATE", number: "АА333"),
-        build(:document, type: "PASSPORT", number: "аа444")
-      ])
+      %{id: person2_id} = insert(
+        :person,
+        documents: [
+          build(:document, type: "BIRTH_CERTIFICATE", number: "АА333"),
+          build(:document, type: "PASSPORT", number: "аа444")
+        ]
+      )
 
-      %{id: person3_id} = insert(:person, documents: [
-        build(:document, type: "PASSPORT", number: "аа555")
-      ])
+      %{id: person3_id} = insert(
+        :person,
+        documents: [
+          build(:document, type: "PASSPORT", number: "аа555")
+        ]
+      )
 
-      insert(:person, status: Person.status(:inactive), documents: [
-        build(:document, type: "PASSPORT", number: "АА444")
-      ])
+      insert(
+        :person,
+        status: Person.status(:inactive),
+        documents: [
+          build(:document, type: "PASSPORT", number: "АА444")
+        ]
+      )
 
       insert(:person)
 
@@ -176,7 +189,9 @@ defmodule Core.RpcTest do
 
       insert_list(10, :person)
 
-      insert_list(3, :person,
+      insert_list(
+        3,
+        :person,
         status: Person.status(:active),
         documents: [build(:document, type: "PASSPORT", number: document_number)],
         birth_date: birth_date,
@@ -228,6 +243,12 @@ defmodule Core.RpcTest do
       person = Rpc.reset_auth_method(id, UUID.generate())
 
       assert {:ok, %Person{id: ^id, authentication_methods: [%{"type" => "NA"}]}} = person
+    end
+
+    test "person inactive" do
+      %{id: id} = insert(:person, status: Person.status(:inactive), authentication_methods: [%{"type" => "PHONE"}])
+
+      assert {:error, {:conflict, "Invalid status MPI for this action"}} = Rpc.reset_auth_method(id, UUID.generate())
     end
 
     test "not found" do
