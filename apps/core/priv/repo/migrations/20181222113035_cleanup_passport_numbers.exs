@@ -17,7 +17,7 @@ defmodule Core.Repo.Migrations.CleanupPassportNumbers do
       update: [
         set: [
           number:
-            fragment("upper(array_to_string(regexp_split_to_array(TRIM(number), ' {2,}'), ' '))")
+            fragment("upper(regexp_replace(number, '\s', '', 'g'))")
         ]
       ]
     )
