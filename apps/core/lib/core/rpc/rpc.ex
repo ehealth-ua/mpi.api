@@ -219,7 +219,6 @@ defmodule Core.Rpc do
             "TYPE" => "REGISTRATION",
             "area" => "ХАРКІВСЬКА"
           }],
-          merge_verified: nil,
           death_date: nil,
           birth_settlement: "Київ",
           preferred_way_communication: nil,

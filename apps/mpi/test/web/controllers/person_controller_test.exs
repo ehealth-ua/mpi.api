@@ -10,7 +10,7 @@ defmodule MPI.Web.PersonControllerTest do
   alias Core.Persons.PersonsAPI
   alias Ecto.UUID
 
-  defp is_equal(key, person_key, attributes, data) do
+  def is_equal?(key, person_key, attributes, data) do
     %{^person_key => db_data} = PersonsAPI.get_by_id(data["id"])
 
     case {data[key], db_data} do
@@ -36,97 +36,9 @@ defmodule MPI.Web.PersonControllerTest do
     end
   end
 
-  def json_person_attributes?(data) do
-    is_equal("phones", :phones, ["number", "type"], data) &&
-      is_equal("documents", :documents, ["number", "type"], data)
-  end
-
-  def assert_person_addresses(person_addresses, data_addresses) do
-    ps =
-      person_addresses
-      |> Enum.map(fn
-        %PersonAddress{settlement: settlement} -> settlement
-        %{settlement: settlement} -> settlement
-      end)
-      |> MapSet.new()
-
-    ds = data_addresses |> Enum.map(&Map.get(&1, "settlement")) |> MapSet.new()
-    assert ds == ps
-  end
-
-  describe "addresses and person_adresses" do
-    test "new person", %{conn: conn} do
-      person =
-        insert(:person,
-          addresses: [build(:address, settlement: "Біла Церква")],
-          person_addresses: []
-        )
-
-      resp =
-        conn
-        |> get(person_path(conn, :show, person.id))
-        |> json_response(200)
-
-      assert resp["data"]["id"] == person.id
-      json_person_attributes?(resp["data"])
-      assert_person(resp["data"])
-      assert_person_addresses(person.addresses, resp["data"]["addresses"])
-    end
-
-    test "old not migrated person", %{conn: conn} do
-      person =
-        insert(:person,
-          addresses: [],
-          person_addresses: [build(:person_address, settlement: "Біла Церква")]
-        )
-
-      resp =
-        conn
-        |> get(person_path(conn, :show, person.id))
-        |> json_response(200)
-
-      assert resp["data"]["id"] == person.id
-      json_person_attributes?(resp["data"])
-      assert_person(resp["data"])
-      assert_person_addresses(person.person_addresses, resp["data"]["addresses"])
-    end
-
-    test "update adresses for existing person", %{conn: conn} do
-      person =
-        insert(:person,
-          addresses: [],
-          person_addresses: [build(:person_address, settlement: "Білка")]
-        )
-
-      addresses = [build(:person_address, settlement: "Біла Церква")]
-
-      conn
-      |> put(person_path(conn, :update, person.id), %{
-        first_name: "Ольга",
-        last_name: "Ігорівна",
-        addresses: addresses
-      })
-      |> json_response(200)
-
-      resp =
-        conn
-        |> get(person_path(conn, :show, person.id))
-        |> json_response(200)
-
-      assert resp["data"]["id"] == person.id
-      json_person_attributes?(resp["data"])
-      assert_person(resp["data"])
-      assert_person_addresses(addresses, resp["data"]["addresses"])
-
-      assert %{
-               "person_first_name" => "Ольга",
-               "person_last_name" => "Ігорівна",
-               "settlement" => "Біла Церква"
-             } ==
-               resp["data"]["addresses"]
-               |> hd
-               |> Map.take(~w(person_first_name person_last_name settlement))
-    end
+  defp json_person_attributes?(data) do
+    is_equal?("phones", :phones, ["number", "type"], data) &&
+      is_equal?("documents", :documents, ["number", "type"], data)
   end
 
   test "successful show person", %{conn: conn} do
@@ -154,9 +66,7 @@ defmodule MPI.Web.PersonControllerTest do
 
   test "successful create person", %{conn: conn} do
     expect(KafkaMock, :publish_person_event, fn _, _, _ -> :ok end)
-
     person_data = string_params_for(:person)
-
     person_data["documents"]
 
     resp =
@@ -172,7 +82,6 @@ defmodule MPI.Web.PersonControllerTest do
       |> json_response(200)
 
     json_person_attributes?(resp["data"])
-
     resp["data"]["documents"]
     assert_person(resp["data"])
   end
@@ -708,8 +617,7 @@ defmodule MPI.Web.PersonControllerTest do
 
     ids = [id_1, id_2, id_3, id_4, id_5]
 
-    conn =
-      get(conn, person_path(conn, :index, ids: Enum.join(ids, ","), status: "active", limit: 3))
+    conn = get(conn, person_path(conn, :index, ids: Enum.join(ids, ","), status: "active", limit: 3))
 
     data = json_response(conn, 200)["data"]
     assert 2 == length(data)

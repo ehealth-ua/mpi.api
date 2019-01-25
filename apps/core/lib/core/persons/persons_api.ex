@@ -27,14 +27,20 @@ defmodule Core.Persons.PersonsAPI do
     |> Map.merge(params, fn _key, value1, _value2 -> value1 end)
   end
 
+  def cast_changes(params, person) do
+    params
+    |> trim_name_spaces()
+    |> Map.put("person_addresses", params["addresses"] || person.addresses)
+  end
+
   def changeset(%Person{} = person, params) do
     person_changes =
       person
-      |> Repo.preload([:phones, :documents, :addresses])
-      |> cast(trim_name_spaces(Map.put(params, "person_addresses", [])), Person.fields())
+      |> Repo.preload([:phones, :documents, :person_addresses])
+      |> cast(cast_changes(params, person), Person.fields())
 
     person_changes
-    |> cast_assoc(:addresses, with: &PersonAddress.cast_addresses(&1, &2, person_changes, person))
+    |> cast_assoc(:person_addresses, with: &PersonAddress.cast_addresses(&1, &2, person_changes, person))
     |> cast_assoc(:phones)
     |> cast_assoc(:documents, required: true)
     |> validate_required(Person.fields_required())
@@ -47,7 +53,7 @@ defmodule Core.Persons.PersonsAPI do
   def get_by_id(id) do
     Person
     |> where([p], p.id == ^id)
-    |> preload([:phones, :documents, :addresses])
+    |> preload([:phones, :documents, :person_addresses])
     |> Repo.one()
   end
 
@@ -102,7 +108,7 @@ defmodule Core.Persons.PersonsAPI do
 
   defp search_by_unzr(unzr) do
     Person
-    |> preload([:documents, :phones, :addresses])
+    |> preload([:documents, :phones, :person_addresses])
     |> where([p], p.unzr == ^unzr)
     |> where([p], p.status == @person_status_active)
     |> Repo.one()
@@ -128,7 +134,7 @@ defmodule Core.Persons.PersonsAPI do
 
     try do
       Person
-      |> preload([:documents, :phones, :addresses])
+      |> preload([:documents, :phones, :person_addresses])
       |> join(:inner, [p], s in subquery(subquery), p.id == s.id)
       |> Repo.paginate(paging_params)
     rescue
@@ -139,7 +145,7 @@ defmodule Core.Persons.PersonsAPI do
 
   def search(filter, order_by, cursor) do
     Person
-    |> preload([:documents, :phones, :addresses])
+    |> preload([:documents, :phones, :person_addresses])
     |> BaseFilter.filter(filter)
     |> apply_cursor(cursor)
     |> order_by(^order_by)

@@ -15,6 +15,7 @@ defmodule Deduplication.V2.MatchTest do
   alias Deduplication.Producer
   alias Deduplication.V2.Match
   alias Deduplication.V2.Model
+  alias Ecto.UUID
 
   setup :verify_on_exit!
   setup :set_mox_global
@@ -584,14 +585,16 @@ defmodule Deduplication.V2.MatchTest do
     end
 
     test "settlement_id + first name with rest persons" do
+      settlement_id = UUID.generate()
+
       Enum.each(1..3, fn i ->
         insert(:person,
           tax_id: "#{i}",
           first_name: "Iv",
           documents: [build(:document, number: "999#{i}")],
-          addresses: [
-            build(:address,
-              settlement_id: "012345",
+          person_addresses: [
+            build(:person_address,
+              settlement_id: settlement_id,
               person_first_name: "Iv"
             )
           ]
@@ -605,7 +608,7 @@ defmodule Deduplication.V2.MatchTest do
             build(:document, number: "#{i}")
           ],
           authentication_methods: [build(:authentication_method, type: "OFFLINE")],
-          addresses: [build(:address, settlement_id: "#{i}")]
+          person_addresses: [build(:person_address, settlement_id: UUID.generate())]
         )
       end)
 
@@ -622,24 +625,28 @@ defmodule Deduplication.V2.MatchTest do
     end
 
     test "settlement_id + last_name with tax_id" do
+      settlement_id = UUID.generate()
+
       Enum.each(1..5, fn i ->
         insert(:person,
           tax_id: "#{i}",
           last_name: "Kusto",
           documents: [build(:document, number: "999#{i}")],
-          addresses: [
-            build(:address,
-              settlement_id: "012345",
+          person_addresses: [
+            build(:person_address,
+              settlement_id: settlement_id,
               person_last_name: "Kusto"
             )
           ]
         )
       end)
 
+      another_settlement_id = UUID.generate()
+
       insert(:person,
         tax_id: "#{3}",
         documents: [build(:document, number: "0000")],
-        addresses: [build(:address, settlement_id: "set-id")]
+        person_addresses: [build(:person_address, settlement_id: another_settlement_id)]
       )
 
       Enum.each(1..3, fn i ->
@@ -647,7 +654,7 @@ defmodule Deduplication.V2.MatchTest do
           tax_id: "00000#{i}",
           documents: [build(:document, number: "#{i}")],
           authentication_methods: [build(:authentication_method, type: "OFFLINE")],
-          addresses: [build(:address, settlement_id: "#{i}")]
+          person_addresses: [build(:person_address, settlement_id: UUID.generate())]
         )
       end)
 
@@ -886,7 +893,7 @@ defmodule Deduplication.V2.MatchTest do
         create_person_document(document_type1, number1),
         create_person_document(document_type2, number2)
       ],
-      addresses: [
+      person_addresses: [
         create_address("RESIDENCE", residence_address_settlement),
         create_address("REGISTRATION", registration_address_settlement)
       ],

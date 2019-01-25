@@ -42,7 +42,8 @@ defmodule Deduplication.V2.CandidatesDistanceTest do
     end
 
     test "match_document_levenshtein no match works" do
-      assert %{levenshtein: nil, same_number: 1} = CandidatesDistance.match_document_levenshtein([], [])
+      assert %{levenshtein: nil, same_number: 1} =
+               CandidatesDistance.match_document_levenshtein([], [])
 
       assert %{levenshtein: nil, same_number: 1} ==
                CandidatesDistance.match_document_levenshtein(
@@ -346,7 +347,7 @@ defmodule Deduplication.V2.CandidatesDistanceTest do
           birth_settlement: "смт. Рокита",
           documents: [%{type: "PASSPORT", document: "упп7423", number: "7423"}],
           authentication_methods: [%{"phone_number" => "123", "type" => "OTP"}],
-          addresses: [
+          person_addresses: [
             %{type: "REGISTRATION", settlement: "0123"},
             %{type: "RESIDENCE", settlement: "4567"}
           ]
@@ -364,7 +365,7 @@ defmodule Deduplication.V2.CandidatesDistanceTest do
           birth_settlement: "Рокита",
           documents: [%{type: "PASSPORT", document: "пп7423", number: "7423"}],
           authentication_methods: [%{"phone_number" => "123", "type" => "OTP"}],
-          addresses: [
+          person_addresses: [
             %{type: "REGISTRATION", settlement: "0123"},
             %{type: "RESIDENCE", settlement: "4567"}
           ]
@@ -400,7 +401,7 @@ defmodule Deduplication.V2.CandidatesDistanceTest do
           birth_settlement: "смт. Рокита",
           documents: [%{type: "PASSPORT", document: "упп7423", number: "7423"}],
           authentication_methods: [%{"phone_number" => "123", "type" => "OTP"}],
-          addresses: [
+          person_addresses: [
             %{type: "REGISTRATION", settlement: "0123"},
             %{type: "RESIDENCE", settlement: "4567"}
           ]
@@ -418,7 +419,7 @@ defmodule Deduplication.V2.CandidatesDistanceTest do
           birth_settlement: "Рокита",
           documents: [%{type: "PASSPORT", document: "пп7422", number: "7422"}],
           authentication_methods: [%{"phone_number" => "9999", "type" => "OTP"}],
-          addresses: [
+          person_addresses: [
             %{type: "REGISTRATION", settlement: "0123"},
             %{type: "RESIDENCE", settlement: "4567"}
           ]

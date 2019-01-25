@@ -1,6 +1,6 @@
 defmodule Core.Repo.Migrations.MigrateAdresses do
   @moduledoc """
-  move addresses to person_addresses table
+  copy addresses to person_addresses table
   """
   import Ecto.Query
   use Ecto.Migration
@@ -16,16 +16,16 @@ defmodule Core.Repo.Migrations.MigrateAdresses do
     persons
     |> Task.async_stream(fn
       %Person{
-        person_addresses: person_addresses,
+        addresses: addresses,
         id: id,
         last_name: last_name,
         first_name: first_name,
         updated_at: updated_at,
         inserted_at: inserted_at
       } ->
-        person_addresses
-        |> Enum.map(fn person_address ->
-          person_address
+        addresses
+        |> Enum.map(fn address ->
+          address
           |> Enum.map(fn {k, v} -> {String.to_atom(k), v} end)
           |> Enum.into(%{})
           |> Map.take(PersonAddress.fields())
@@ -43,14 +43,14 @@ defmodule Core.Repo.Migrations.MigrateAdresses do
     |> List.flatten()
   end
 
-  def store_addresses(person_addresses) do
-    {_n, nil} = Repo.insert_all(PersonAddress, person_addresses)
+  def store_addresses(addresses) do
+    {_n, nil} = Repo.insert_all(PersonAddress, addresses)
   end
 
   def chunk_persons_process(limit) do
     Person
     |> select([p, a], %Person{
-      person_addresses: p.person_addresses,
+      addresses: p.addresses,
       first_name: p.first_name,
       last_name: p.last_name,
       id: p.id,
@@ -61,13 +61,13 @@ defmodule Core.Repo.Migrations.MigrateAdresses do
     |> where(
       [p, a],
       fragment(
-        "? IS NULL and ? <=
+        "? IS NULL and ? >=
     (select COALESCE(min(updated_at), '01-01-3000 00:00:00') from person_addresses)",
         a.person_id,
         p.updated_at
       )
     )
-    |> order_by([p, a], desc: p.updated_at)
+    |> order_by([p, a], p.updated_at)
     |> limit(^limit)
     |> Repo.all()
     |> case do

@@ -39,7 +39,7 @@ defmodule Deduplication.V2.Match do
         end
 
         Model.unlock_person_after_verify(person.id)
-        set_current_verified_ts(person.inserted_at)
+        set_current_verified_ts(person.updated_at)
       end
 
       count + 1
@@ -127,11 +127,11 @@ defmodule Deduplication.V2.Match do
     {1, _} = Repo.update_all(person_query, [])
   end
 
-  def set_current_verified_ts(inserted_at) do
+  def set_current_verified_ts(updated_at) do
     query =
       from(p in VerifiedTs,
         where: p.id == ^0,
-        update: [set: [inserted_at: ^inserted_at, updated_at: ^DateTime.utc_now()]]
+        update: [set: [inserted_at: ^DateTime.utc_now(), updated_at: ^updated_at]]
       )
 
     {row_updated, _} = Repo.update_all(query, [])

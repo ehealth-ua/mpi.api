@@ -82,12 +82,12 @@ defmodule Deduplication.V2.CandidatesDistance do
   def levenshtein_weight(
         %Person{
           documents: person_documents,
-          addresses: person_addresses,
+          person_addresses: person_addresses,
           authentication_methods: person_phones
         } = person,
         %Person{
           documents: candidate_documents,
-          addresses: candidate_addresses,
+          person_addresses: candidate_addresses,
           authentication_methods: candidate_phones
         } = candidate
       ) do
@@ -101,7 +101,8 @@ defmodule Deduplication.V2.CandidatesDistance do
       distance_second_name: levenshtein(person.second_name, candidate.second_name),
       distance_documents: document_levenshtein[:levenshtein],
       docs_same_number: document_levenshtein[:same_number],
-      birth_settlement_substr: birth_settlement_substr(person.birth_settlement, candidate.birth_settlement),
+      birth_settlement_substr:
+        birth_settlement_substr(person.birth_settlement, candidate.birth_settlement),
       distance_tax_id: levenshtein(person.tax_id, candidate.tax_id),
       residence_settlement_flag: equal_residence_addresses(person_addresses, candidate_addresses),
       authentication_methods_flag: equal_auth_phones(person_phones, candidate_phones),
@@ -120,8 +121,9 @@ defmodule Deduplication.V2.CandidatesDistance do
       ) do
     twins = documents_twins_flag(person_documents, candidate_documents)
 
-    if levenshtein(person.last_name, candidate.last_name) < 3 and person.first_name != candidate.first_name and
-         person.birth_date == candidate.birth_date and twins == 1 do
+    if levenshtein(person.last_name, candidate.last_name) < 3 and
+         person.first_name != candidate.first_name and person.birth_date == candidate.birth_date and
+         twins == 1 do
       1
     else
       0
@@ -172,8 +174,11 @@ defmodule Deduplication.V2.CandidatesDistance do
             if %{levenshtein: 0, same_number: 0} == acc do
               {:halt, acc}
             else
-              levenshtein = check_documents_levenshtein(Map.get(pd, :document), Map.get(cd, :document), acc)
-              same_number = check_documents_same_number(Map.get(pd, :number), Map.get(cd, :number), acc)
+              levenshtein =
+                check_documents_levenshtein(Map.get(pd, :document), Map.get(cd, :document), acc)
+
+              same_number =
+                check_documents_same_number(Map.get(pd, :number), Map.get(cd, :number), acc)
 
               {:cont, %{levenshtein: levenshtein, same_number: same_number}}
             end

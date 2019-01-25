@@ -8,7 +8,7 @@
     <title>Core.Rpc – core v0.1.0</title>
     <link rel="stylesheet" href="dist/app-240d7fc7e5.css" />
     <script src="dist/sidebar_items-89e8e45312.js"></script>
-    
+
   </head>
   <body data-type="modules">
     <script>try { if(localStorage.getItem('night-mode')) document.body.className += ' night-mode'; } catch (e) { }</script>
@@ -88,7 +88,7 @@ Core.Rpc              </h1>
   </div>
 </div>
   </div>
-          
+
   <div class="summary-functions summary">
     <h2>
       <a href="#functions">Functions</a>
@@ -122,7 +122,7 @@ Core.Rpc              </h1>
 </div>
 </div>
   </div>
-          
+
         </section>
 
         <section id="types" class="details-list">
@@ -141,7 +141,7 @@ Core.Rpc              </h1>
       <span class="sr-only">Link to this type</span>
     </a>
     <span class="signature">person()</span>
-        
+
       <div class="specs">
           <pre>person() :: %Core.Person{
   preferred_way_communication: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>(),
@@ -169,7 +169,6 @@ Core.Rpc              </h1>
   first_name: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>(),
   no_tax_id: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>(),
   unzr: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>(),
-  person_addresses: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   death_date: Date,
   version: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>(),
   birth_settlement: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>(),
@@ -191,7 +190,7 @@ Core.Rpc              </h1>
       <span class="sr-only">Link to this type</span>
     </a>
     <span class="signature">successfull_search_response()</span>
-        
+
       <div class="specs">
           <pre>successfull_search_response() :: %Scrivener.Page{
   entries: [<a href="#t:person/0">person</a>()],
@@ -224,7 +223,7 @@ Core.Rpc              </h1>
       <span class="sr-only">Link to this function</span>
     </a>
     <span class="signature">get_person_by_id(id)</span>
-        
+
       <div class="specs">
           <pre>get_person_by_id(id :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()) :: nil | {:ok, <a href="#t:person/0">person</a>()}</pre>
       </div>
@@ -266,7 +265,6 @@ Core.Rpc              </h1>
       </span><span class="s">&quot;TYPE&quot;</span><span class="w"> </span><span class="o">=</span><span class="o">&gt;</span><span class="w"> </span><span class="s">&quot;REGISTRATION&quot;</span><span class="p">,</span><span class="w">
       </span><span class="s">&quot;area&quot;</span><span class="w"> </span><span class="o">=</span><span class="o">&gt;</span><span class="w"> </span><span class="s">&quot;ХАРКІВСЬКА&quot;</span><span class="w">
     </span><span class="p" data-group-id="1658989980-8">}</span><span class="p" data-group-id="1658989980-7">]</span><span class="p">,</span><span class="w">
-    </span><span class="ss">merge_verified</span><span class="p">:</span><span class="w"> </span><span class="no">nil</span><span class="p">,</span><span class="w">
     </span><span class="ss">death_date</span><span class="p">:</span><span class="w"> </span><span class="no">nil</span><span class="p">,</span><span class="w">
     </span><span class="ss">birth_settlement</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Київ&quot;</span><span class="p">,</span><span class="w">
     </span><span class="ss">preferred_way_communication</span><span class="p">:</span><span class="w"> </span><span class="no">nil</span><span class="p">,</span><span class="w">
@@ -298,7 +296,7 @@ Core.Rpc              </h1>
       <span class="sr-only">Link to this function</span>
     </a>
     <span class="signature">reset_auth_method(id, consumer_id)</span>
-        
+
       <div class="specs">
           <pre>reset_auth_method(id :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>(), consumer_id :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()) ::
   {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()} | {:ok, <a href="#t:person/0">person</a>()}</pre>
@@ -331,7 +329,7 @@ Core.Rpc              </h1>
       <span class="sr-only">Link to this function</span>
     </a>
     <span class="signature">search_persons(params)</span>
-        
+
       <div class="specs">
           <pre>search_persons(params :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()) ::
   {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()} | <a href="#t:successfull_search_response/0">successfull_search_response</a>()</pre>
@@ -443,7 +441,7 @@ Core.Rpc              </h1>
       <span class="sr-only">Link to this function</span>
     </a>
     <span class="signature">search_persons(params, order_by, opts)</span>
-        
+
       <div class="specs">
           <pre>search_persons(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>(), <a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>(), {<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()}) ::
   {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()} | {:ok, [<a href="#t:person/0">person</a>()]}</pre>
@@ -517,7 +515,6 @@ Core.Rpc              </h1>
 </section>
 </div>
   <script src="dist/app-a0c90688fa.js"></script>
-  
+
   </body>
 </html>
-

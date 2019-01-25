@@ -46,7 +46,7 @@ defmodule Core.Factory do
       death_date: ~D[2117-11-09],
       preferred_way_communication: "email",
       is_active: true,
-      person_addresses: build_list(2, :person_address),
+      addresses: build_list(2, :address),
       secret: sequence(:secret, &"secret-#{&1}"),
       emergency_contact: build(:emergency_contact),
       confidant_person: build_list(1, :confidant_person),
@@ -59,8 +59,7 @@ defmodule Core.Factory do
       merged_ids: [],
       phones: build_list(1, :person_phone),
       documents: build_list(2, :person_document),
-      addresses:
-        build_list(2, :address, person_first_name: first_name, person_last_name: last_name)
+      person_addresses: build_list(2, :person_address, person_first_name: first_name, person_last_name: last_name)
     }
   end
 
@@ -72,7 +71,7 @@ defmodule Core.Factory do
     }
   end
 
-  def person_address_factory do
+  def address_factory do
     %{
       type: "RESIDENCE",
       country: "UA",
@@ -89,7 +88,7 @@ defmodule Core.Factory do
     }
   end
 
-  def address_factory do
+  def person_address_factory do
     %PersonAddress{
       person_first_name: first_name(),
       person_last_name: last_name(),

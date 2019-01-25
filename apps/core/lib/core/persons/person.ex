@@ -10,7 +10,7 @@ defmodule Core.Person do
   @status_inactive "inactive"
 
   @primary_key {:id, Ecto.UUID, autogenerate: true}
-  @derive {Poison.Encoder, except: [:__meta__, :person_addresses]}
+  @derive {Poison.Encoder, except: [:__meta__]}
   schema "persons" do
     field(:version, :string, default: "default")
     field(:first_name, :string)
@@ -27,7 +27,7 @@ defmodule Core.Person do
     field(:preferred_way_communication, :string)
     field(:invalid_tax_id, :boolean, default: false)
     field(:is_active, :boolean, default: true)
-    field(:person_addresses, {:array, :map})
+    field(:addresses, {:array, :map})
     field(:secret, :string)
     field(:emergency_contact, :map)
     field(:confidant_person, {:array, :map})
@@ -42,7 +42,7 @@ defmodule Core.Person do
 
     has_many(:documents, PersonDocument, on_delete: :delete_all, on_replace: :delete)
     has_many(:phones, PersonPhone, on_delete: :delete_all, on_replace: :delete)
-    has_many(:addresses, PersonAddress, on_delete: :delete_all, on_replace: :delete)
+    has_many(:person_addresses, PersonAddress, on_delete: :delete_all, on_replace: :delete)
     timestamps(type: :utc_datetime)
   end
 
@@ -65,7 +65,7 @@ defmodule Core.Person do
     preferred_way_communication
     invalid_tax_id
     is_active
-    person_addresses
+    addresses
     secret
     emergency_contact
     confidant_person
@@ -79,24 +79,24 @@ defmodule Core.Person do
     no_tax_id
   )
 
-  @fields_required [
-    :version,
-    :first_name,
-    :last_name,
-    :birth_date,
-    :birth_country,
-    :birth_settlement,
-    :gender,
-    :secret,
-    :addresses,
-    :authentication_methods,
-    :emergency_contact,
-    :patient_signed,
-    :process_disclosure_data_consent,
-    :status,
-    :inserted_by,
-    :updated_by
-  ]
+  @fields_required ~w(
+    version
+    first_name
+    last_name
+    birth_date
+    birth_country
+    birth_settlement
+    gender
+    secret
+    addresses
+    authentication_methods
+    emergency_contact
+    patient_signed
+    process_disclosure_data_consent
+    status
+    inserted_by
+    updated_by
+  )a
 
   def fields, do: @fields
   def fields_required, do: @fields_required
