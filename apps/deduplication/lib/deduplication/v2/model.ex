@@ -83,7 +83,7 @@ defmodule Deduplication.V2.Model do
           p.updated_at
         )
     )
-    |> order_by([p], p.inserted_at)
+    |> order_by([p], p.updated_at)
     |> limit(^limit)
     |> Repo.all()
   end
@@ -186,9 +186,9 @@ defmodule Deduplication.V2.Model do
       # recheck id is not null after right join
       |> where(
         [p, ca],
-        p.id != ^person.id and p.inserted_at < ^person.inserted_at and not is_nil(p.id)
+        p.id != ^person.id and p.updated_at < ^person.updated_at and not is_nil(p.id)
       )
-      |> order_by([p, ca], p.inserted_at)
+      |> order_by([p, ca], p.updated_at)
       |> limit(^limit)
       |> offset(^offset)
       |> Repo.all()
