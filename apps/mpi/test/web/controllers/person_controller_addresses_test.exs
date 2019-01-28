@@ -133,6 +133,37 @@ defmodule MPI.Web.PersonControllerAddressesTest do
              } = PersonsAPI.get_by_id(person.id)
     end
 
+    test "update adresses for existing person with addresses and person_addresses and without addresses in params do not double person_addresses",
+         %{
+           conn: conn
+         } do
+      person =
+        insert(:person,
+          addresses: [build(:address, settlement: "Хотин")],
+          person_addresses: [build(:address, settlement: "Хотин")]
+        )
+
+      assert resp =
+               conn
+               |> put(person_path(conn, :update, person.id), %{
+                 first_name: "Олександр",
+                 last_name: "Коваль"
+               })
+               |> json_response(200)
+
+      assert [%{"settlement" => "Хотин"}] = resp["data"]["addresses"]
+
+      assert %Person{
+               person_addresses: [
+                 %Core.PersonAddress{
+                   person_first_name: "Олександр",
+                   person_last_name: "Коваль",
+                   settlement: "Хотин"
+                 }
+               ]
+             } = PersonsAPI.get_by_id(person.id)
+    end
+
     test "create person with addresses", %{conn: conn} do
       addresses = [build(:address, settlement: "Львів", region: "Галичина")]
 
