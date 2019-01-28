@@ -9,7 +9,7 @@ use Mix.Config
 # back to each application for organization purposes.
 
 config :git_ops,
-  mix_project: Ael.Mixfile,
+  mix_project: MPI.MixProject,
   changelog_file: "CHANGELOG.md",
   repository_url: "https://github.com/edenlabllc/mpi.api/",
   types: [
