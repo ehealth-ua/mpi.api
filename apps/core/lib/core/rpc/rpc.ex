@@ -270,4 +270,19 @@ defmodule Core.Rpc do
   def reset_auth_method(id, actor_id) do
     PersonsAPI.reset_auth_method(id, %{"authentication_methods" => [%{"type" => "NA"}]}, actor_id)
   end
+
+  @doc """
+  Get authentication method for person by `id`
+
+  ## Examples
+
+      iex> Core.Rpc.get_person_auth_method("26e673e1-1d68-413e-b96c-407b45d9f572")
+      {:ok, %{"type" => "OTP", "phone_number" => "+380630000000"}}
+  """
+  @spec get_auth_method(id :: binary()) :: nil | {:ok, map()}
+  def get_auth_method(id) do
+    with %Person{} = person <- PersonsAPI.get_by_id(id) do
+      {:ok, PersonsAPI.get_person_auth_method(person)}
+    end
+  end
 end

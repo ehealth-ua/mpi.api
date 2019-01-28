@@ -289,4 +289,8 @@ defmodule Core.Persons.PersonsAPI do
 
   defp person_is_active(%Person{is_active: true}), do: :ok
   defp person_is_active(_), do: {:error, {:"422", "Person is not active"}}
+
+  def get_person_auth_method(%Person{authentication_methods: authentication_methods}) do
+    List.first(authentication_methods)
+  end
 end

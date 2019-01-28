@@ -12,28 +12,31 @@ defmodule Core.RpcTest do
 
   describe "search_persons/1" do
     test "search person by documents list and status" do
-      %{id: person1_id} = insert(
-        :person,
-        documents: [
-          build(:document, type: "BIRTH_CERTIFICATE", number: "АА111"),
-          build(:document, type: "PASSPORT", number: "аа222")
-        ]
-      )
+      %{id: person1_id} =
+        insert(
+          :person,
+          documents: [
+            build(:document, type: "BIRTH_CERTIFICATE", number: "АА111"),
+            build(:document, type: "PASSPORT", number: "аа222")
+          ]
+        )
 
-      %{id: person2_id} = insert(
-        :person,
-        documents: [
-          build(:document, type: "BIRTH_CERTIFICATE", number: "АА333"),
-          build(:document, type: "PASSPORT", number: "аа444")
-        ]
-      )
+      %{id: person2_id} =
+        insert(
+          :person,
+          documents: [
+            build(:document, type: "BIRTH_CERTIFICATE", number: "АА333"),
+            build(:document, type: "PASSPORT", number: "аа444")
+          ]
+        )
 
-      %{id: person3_id} = insert(
-        :person,
-        documents: [
-          build(:document, type: "PASSPORT", number: "аа555")
-        ]
-      )
+      %{id: person3_id} =
+        insert(
+          :person,
+          documents: [
+            build(:document, type: "PASSPORT", number: "аа555")
+          ]
+        )
 
       insert(
         :person,
@@ -253,6 +256,36 @@ defmodule Core.RpcTest do
 
     test "not found" do
       refute Rpc.reset_auth_method(UUID.generate(), UUID.generate())
+    end
+  end
+
+  describe "get_auth_method/1" do
+    test "success" do
+      %{id: id1} =
+        insert(:person,
+          authentication_methods: [
+            %{
+              type: "OTP",
+              phone_number: "+38#{Enum.random(1_000_000_000..9_999_999_999)}"
+            }
+          ]
+        )
+
+      %{id: id2} =
+        insert(:person,
+          authentication_methods: [
+            %{
+              type: "OFFLINE"
+            }
+          ]
+        )
+
+      assert {:ok, %{"phone_number" => _, "type" => "OTP"}} = Rpc.get_auth_method(id1)
+      assert {:ok, %{"type" => "OFFLINE"}} = Rpc.get_auth_method(id2)
+    end
+
+    test "person not found" do
+      refute Rpc.get_auth_method(UUID.generate())
     end
   end
 end
