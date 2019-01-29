@@ -10,7 +10,8 @@ config :logger, :console,
 config :deduplication,
   producer: Deduplication.Producer,
   client: HTTPoison,
-  py_weight: Deduplication.V2.PyWeight
+  py_weight: Deduplication.V2.PyWeight,
+  python_workers_pool_size: {:system, :integer, PYTHON_WORKERS_POOL_SIZE, 10}
 
 config :deduplication, Deduplication.Application,
   env: Mix.env(),

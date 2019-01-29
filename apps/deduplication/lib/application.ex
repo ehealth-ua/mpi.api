@@ -16,7 +16,7 @@ defmodule Deduplication.Application do
       )
 
     producer_id = String.to_atom("Producer#{0}")
-    parallel_consumers = config()[:parallel_consumers]
+    parallel_consumers = config(:parallel_consumers)
 
     worker_children =
       if config(:env) == :test,
@@ -51,7 +51,7 @@ defmodule Deduplication.Application do
     [
       {:name, {:local, :python_workers}},
       {:worker_module, PythonWorker},
-      {:size, System.schedulers_online()},
+      {:size, config(:python_workers_pool_size)},
       {:max_overflow, 0}
     ]
   end
