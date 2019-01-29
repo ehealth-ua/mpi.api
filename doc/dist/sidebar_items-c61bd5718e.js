@@ -1,1 +1,0 @@
-sidebarNodes={"extras":[{"id":"api-reference","title":"API Reference","group":"","headers":[{"id":"Modules","anchor":"modules"}]}],"exceptions":[],"modules":[{"id":"Core.Rpc","title":"Core.Rpc","group":"","functions":[{"id":"search_persons/1","anchor":"search_persons/1"}],"types":[{"id":"person/0","anchor":"t:person/0"}]}],"tasks":[]}

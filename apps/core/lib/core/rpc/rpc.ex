@@ -276,7 +276,7 @@ defmodule Core.Rpc do
 
   ## Examples
 
-      iex> Core.Rpc.get_person_auth_method("26e673e1-1d68-413e-b96c-407b45d9f572")
+      iex> Core.Rpc.get_auth_method("26e673e1-1d68-413e-b96c-407b45d9f572")
       {:ok, %{"type" => "OTP", "phone_number" => "+380630000000"}}
   """
   @spec get_auth_method(id :: binary()) :: nil | {:ok, map()}
