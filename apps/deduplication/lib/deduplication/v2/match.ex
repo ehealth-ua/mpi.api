@@ -56,15 +56,15 @@ defmodule Deduplication.V2.Match do
       fn candidate ->
         normalized_candidate = Model.normalize_person(candidate)
 
-        weigth_map =
+        weight_map =
           normalized_person
           |> CandidatesDistance.levenshtein_weight(normalized_candidate)
           |> CandidatesDistance.finalize_weight()
 
-        pair_weight = @py_weight.weight(weigth_map)
+        pair_weight = @py_weight.weight(weight_map)
 
         if pair_weight >= score,
-          do: %{candidate: candidate, weight: pair_weight, matrix: weigth_map},
+          do: %{candidate: candidate, weight: pair_weight, matrix: weight_map},
           else: :skip
       end,
       timeout: config[:weight_count_timeout]
@@ -75,7 +75,7 @@ defmodule Deduplication.V2.Match do
   def merge_candidates(person_id, candidates, system_user_id) do
     merge_candidates =
       candidates
-      |> Task.async_stream(fn %{candidate: candidate, weight: score, matrix: weigth_map} ->
+      |> Task.async_stream(fn %{candidate: candidate, weight: score, matrix: weight_map} ->
         score = if is_integer(score), do: score / 1, else: score
 
         %{
@@ -83,7 +83,7 @@ defmodule Deduplication.V2.Match do
           master_person_id: person_id,
           person_id: candidate.id,
           status: "NEW",
-          config: weigth_map,
+          config: weight_map,
           inserted_at: DateTime.utc_now(),
           updated_at: DateTime.utc_now(),
           score: score
