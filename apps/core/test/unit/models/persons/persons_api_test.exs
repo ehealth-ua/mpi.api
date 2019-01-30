@@ -22,8 +22,7 @@ defmodule Core.Persons.PersonTest do
   @inactive Person.status(:inactive)
 
   test "inserts person in DB successfully" do
-    %Ecto.Changeset{valid?: true} =
-      changeset = PersonsAPI.changeset(%Person{}, build_person_map())
+    %Ecto.Changeset{valid?: true} = changeset = PersonsAPI.changeset(%Person{}, build_person_map())
 
     assert {:ok, _record} = Repo.insert(changeset)
   end
@@ -31,11 +30,9 @@ defmodule Core.Persons.PersonTest do
   test "creates person" do
     active = Person.status(:active)
 
-    assert {:created, {:ok, %Person{id: id}}} =
-             PersonsAPI.create(build_person_map(), @test_consumer_id)
+    assert {:created, {:ok, %Person{id: id}}} = PersonsAPI.create(build_person_map(), @test_consumer_id)
 
-    assert [%PersonUpdate{person_id: ^id, updated_by: @test_consumer_id, status: ^active}] =
-             Repo.all(PersonUpdate)
+    assert [%PersonUpdate{person_id: ^id, updated_by: @test_consumer_id, status: ^active}] = Repo.all(PersonUpdate)
   end
 
   test "updates person" do
@@ -68,8 +65,7 @@ defmodule Core.Persons.PersonTest do
     ]
 
     for person_data <- inactive_persons do
-      assert {:error, {:conflict, "person is not active"}} =
-               PersonsAPI.create(person_data, @test_consumer_id)
+      assert {:error, {:conflict, "person is not active"}} = PersonsAPI.create(person_data, @test_consumer_id)
     end
   end
 
@@ -94,8 +90,7 @@ defmodule Core.Persons.PersonTest do
 
     expected_entries_count = 2
 
-    assert expected_entries_count ===
-             PersonsAPI.search(%{"birth_certificate" => nil}).total_entries
+    assert expected_entries_count === PersonsAPI.search(%{"birth_certificate" => nil}).total_entries
   end
 
   test "searches with birth certificate escape" do
@@ -199,6 +194,7 @@ defmodule Core.Persons.PersonTest do
       Enum.reduce(1..100, [], fn n, acc ->
         %Person{id: id} =
           insert(
+            :mpi,
             :person,
             tax_id: "0123456789",
             birth_date: ~D[1996-12-12],
@@ -226,6 +222,7 @@ defmodule Core.Persons.PersonTest do
   test "searches by unzr, with tax_id and birthday presence" do
     %Person{id: id} =
       insert(
+        :mpi,
         :person,
         tax_id: "0123456789",
         birth_date: ~D[1996-12-12],
@@ -234,6 +231,7 @@ defmodule Core.Persons.PersonTest do
 
     Enum.each(1..100, fn n ->
       insert(
+        :mpi,
         :person,
         tax_id: "0123456789",
         birth_date: ~D[1996-12-12],
@@ -256,7 +254,7 @@ defmodule Core.Persons.PersonTest do
 
   def insert_person_test_data(args \\ %{}) do
     def_args = %{id: @test_person_id, first_name: @test_consumer_first_name_original}
-    person = insert(:person, Map.merge(def_args, args))
+    person = insert(:mpi, :person, Map.merge(def_args, args))
 
     person
     |> Repo.preload(:phones)

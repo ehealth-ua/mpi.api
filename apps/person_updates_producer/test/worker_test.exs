@@ -22,7 +22,7 @@ defmodule PersonUpdateProducer.WorkerTest do
       expect(WorkerMock, :stop_application, fn -> :ok end)
       expect(KafkaMock, :publish_person_event, fn _, _, _ -> :ok end)
       person_id = UUID.generate()
-      insert(:person_update, person_id: person_id)
+      insert(:mpi, :person_update, person_id: person_id)
       assert [_] = Repo.all(PersonUpdate)
       {:ok, _pid} = GenServer.start_link(Worker, [])
       :timer.sleep(100)

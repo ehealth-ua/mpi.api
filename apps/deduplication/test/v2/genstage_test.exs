@@ -50,7 +50,7 @@ defmodule Deduplication.V2.GenStageTest do
 
     @tag :pending
     test "for completed db works" do
-      Enum.map(1..300, fn _ -> insert(:person) end)
+      Enum.map(1..300, fn _ -> insert(:mpi, :person) end)
       Match.set_current_verified_ts(DateTime.utc_now())
       start_genstage(100)
       assert 0 == Enum.count(Model.get_unverified_persons(300))
@@ -65,7 +65,7 @@ defmodule Deduplication.V2.GenStageTest do
 
     @tag :pending
     test "for random persons works" do
-      Enum.map(1..100, fn _ -> insert(:person) end)
+      Enum.map(1..100, fn _ -> insert(:mpi, :person) end)
       start_genstage(5000)
       assert 0 == Enum.count(Model.get_unverified_persons(100))
     end
@@ -84,7 +84,7 @@ defmodule Deduplication.V2.GenStageTest do
       n2 = 23
 
       Enum.each(1..n1, fn i ->
-        insert(:person,
+        insert(:mpi, :person,
           tax_id: "123456789",
           first_name: "#{i}",
           documents: [build(:document, number: "#{i}")],
@@ -93,7 +93,7 @@ defmodule Deduplication.V2.GenStageTest do
       end)
 
       Enum.each(1..n2, fn i ->
-        insert(:person,
+        insert(:mpi, :person,
           tax_id: "000000000",
           first_name: "#{i}",
           documents: [build(:document, number: "999#{i}")],
@@ -133,8 +133,8 @@ defmodule Deduplication.V2.GenStageTest do
     @tag :pending
     test "only failed persons" do
       Enum.map(1..110, fn _ ->
-        person = insert(:person)
-        insert(:verifying_ids, id: person.id)
+        person = insert(:mpi, :person)
+        insert(:mpi, :verifying_ids, id: person.id)
       end)
 
       Match.set_current_verified_ts(DateTime.utc_now())
@@ -148,12 +148,12 @@ defmodule Deduplication.V2.GenStageTest do
   describe "both failed and unverified persons works" do
     test "unverified + failed persons" do
       Enum.map(1..51, fn _ ->
-        person = insert(:person)
-        insert(:verifying_ids, id: person.id)
+        person = insert(:mpi, :person)
+        insert(:mpi, :verifying_ids, id: person.id)
       end)
 
       Match.set_current_verified_ts(DateTime.utc_now())
-      Enum.map(1..103, fn _ -> insert(:person) end)
+      Enum.map(1..103, fn _ -> insert(:mpi, :person) end)
       assert 51 == Enum.count(Model.get_failed_unverified_persons(100, 0))
       start_genstage(5000)
       assert 0 == Enum.count(Model.get_unverified_persons(300))

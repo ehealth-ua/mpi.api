@@ -86,14 +86,14 @@ defmodule Deduplication.V2.ModelTest do
     end
 
     test "get unverified person works" do
-      person = insert(:person, tax_id: "123456789")
+      person = insert(:mpi, :person, tax_id: "123456789")
       [unverified_person] = Model.get_unverified_persons(1)
 
       assert person.id == unverified_person.id
     end
 
     test "normalize unverified person works" do
-      person = insert(:person, tax_id: "123456789")
+      person = insert(:mpi, :person, tax_id: "123456789")
       [unverified_person] = Model.get_unverified_persons(10)
       unverified_person = Model.normalize_person(unverified_person)
       assert person.id == unverified_person.id
@@ -104,28 +104,28 @@ defmodule Deduplication.V2.ModelTest do
     end
 
     test "unverified persons limit" do
-      insert(:person)
+      insert(:mpi, :person)
       Match.set_current_verified_ts(DateTime.utc_now())
       assert [] == Model.get_unverified_persons(1)
 
       Match.set_current_verified_ts(DateTime.utc_now())
-      person = insert(:person)
+      person = insert(:mpi, :person)
       assert [%Person{id: id}] = Model.get_unverified_persons(1)
       assert id == person.id
       assert [%Person{}] = Model.get_unverified_persons(5)
     end
 
     test "get candidates works" do
-      p00 = insert(:person, tax_id: "000000000").id
-      insert(:person, tax_id: "999999999")
-      p10 = insert(:person, tax_id: "123456789").id
+      p00 = insert(:mpi, :person, tax_id: "000000000").id
+      insert(:mpi, :person, tax_id: "999999999")
+      p10 = insert(:mpi, :person, tax_id: "123456789").id
 
       Match.set_current_verified_ts(DateTime.utc_now())
 
-      p11 = insert(:person, tax_id: "123456789", documents: [build(:document, number: "1")]).id
-      insert(:person, tax_id: "123456789", documents: [build(:document, number: "2")])
-      p01 = insert(:person, tax_id: "000000000", documents: [build(:document, number: "3")]).id
-      insert(:person, tax_id: "000000000", documents: [build(:document, number: "4")])
+      p11 = insert(:mpi, :person, tax_id: "123456789", documents: [build(:document, number: "1")]).id
+      insert(:mpi, :person, tax_id: "123456789", documents: [build(:document, number: "2")])
+      p01 = insert(:mpi, :person, tax_id: "000000000", documents: [build(:document, number: "3")]).id
+      insert(:mpi, :person, tax_id: "000000000", documents: [build(:document, number: "4")])
       unverified_persons = Model.get_unverified_persons(100)
 
       Enum.reduce(unverified_persons, 1, fn unverified_person, i ->

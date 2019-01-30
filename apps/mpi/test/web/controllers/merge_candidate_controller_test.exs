@@ -8,8 +8,8 @@ defmodule MPI.Web.MergeCandidateControllerTest do
   alias Core.Repo
 
   test "GET /merge_candidates", %{conn: conn} do
-    merge_candidate_1 = Factory.insert(:merge_candidate, status: "NEW")
-    merge_candidate_2 = Factory.insert(:merge_candidate, status: "MERGED")
+    merge_candidate_1 = Factory.insert(:mpi, :merge_candidate, status: "NEW")
+    merge_candidate_2 = Factory.insert(:mpi, :merge_candidate, status: "MERGED")
 
     response =
       conn
@@ -23,7 +23,7 @@ defmodule MPI.Web.MergeCandidateControllerTest do
   end
 
   test "update /merge_candidates/:id", %{conn: conn} do
-    merge_candidate = Factory.insert(:merge_candidate, status: "NEW")
+    merge_candidate = Factory.insert(:mpi, :merge_candidate, status: "NEW")
     id = merge_candidate.id
 
     response =

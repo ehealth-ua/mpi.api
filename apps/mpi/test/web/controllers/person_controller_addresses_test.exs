@@ -23,7 +23,7 @@ defmodule MPI.Web.PersonControllerAddressesTest do
   describe "addresses and person_adresses" do
     test "get person with addresses", %{conn: conn} do
       person =
-        insert(:person,
+        insert(:mpi, :person,
           addresses: [build(:address, settlement: "Біла Церква")],
           person_addresses: [build(:address, settlement: "Чернігів")]
         )
@@ -39,7 +39,7 @@ defmodule MPI.Web.PersonControllerAddressesTest do
     end
 
     test "get person without addresses", %{conn: conn} do
-      person = insert(:person, addresses: [], person_addresses: [])
+      person = insert(:mpi, :person, addresses: [], person_addresses: [])
 
       resp =
         conn
@@ -53,7 +53,7 @@ defmodule MPI.Web.PersonControllerAddressesTest do
 
     test "update person by id without addresses in params", %{conn: conn} do
       person =
-        insert(:person,
+        insert(:mpi, :person,
           first_name: "Святославович",
           addresses: [build(:address, settlement: "Ромни")],
           person_addresses: []
@@ -75,7 +75,7 @@ defmodule MPI.Web.PersonControllerAddressesTest do
     end
 
     test "update by id adresses for existing person with addresses and without person_addresses", %{conn: conn} do
-      person = insert(:person, addresses: [build(:address, settlement: "Київ")], person_addresses: [])
+      person = insert(:mpi, :person, addresses: [build(:address, settlement: "Київ")], person_addresses: [])
       addresses = [build(:address, settlement: "Коростень")]
 
       assert resp =
@@ -103,7 +103,7 @@ defmodule MPI.Web.PersonControllerAddressesTest do
 
     test "update adresses for existing person with addresses and with person_addresses", %{conn: conn} do
       person =
-        insert(:person,
+        insert(:mpi, :person,
           addresses: [build(:address, settlement: "Київ")],
           person_addresses: [build(:address, settlement: "Київ")]
         )
@@ -138,7 +138,7 @@ defmodule MPI.Web.PersonControllerAddressesTest do
            conn: conn
          } do
       person =
-        insert(:person,
+        insert(:mpi, :person,
           addresses: [build(:address, settlement: "Хотин")],
           person_addresses: [build(:address, settlement: "Хотин")]
         )

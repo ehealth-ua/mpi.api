@@ -12,7 +12,7 @@ defmodule Deduplication.V2.ConsumerTest do
 
   describe "status inactive" do
     test "mark peron inactive" do
-      person = insert(:person)
+      person = insert(:mpi, :person)
       actor_id = UUID.generate()
       assert :ok = GenConsumer.deactivate_person(person.id, actor_id)
 

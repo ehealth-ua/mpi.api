@@ -14,6 +14,7 @@ defmodule Core.RpcTest do
     test "search person by documents list and status" do
       %{id: person1_id} =
         insert(
+          :mpi,
           :person,
           documents: [
             build(:document, type: "BIRTH_CERTIFICATE", number: "АА111"),
@@ -23,6 +24,7 @@ defmodule Core.RpcTest do
 
       %{id: person2_id} =
         insert(
+          :mpi,
           :person,
           documents: [
             build(:document, type: "BIRTH_CERTIFICATE", number: "АА333"),
@@ -32,6 +34,7 @@ defmodule Core.RpcTest do
 
       %{id: person3_id} =
         insert(
+          :mpi,
           :person,
           documents: [
             build(:document, type: "PASSPORT", number: "аа555")
@@ -39,6 +42,7 @@ defmodule Core.RpcTest do
         )
 
       insert(
+        :mpi,
         :person,
         status: Person.status(:inactive),
         documents: [
@@ -46,7 +50,7 @@ defmodule Core.RpcTest do
         ]
       )
 
-      insert(:person)
+      insert(:mpi, :person)
 
       search_params = %{
         "documents" => [
@@ -190,10 +194,11 @@ defmodule Core.RpcTest do
       phone_number = "+3809900011122"
       document_number = "АА444009"
 
-      insert_list(10, :person)
+      insert_list(10, :mpi, :person)
 
       insert_list(
         3,
+        :mpi,
         :person,
         status: Person.status(:active),
         documents: [build(:document, type: "PASSPORT", number: document_number)],
@@ -215,9 +220,9 @@ defmodule Core.RpcTest do
     end
 
     test "success by persons id" do
-      insert_list(4, :person)
+      insert_list(4, :mpi, :person)
 
-      persons = insert_list(2, :person)
+      persons = insert_list(2, :mpi, :person)
       persons_ids = Enum.map(persons, & &1.id)
 
       filter = [{:id, :in, persons_ids}]
@@ -229,7 +234,7 @@ defmodule Core.RpcTest do
 
   describe "get_person_by_id/1" do
     test "success" do
-      %{id: id} = insert(:person)
+      %{id: id} = insert(:mpi, :person)
 
       assert {:ok, %Person{id: ^id}} = Rpc.get_person_by_id(id)
     end
@@ -241,7 +246,7 @@ defmodule Core.RpcTest do
 
   describe "reset_auth_method/2" do
     test "success" do
-      %{id: id} = insert(:person, authentication_methods: [%{"type" => "PHONE"}])
+      %{id: id} = insert(:mpi, :person, authentication_methods: [%{"type" => "PHONE"}])
 
       person = Rpc.reset_auth_method(id, UUID.generate())
 
@@ -249,7 +254,8 @@ defmodule Core.RpcTest do
     end
 
     test "person inactive" do
-      %{id: id} = insert(:person, status: Person.status(:inactive), authentication_methods: [%{"type" => "PHONE"}])
+      %{id: id} =
+        insert(:mpi, :person, status: Person.status(:inactive), authentication_methods: [%{"type" => "PHONE"}])
 
       assert {:error, {:conflict, "Invalid status MPI for this action"}} = Rpc.reset_auth_method(id, UUID.generate())
     end
@@ -262,7 +268,7 @@ defmodule Core.RpcTest do
   describe "get_auth_method/1" do
     test "success" do
       %{id: id1} =
-        insert(:person,
+        insert(:mpi, :person,
           authentication_methods: [
             %{
               type: "OTP",
@@ -272,7 +278,7 @@ defmodule Core.RpcTest do
         )
 
       %{id: id2} =
-        insert(:person,
+        insert(:mpi, :person,
           authentication_methods: [
             %{
               type: "OFFLINE"

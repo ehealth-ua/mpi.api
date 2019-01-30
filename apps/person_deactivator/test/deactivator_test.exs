@@ -16,9 +16,9 @@ defmodule PersonDeactivatorTest do
 
   describe "deactivate_persons/0" do
     test "deactivate_persons success" do
-      Enum.each(1..3, fn _ -> insert(:merge_candidate, score: 0) end)
-      Enum.each(1..5, fn _ -> insert(:merge_candidate, score: 0.6) end)
-      Enum.each(1..2, fn _ -> insert(:merge_candidate, score: 0.8) end)
+      Enum.each(1..3, fn _ -> insert(:mpi, :merge_candidate, score: 0.0) end)
+      Enum.each(1..5, fn _ -> insert(:mpi, :merge_candidate, score: 0.6) end)
+      Enum.each(1..2, fn _ -> insert(:mpi, :merge_candidate, score: 0.8) end)
 
       expect(PersonDeactivatorKafkaMock, :publish_person_merged_event, 2, fn _, _ -> :ok end)
       assert 2 == PersonDeactivator.deactivate_persons()
@@ -31,21 +31,21 @@ defmodule PersonDeactivatorTest do
       mc =
         Enum.map(1..3, fn _ ->
           score = 1.0
-          m = insert(:merge_candidate, score: score)
+          m = insert(:mpi, :merge_candidate, score: score)
           %{person_id: m.person_id, id: m.id}
         end)
 
-      Enum.each(1..3, fn _ -> insert(:merge_candidate, score: 0) end)
+      Enum.each(1..3, fn _ -> insert(:mpi, :merge_candidate, score: 0.0) end)
 
       dm = PersonDeactivator.get_new_merge_candidates(1, 100)
       assert MapSet.new(mc) == MapSet.new(dm)
     end
 
     test "get_new_merge_candidates/2 no merge candidates" do
-      Enum.each(1..3, fn _ -> insert(:merge_candidate, score: 0) end)
+      Enum.each(1..3, fn _ -> insert(:mpi, :merge_candidate, score: 0.0) end)
 
       Enum.each(1..3, fn _ ->
-        insert(:merge_candidate, score: 1.0, status: MergeCandidate.status(:merged))
+        insert(:mpi, :merge_candidate, score: 1.0, status: MergeCandidate.status(:merged))
       end)
 
       assert [] == PersonDeactivator.get_new_merge_candidates(0.6, 100)
@@ -57,11 +57,11 @@ defmodule PersonDeactivatorTest do
       mc =
         Enum.map(1..3, fn _ ->
           score = 1.0
-          m = insert(:merge_candidate, score: score)
+          m = insert(:mpi, :merge_candidate, score: score)
           m.id
         end)
 
-      Enum.each(1..3, fn _ -> insert(:merge_candidate, score: 0) end)
+      Enum.each(1..3, fn _ -> insert(:mpi, :merge_candidate, score: 0.0) end)
 
       merge_candidates = PersonDeactivator.get_new_merge_candidates(1, 100)
 

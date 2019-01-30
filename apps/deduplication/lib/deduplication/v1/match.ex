@@ -109,7 +109,7 @@ defmodule Deduplication.V1.Match do
           stale_persons_query,
           set: [status: @person_status_inactive]
         )
-        |> Multi.run(:log_inserts, &log_insert(&1.insert_candidates, system_user_id))
+        |> Multi.run(:log_inserts, &log_insert(:mpi, &1.insert_candidates, system_user_id))
         |> Repo.transaction()
 
       Logger.info(fn ->
@@ -249,7 +249,7 @@ defmodule Deduplication.V1.Match do
   def compare_lists(field, field), do: :match
   def compare_lists(_, _), do: :no_match
 
-  defp log_insert({_, merge_candidates}, system_user_id) do
+  defp log_insert(:mpi, {_, merge_candidates}, system_user_id) do
     changes =
       Enum.map(merge_candidates, fn mc ->
         %{

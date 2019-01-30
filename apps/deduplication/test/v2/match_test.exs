@@ -44,7 +44,7 @@ defmodule Deduplication.V2.MatchTest do
       n = batch_size * 5
 
       Enum.map(1..n, fn _ ->
-        insert(:person, tax_id: "000000000")
+        insert(:mpi, :person, tax_id: "000000000")
       end)
 
       persons = Model.get_unverified_persons(n)
@@ -70,7 +70,7 @@ defmodule Deduplication.V2.MatchTest do
       person_ids =
         Enum.map(1..5, fn _i ->
           p =
-            insert(:person,
+            insert(:mpi, :person,
               tax_id: "123456789",
               documents: [build(:document, number: "000123")],
               authentication_methods: [
@@ -106,7 +106,7 @@ defmodule Deduplication.V2.MatchTest do
       person_ids =
         Enum.map(1..5, fn _i ->
           p =
-            insert(:person,
+            insert(:mpi, :person,
               tax_id: "123456789",
               documents: [build(:document, number: "000123")],
               authentication_methods: [
@@ -122,7 +122,7 @@ defmodule Deduplication.V2.MatchTest do
 
       Enum.each(1..5, fn i ->
         p =
-          insert(:person,
+          insert(:mpi, :person,
             tax_id: "#{i}",
             documents: [build(:document, number: "#{i}")],
             authentication_methods: [
@@ -165,7 +165,7 @@ defmodule Deduplication.V2.MatchTest do
       t_person_ids =
         Enum.map(1..5, fn i ->
           p =
-            insert(:person,
+            insert(:mpi, :person,
               tax_id: "000#{i}",
               documents: [build(:document, number: "0000")],
               authentication_methods: [
@@ -182,7 +182,7 @@ defmodule Deduplication.V2.MatchTest do
       a_person_ids =
         Enum.map(1..5, fn i ->
           p =
-            insert(:person,
+            insert(:mpi, :person,
               tax_id: "#{i}",
               documents: [build(:document, number: "0000")],
               authentication_methods: [
@@ -197,7 +197,7 @@ defmodule Deduplication.V2.MatchTest do
         end)
 
       Enum.each(1..3, fn i ->
-        insert(:person,
+        insert(:mpi, :person,
           tax_id: "#{i * 100}",
           documents: [build(:document, number: "111#{i}")],
           authentication_methods: [
@@ -239,7 +239,7 @@ defmodule Deduplication.V2.MatchTest do
       person_ids =
         Enum.map(1..5, fn i ->
           p =
-            insert(:person,
+            insert(:mpi, :person,
               tax_id: "#{i}",
               documents: [build(:document, number: "0000")],
               authentication_methods: [
@@ -254,7 +254,7 @@ defmodule Deduplication.V2.MatchTest do
         end)
 
       Enum.each(1..5, fn i ->
-        insert(:person,
+        insert(:mpi, :person,
           tax_id: "#{i * 10}",
           documents: [build(:document, number: "999#{i}")],
           authentication_methods: [
@@ -288,7 +288,7 @@ defmodule Deduplication.V2.MatchTest do
       t_person_ids =
         Enum.map(1..5, fn i ->
           p =
-            insert(:person,
+            insert(:mpi, :person,
               tax_id: "#{i}",
               documents: [build(:document, number: "0000")],
               authentication_methods: [
@@ -305,7 +305,7 @@ defmodule Deduplication.V2.MatchTest do
       a_person_ids =
         Enum.map(1..5, fn i ->
           p =
-            insert(:person,
+            insert(:mpi, :person,
               tax_id: "#{i}",
               documents: [build(:document, number: "0000")],
               authentication_methods: [
@@ -320,7 +320,7 @@ defmodule Deduplication.V2.MatchTest do
         end)
 
       Enum.each(1..3, fn i ->
-        insert(:person,
+        insert(:mpi, :person,
           tax_id: "#{i * 100}",
           documents: [build(:document, number: "111#{i}")],
           authentication_methods: [
@@ -363,7 +363,7 @@ defmodule Deduplication.V2.MatchTest do
       person_ids =
         Enum.map(1..5, fn i ->
           p =
-            insert(:person,
+            insert(:mpi, :person,
               tax_id: "#{i}",
               documents: [build(:document, number: "#{i}")],
               authentication_methods: [
@@ -378,7 +378,7 @@ defmodule Deduplication.V2.MatchTest do
         end)
 
       Enum.each(1..5, fn i ->
-        insert(:person,
+        insert(:mpi, :person,
           tax_id: "#{i * 10}",
           documents: [build(:document, number: "999#{i}")],
           authentication_methods: [
@@ -412,7 +412,7 @@ defmodule Deduplication.V2.MatchTest do
       t_person_ids =
         Enum.map(1..5, fn i ->
           p =
-            insert(:person,
+            insert(:mpi, :person,
               tax_id: "#{i}",
               documents: [build(:document, number: "#{i}")],
               authentication_methods: [
@@ -429,7 +429,7 @@ defmodule Deduplication.V2.MatchTest do
       a_person_ids =
         Enum.map(1..5, fn i ->
           p =
-            insert(:person,
+            insert(:mpi, :person,
               tax_id: "#{i}",
               documents: [build(:document, number: "000#{i}")],
               authentication_methods: [
@@ -444,7 +444,7 @@ defmodule Deduplication.V2.MatchTest do
         end)
 
       Enum.each(1..3, fn i ->
-        insert(:person,
+        insert(:mpi, :person,
           tax_id: "#{i * 100}",
           documents: [build(:document, number: "111#{i}")],
           authentication_methods: [
@@ -485,15 +485,15 @@ defmodule Deduplication.V2.MatchTest do
     test "no persons" do
       persons = Model.get_unverified_persons(0)
       assert 0 = Match.deduplicate_persons(persons)
-      insert(:person)
+      insert(:mpi, :person)
       Match.set_current_verified_ts(DateTime.utc_now())
       persons = Model.get_unverified_persons(0)
       assert 0 = Match.deduplicate_persons(persons)
     end
 
     test "one person one duplicates" do
-      stale = insert(:person, tax_id: "0987654321", first_name: "Stale")
-      actual = insert(:person, tax_id: "0987654321", first_name: "Actual")
+      stale = insert(:mpi, :person, tax_id: "0987654321", first_name: "Stale")
+      actual = insert(:mpi, :person, tax_id: "0987654321", first_name: "Actual")
       persons = Model.get_unverified_persons(2)
       assert 2 = Match.deduplicate_persons(persons)
       assert [] == Model.get_unverified_persons(1)
@@ -507,7 +507,7 @@ defmodule Deduplication.V2.MatchTest do
 
     test "duplicates persons with rest persons" do
       Enum.each(1..1, fn i ->
-        insert(:person,
+        insert(:mpi, :person,
           tax_id: "#{i}",
           documents: [build(:document, number: "999#{i}")],
           authentication_methods: [build(:authentication_method, type: "OFFLINE")]
@@ -515,7 +515,7 @@ defmodule Deduplication.V2.MatchTest do
       end)
 
       Enum.each(1..3, fn i ->
-        insert(:person,
+        insert(:mpi, :person,
           tax_id: "123456789",
           first_name: "#{i}",
           documents: [
@@ -544,7 +544,7 @@ defmodule Deduplication.V2.MatchTest do
 
     test "duplicates persons only" do
       Enum.each(1..10, fn i ->
-        insert(:person,
+        insert(:mpi, :person,
           tax_id: "123456789",
           first_name: "#{i}",
           documents: [build(:document, number: "#{i}")],
@@ -588,7 +588,7 @@ defmodule Deduplication.V2.MatchTest do
       settlement_id = UUID.generate()
 
       Enum.each(1..3, fn i ->
-        insert(:person,
+        insert(:mpi, :person,
           tax_id: "#{i}",
           first_name: "Iv",
           documents: [build(:document, number: "999#{i}")],
@@ -602,7 +602,7 @@ defmodule Deduplication.V2.MatchTest do
       end)
 
       Enum.each(1..3, fn i ->
-        insert(:person,
+        insert(:mpi, :person,
           tax_id: "#{i / 100}",
           documents: [
             build(:document, number: "#{i}")
@@ -628,7 +628,7 @@ defmodule Deduplication.V2.MatchTest do
       settlement_id = UUID.generate()
 
       Enum.each(1..5, fn i ->
-        insert(:person,
+        insert(:mpi, :person,
           tax_id: "#{i}",
           last_name: "Kusto",
           documents: [build(:document, number: "999#{i}")],
@@ -643,14 +643,14 @@ defmodule Deduplication.V2.MatchTest do
 
       another_settlement_id = UUID.generate()
 
-      insert(:person,
+      insert(:mpi, :person,
         tax_id: "#{3}",
         documents: [build(:document, number: "0000")],
         person_addresses: [build(:person_address, settlement_id: another_settlement_id)]
       )
 
       Enum.each(1..3, fn i ->
-        insert(:person,
+        insert(:mpi, :person,
           tax_id: "00000#{i}",
           documents: [build(:document, number: "#{i}")],
           authentication_methods: [build(:authentication_method, type: "OFFLINE")],

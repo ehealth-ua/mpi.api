@@ -11,6 +11,9 @@ defmodule Core.ModelCase do
   """
 
   use ExUnit.CaseTemplate
+  alias Ecto.Adapters.SQL.Sandbox
+  alias Core.DeduplicationRepo
+  alias Core.Repo
 
   using do
     quote do
@@ -25,10 +28,12 @@ defmodule Core.ModelCase do
   end
 
   setup tags do
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Core.Repo)
+    :ok = Sandbox.checkout(Repo)
+    :ok = Sandbox.checkout(DeduplicationRepo)
 
     unless tags[:async] do
-      Ecto.Adapters.SQL.Sandbox.mode(Core.Repo, {:shared, self()})
+      Sandbox.mode(Repo, {:shared, self()})
+      Sandbox.mode(DeduplicationRepo, {:shared, self()})
     end
 
     :ok

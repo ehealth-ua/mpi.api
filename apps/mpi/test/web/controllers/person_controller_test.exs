@@ -6,7 +6,6 @@ defmodule MPI.Web.PersonControllerTest do
   import Mox
   alias Core.Repo
   alias Core.Person
-  alias Core.PersonAddress
   alias Core.Persons.PersonsAPI
   alias Ecto.UUID
 
@@ -42,7 +41,7 @@ defmodule MPI.Web.PersonControllerTest do
   end
 
   test "successful show person", %{conn: conn} do
-    person = insert(:person)
+    person = insert(:mpi, :person)
 
     resp =
       conn
@@ -196,7 +195,7 @@ defmodule MPI.Web.PersonControllerTest do
       inserted_by_id = UUID.generate()
       update_by_id = UUID.generate()
       document = build(:document, type: "NATIONAL_ID")
-      person = insert(:person, unzr: "19910827-33445", inserted_by: inserted_by_id)
+      person = insert(:mpi, :person, unzr: "19910827-33445", inserted_by: inserted_by_id)
 
       person_data =
         %{person | documents: [document], unzr: "20160828-33445"}
@@ -218,7 +217,7 @@ defmodule MPI.Web.PersonControllerTest do
 
     test "success update person documents without unzr do not change person's unzr", %{conn: conn} do
       document = build(:document, type: "PASSPORT")
-      person = insert(:person, unzr: "20160303-33445")
+      person = insert(:mpi, :person, unzr: "20160303-33445")
 
       person_data =
         %{person | documents: [document]}
@@ -341,7 +340,7 @@ defmodule MPI.Web.PersonControllerTest do
     end
 
     test "person is not active", %{conn: conn} do
-      person = insert(:person, is_active: false)
+      person = insert(:mpi, :person, is_active: false)
 
       assert conn
              |> post(person_path(conn, :create), %{"id" => person.id})
@@ -360,7 +359,7 @@ defmodule MPI.Web.PersonControllerTest do
   end
 
   test "HEAD /persons/:id OK", %{conn: conn} do
-    person = insert(:person)
+    person = insert(:mpi, :person)
 
     status =
       conn
@@ -380,7 +379,7 @@ defmodule MPI.Web.PersonControllerTest do
   end
 
   test "successful update person", %{conn: conn} do
-    person = insert(:person)
+    person = insert(:mpi, :person)
 
     person_data = string_params_for(:person)
 
@@ -395,7 +394,7 @@ defmodule MPI.Web.PersonControllerTest do
   end
 
   test "spaces are trimmed when person is updated", %{conn: conn} do
-    person = insert(:person)
+    person = insert(:mpi, :person)
 
     person_data =
       string_params_for(:person, %{
@@ -419,7 +418,7 @@ defmodule MPI.Web.PersonControllerTest do
 
   describe "reset auth method" do
     test "success", %{conn: conn} do
-      person = insert(:person)
+      person = insert(:mpi, :person)
 
       resp =
         conn
@@ -432,7 +431,7 @@ defmodule MPI.Web.PersonControllerTest do
     end
 
     test "invalid status", %{conn: conn} do
-      person = insert(:person, status: Person.status(:inactive))
+      person = insert(:mpi, :person, status: Person.status(:inactive))
 
       conn
       |> patch(person_path(conn, :reset_auth_method, person.id))
@@ -455,7 +454,7 @@ defmodule MPI.Web.PersonControllerTest do
   test "successful update person with merged_ids", %{conn: conn} do
     merged_id1 = UUID.generate()
     merged_id2 = UUID.generate()
-    person = insert(:person, merged_ids: [merged_id1])
+    person = insert(:mpi, :person, merged_ids: [merged_id1])
 
     patch(
       conn,
@@ -467,7 +466,7 @@ defmodule MPI.Web.PersonControllerTest do
   end
 
   test "successful persons search by last_name", %{conn: conn} do
-    person = insert(:person, phones: [])
+    person = insert(:mpi, :person, phones: [])
 
     conn =
       get(
@@ -492,7 +491,7 @@ defmodule MPI.Web.PersonControllerTest do
   end
 
   test "successful persons search by tax_id", %{conn: conn} do
-    person = insert(:person)
+    person = insert(:mpi, :person)
     tax_id = person.tax_id
 
     conn =
@@ -515,7 +514,7 @@ defmodule MPI.Web.PersonControllerTest do
   end
 
   test "successful persons search by auth_phone_number", %{conn: conn} do
-    %{id: person_id} = person = insert(:person)
+    %{id: person_id} = person = insert(:mpi, :person)
 
     auth_phone_number =
       person
@@ -523,7 +522,7 @@ defmodule MPI.Web.PersonControllerTest do
       |> Enum.random()
       |> Map.get(:phone_number)
 
-    insert(
+    insert(:mpi,
       :person,
       authentication_methods: [%{phone_number: auth_phone_number}],
       status: Person.status(:inactive)
@@ -539,7 +538,7 @@ defmodule MPI.Web.PersonControllerTest do
   end
 
   test "successful persons search by unzr as type number", %{conn: conn} do
-    person = insert(:person)
+    person = insert(:mpi, :person)
     unzr = person.unzr
 
     conn =
@@ -562,7 +561,7 @@ defmodule MPI.Web.PersonControllerTest do
   end
 
   test "successful persons search by unzr as parametr", %{conn: conn} do
-    person = insert(:person)
+    person = insert(:mpi, :person)
     unzr = person.unzr
 
     conn =
@@ -587,7 +586,7 @@ defmodule MPI.Web.PersonControllerTest do
        %{
          conn: conn
        } do
-    person = insert(:person, unzr: nil)
+    person = insert(:mpi, :person, unzr: nil)
     tax_id = person.tax_id
 
     conn =
@@ -609,11 +608,11 @@ defmodule MPI.Web.PersonControllerTest do
   end
 
   test "successful persons search by ids", %{conn: conn} do
-    %{id: id_1} = insert(:person)
-    %{id: id_2} = insert(:person)
-    %{id: id_3} = insert(:person, is_active: false)
-    %{id: id_4} = insert(:person, status: "INACTIVE")
-    %{id: id_5} = insert(:person, status: "MERGED")
+    %{id: id_1} = insert(:mpi, :person)
+    %{id: id_2} = insert(:mpi, :person)
+    %{id: id_3} = insert(:mpi, :person, is_active: false)
+    %{id: id_4} = insert(:mpi, :person, status: "INACTIVE")
+    %{id: id_5} = insert(:mpi, :person, status: "MERGED")
 
     ids = [id_1, id_2, id_3, id_4, id_5]
 
@@ -634,7 +633,7 @@ defmodule MPI.Web.PersonControllerTest do
     conn: conn
   } do
     person =
-      insert(
+      insert(:mpi,
         :person,
         first_name: "first name",
         second_name: "second name",
@@ -670,7 +669,7 @@ defmodule MPI.Web.PersonControllerTest do
 
   test "successful person search", %{conn: conn} do
     person =
-      insert(
+      insert(:mpi,
         :person,
         documents: [build(:document, type: "BIRTH_CERTIFICATE", number: "1234567890")],
         phones: [build(:phone, type: "LANDLINE"), build(:phone, type: "MOBILE")]

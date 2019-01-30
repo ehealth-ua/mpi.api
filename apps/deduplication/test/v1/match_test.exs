@@ -27,9 +27,9 @@ defmodule Deduplication.V1.MatchTest do
           birth_date: ~D[2000-01-01]
         })
 
-      insert(person_attrs, %{inserted_at: within_hours(49)})
-      insert(person_attrs_dup1, %{inserted_at: within_hours(27)})
-      insert(person_attrs_dup2, %{inserted_at: within_hours(13)})
+      insert(:mpi, person_attrs, %{inserted_at: within_hours(49)})
+      insert(:mpi, person_attrs_dup1, %{inserted_at: within_hours(27)})
+      insert(:mpi, person_attrs_dup2, %{inserted_at: within_hours(13)})
 
       Deduplication.run()
       assert 2 = Repo.one(from(mc in MergeCandidate, select: count(1)))
@@ -55,9 +55,9 @@ defmodule Deduplication.V1.MatchTest do
           birth_date: ~D[2000-01-01]
         })
 
-      person = insert(person_attrs, %{inserted_at: within_hours(49)})
-      person_dup1 = insert(person_attrs_dup1, %{inserted_at: within_hours(27)})
-      person_dup2 = insert(person_attrs_dup2, %{inserted_at: within_hours(13)})
+      person = insert(:mpi, person_attrs, %{inserted_at: within_hours(49)})
+      person_dup1 = insert(:mpi, person_attrs_dup1, %{inserted_at: within_hours(27)})
+      person_dup2 = insert(:mpi, person_attrs_dup2, %{inserted_at: within_hours(13)})
 
       Deduplication.run()
 
@@ -141,8 +141,8 @@ defmodule Deduplication.V1.MatchTest do
           birth_date: ~D[2000-01-01]
         })
 
-      person1 = insert(person1_attrs, %{inserted_at: within_hours(13)})
-      person1_dup = insert(person1_attrs_dup, %{inserted_at: within_hours(3 * 24 + 5)})
+      person1 = insert(:mpi, person1_attrs, %{inserted_at: within_hours(13)})
+      person1_dup = insert(:mpi, person1_attrs_dup, %{inserted_at: within_hours(3 * 24 + 5)})
 
       person2_attrs = Factory.person_factory()
 
@@ -153,8 +153,8 @@ defmodule Deduplication.V1.MatchTest do
           birth_date: ~D[2000-01-01]
         })
 
-      person2 = insert(person2_attrs, %{inserted_at: within_hours(41)})
-      person2_dup = insert(person2_attrs_dup, %{inserted_at: within_hours(73)})
+      person2 = insert(:mpi, person2_attrs, %{inserted_at: within_hours(41)})
+      person2_dup = insert(:mpi, person2_attrs_dup, %{inserted_at: within_hours(73)})
 
       Deduplication.run()
 
@@ -371,7 +371,7 @@ defmodule Deduplication.V1.MatchTest do
     end
   end
 
-  defp insert(struct, attrs) do
+  defp insert(:mpi, struct, attrs) do
     struct
     |> Ecto.Changeset.change(attrs)
     |> Repo.insert!()

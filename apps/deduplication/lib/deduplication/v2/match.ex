@@ -92,10 +92,10 @@ defmodule Deduplication.V2.Match do
       |> Model.async_stream_filter()
 
     Repo.insert_all(MergeCandidate, merge_candidates)
-    log_insert(merge_candidates, system_user_id)
+    log_insert(:mpi, merge_candidates, system_user_id)
   end
 
-  def log_insert(merge_candidates, system_user_id) do
+  def log_insert(:mpi, merge_candidates, system_user_id) do
     changes =
       merge_candidates
       |> Task.async_stream(fn mc ->
