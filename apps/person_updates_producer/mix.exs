@@ -37,6 +37,8 @@ defmodule PersonUpdatesProducer.Mixfile do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:quantum, "~> 2.3"},
+      {:timex, "~> 3.0"},
       {:kafka_ex, "~> 0.8.3"},
       {:core, in_umbrella: true}
     ]

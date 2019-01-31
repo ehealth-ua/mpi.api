@@ -9,12 +9,9 @@ defmodule PersonUpdatesProducer.Application do
   # for more information on OTP Applications
   def start(_type, _args) do
     import Supervisor.Spec
-
-    children = if config()[:env] == :test, do: [], else: [worker(Worker, [], restart: :transient)]
-
-    # See https://hexdocs.pm/elixir/Supervisor.html
-    # for other strategies and supported options
     opts = [strategy: :one_for_one, name: PersonUpdatesProducer.Supervisor]
-    Supervisor.start_link(children, opts)
+    result = Supervisor.start_link([{Worker, []}], opts)
+    Worker.create_jobs()
+    result
   end
 end

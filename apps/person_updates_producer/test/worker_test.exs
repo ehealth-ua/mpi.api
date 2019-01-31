@@ -6,7 +6,7 @@ defmodule PersonUpdateProducer.WorkerTest do
   alias Core.Repo
   alias Ecto.Adapters.SQL.Sandbox
   alias Ecto.UUID
-  alias PersonUpdatesProducer.Worker
+  alias PersonUpdatesProducer.Jobs.PersonUpdatesPublisher
   import Core.Factory
   import Mox
 
@@ -19,13 +19,11 @@ defmodule PersonUpdateProducer.WorkerTest do
 
   describe "worker tests" do
     test "success start worker" do
-      expect(WorkerMock, :stop_application, fn -> :ok end)
       expect(KafkaMock, :publish_person_event, fn _, _, _ -> :ok end)
       person_id = UUID.generate()
       insert(:mpi, :person_update, person_id: person_id)
       assert [_] = Repo.all(PersonUpdate)
-      {:ok, _pid} = GenServer.start_link(Worker, [])
-      :timer.sleep(100)
+      PersonUpdatesPublisher.run()
       assert [] = Repo.all(PersonUpdate)
     end
   end
