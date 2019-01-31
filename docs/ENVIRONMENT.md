@@ -27,6 +27,18 @@ Also sample `.env` can be used as payload for `docker run` cli.
 | DB_PASSWORD | `postgres` | Database user password |
 | DB_HOST | `travis` | Database host |
 | DB_PORT | `5432` | Database port |
+| DB_POOL_SIZE | `40` | Database pool size |
+
+## Database variables
+
+| VAR_NAME      | Default Value | Description |
+| ------------- | ------------- | ----------- |
+| DB_DEDUPLICATION_NAME | `mpi_dev` | Database name |
+| DB_DEDUPLICATION_USER | `postgres` | Database user name |
+| DB_DEDUPLICATION_PASSWORD | `postgres` | Database user password |
+| DB_DEDUPLICATION_HOST | `travis` | Database host |
+| DB_DEDUPLICATION_PORT | `5432` | Database port |
+| DB_DEDUPLICATION_POOL_SIZE | `40` | Database pool size |
 
 ## Application variables
 | VAR_NAME      | Default Value | Description |
