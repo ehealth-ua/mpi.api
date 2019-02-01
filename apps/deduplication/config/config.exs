@@ -24,7 +24,9 @@ config :deduplication, Deduplication.V2.Model,
   candidates_batch_size: {:system, :integer, "DEDUPLICATION_CANDIDATES_BATCH_SIZE", 5000}
 
 config :deduplication, Deduplication.V2.Match,
-  score: {:system, "DEDUPLICATION_SCORE", "0.7"},
+  score: {:system, :float, "DEDUPLICATION_SCORE", 0.7},
+  manual_score_min: {:system, :float, "DEDUPLICATION_MANUAL_SCORE_MIN", 0.7},
+  manual_score_max: {:system, :float, "DEDUPLICATION_MANUAL_SCORE_MAX", 0.9},
   weight_count_timeout: {:system, :integer, "WEIGHT_COUNT_TIMEOUT", 20000}
 
 config :deduplication, Deduplication.V1.Match,

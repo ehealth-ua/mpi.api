@@ -16,8 +16,7 @@ defmodule Core.Factories.Deduplication do
           assignee_id: nil,
           person_id: UUID.generate(),
           master_person_id: UUID.generate(),
-          merge_candidate_id: UUID.generate(),
-          inserted_by: UUID.generate()
+          merge_candidate_id: UUID.generate()
         }
       end
 

@@ -6,11 +6,18 @@ defmodule Core.ManualMerge do
   alias Core.DeduplicationRepo
   alias Core.ManualMergeCandidate
   alias Core.ManualMergeRequest
+  alias Ecto.UUID
 
-  def create(%ManualMergeCandidate{} = merge_request, params, actor_id) when is_binary(actor_id) do
-    merge_request
-    |> ManualMergeCandidate.changeset(put_inserted_by(params, actor_id))
-    |> insert_and_log(actor_id)
+  def new_candidate(merge_candidate) do
+    %{
+      id: UUID.generate(),
+      status: ManualMergeCandidate.status(:new),
+      person_id: merge_candidate.person_id,
+      master_person_id: merge_candidate.master_person_id,
+      merge_candidate_id: merge_candidate.id,
+      inserted_at: DateTime.utc_now(),
+      updated_at: DateTime.utc_now()
+    }
   end
 
   def create(%ManualMergeRequest{} = merge_request, params, actor_id) when is_binary(actor_id) do
@@ -24,8 +31,6 @@ defmodule Core.ManualMerge do
     |> ManualMergeRequest.changeset(%{decision: decision})
     |> update_and_log(actor_id)
   end
-
-  defp put_inserted_by(params, actor_id), do: Map.put(params, :inserted_by, actor_id)
 
   # ToDo: Ecto.Trail doesn't support multi repos.
   # At now it possible log just in audit_log_mpi table

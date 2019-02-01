@@ -122,9 +122,14 @@ defmodule Deduplication.V2.ModelTest do
 
       Match.set_current_verified_ts(DateTime.utc_now())
 
-      p11 = insert(:mpi, :person, tax_id: "123456789", documents: [build(:document, number: "1")]).id
+      p11 =
+        insert(:mpi, :person, tax_id: "123456789", documents: [build(:document, number: "1")]).id
+
       insert(:mpi, :person, tax_id: "123456789", documents: [build(:document, number: "2")])
-      p01 = insert(:mpi, :person, tax_id: "000000000", documents: [build(:document, number: "3")]).id
+
+      p01 =
+        insert(:mpi, :person, tax_id: "000000000", documents: [build(:document, number: "3")]).id
+
       insert(:mpi, :person, tax_id: "000000000", documents: [build(:document, number: "4")])
       unverified_persons = Model.get_unverified_persons(100)
 

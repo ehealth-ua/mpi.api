@@ -38,7 +38,8 @@ defmodule Deduplication.V2.PythonWorker do
   end
 
   defp start_python(python_app_path) when is_binary(python_app_path) do
-    with {:ok, python} <- :python.start(python_path: String.to_charlist(python_app_path), python: 'python3'),
+    with {:ok, python} <-
+           :python.start(python_path: String.to_charlist(python_app_path), python: 'python3'),
          do: {:ok, python}
   end
 

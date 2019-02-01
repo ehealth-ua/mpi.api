@@ -7,20 +7,6 @@ defmodule Core.Unit.ManualMergeTest do
   alias Core.ManualMergeCandidate
   alias Ecto.UUID
 
-  describe "create manual merge candidate" do
-    test "successful" do
-      actor_id = UUID.generate()
-
-      params = %{
-        person_id: UUID.generate(),
-        master_person_id: UUID.generate(),
-        merge_candidate_id: UUID.generate()
-      }
-
-      assert {:ok, %ManualMergeCandidate{}} = ManualMerge.create(%ManualMergeCandidate{}, params, actor_id)
-    end
-  end
-
   describe "create manual merge request" do
     test "successful" do
       actor_id = UUID.generate()

@@ -522,7 +522,8 @@ defmodule MPI.Web.PersonControllerTest do
       |> Enum.random()
       |> Map.get(:phone_number)
 
-    insert(:mpi,
+    insert(
+      :mpi,
       :person,
       authentication_methods: [%{phone_number: auth_phone_number}],
       status: Person.status(:inactive)
@@ -633,7 +634,8 @@ defmodule MPI.Web.PersonControllerTest do
     conn: conn
   } do
     person =
-      insert(:mpi,
+      insert(
+        :mpi,
         :person,
         first_name: "first name",
         second_name: "second name",
@@ -669,7 +671,8 @@ defmodule MPI.Web.PersonControllerTest do
 
   test "successful person search", %{conn: conn} do
     person =
-      insert(:mpi,
+      insert(
+        :mpi,
         :person,
         documents: [build(:document, type: "BIRTH_CERTIFICATE", number: "1234567890")],
         phones: [build(:phone, type: "LANDLINE"), build(:phone, type: "MOBILE")]

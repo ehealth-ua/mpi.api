@@ -10,8 +10,6 @@ defmodule Core.DeduplicationRepo.Migrations.CreateManualMergeCandidates do
       add(:person_id, :uuid, null: false)
       add(:master_person_id, :uuid, null: false)
       add(:merge_candidate_id, :uuid, null: false)
-      add(:inserted_by, :uuid)
-      add(:updated_by, :uuid)
 
       timestamps(type: :utc_datetime)
     end

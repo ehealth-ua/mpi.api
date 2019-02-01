@@ -32,12 +32,10 @@ defmodule Core.ManualMergeCandidate do
   schema "manual_merge_candidates" do
     field(:status, :string, default: @status_new)
     field(:decision, :string, default: nil)
-    field(:assignee_id, UUID)
+    field(:assignee_id, UUID, default: nil)
     field(:person_id, UUID)
     field(:master_person_id, UUID)
     field(:merge_candidate_id, UUID)
-    field(:inserted_by, UUID)
-    field(:updated_by, UUID)
 
     has_many(:manual_merge_requests, ManualMergeRequest, foreign_key: :manual_merge_candidate_id)
 

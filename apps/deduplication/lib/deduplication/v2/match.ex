@@ -3,10 +3,12 @@ defmodule Deduplication.V2.Match do
 
   use Confex, otp_app: :deduplication
 
-  require Logger
   import Core.AuditLogs, only: [create_audit_logs: 1]
   import Ecto.Query
 
+  alias Core.DeduplicationRepo
+  alias Core.ManualMerge
+  alias Core.ManualMergeCandidate
   alias Core.MergeCandidate
   alias Core.Person
   alias Core.Repo
@@ -14,6 +16,8 @@ defmodule Deduplication.V2.Match do
   alias Deduplication.V2.CandidatesDistance
   alias Deduplication.V2.Model
   alias Ecto.UUID
+
+  require Logger
 
   @py_weight Application.get_env(:deduplication, :py_weight)
 
@@ -33,7 +37,10 @@ defmodule Deduplication.V2.Match do
           candidates_ids = Enum.map(candidates, & &1[:candidate].id)
 
           Repo.transaction(fn ->
-            merge_candidates(person.id, candidates, system_user_id)
+            person.id
+            |> merge_candidates(candidates, system_user_id)
+            |> manual_merge_candidates(system_user_id)
+
             put_merge_candidates(person, candidates_ids, system_user_id)
           end)
         end
@@ -48,7 +55,7 @@ defmodule Deduplication.V2.Match do
 
   def match_candidates(candidates, person) do
     config = config()
-    score = String.to_float(config[:score])
+    score = config[:score]
     normalized_person = Model.normalize_person(person)
 
     candidates
@@ -93,6 +100,28 @@ defmodule Deduplication.V2.Match do
 
     Repo.insert_all(MergeCandidate, merge_candidates)
     log_insert(:mpi, merge_candidates, system_user_id)
+    merge_candidates
+  end
+
+  def manual_merge_candidates(merge_candidates, system_user_id) do
+    manual_merge_candidates =
+      merge_candidates
+      |> Task.async_stream(&filter_manual_merge_candidate/1)
+      |> Model.async_stream_filter()
+
+    DeduplicationRepo.insert_all(ManualMergeCandidate, manual_merge_candidates)
+    # ToDo: add audit log
+    # log_insert(:deduplication, manual_merge_candidates, system_user_id)
+  end
+
+  defp filter_manual_merge_candidate(%{score: score} = merge_candidate) do
+    config = config()
+
+    if score >= config[:manual_score_min] and score <= config[:manual_score_max] do
+      ManualMerge.new_candidate(merge_candidate)
+    else
+      :skip
+    end
   end
 
   def log_insert(:mpi, merge_candidates, system_user_id) do

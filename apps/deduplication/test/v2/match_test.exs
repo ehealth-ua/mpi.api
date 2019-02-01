@@ -7,11 +7,13 @@ defmodule Deduplication.V2.MatchTest do
   import Core.Factory
   import Mox
 
+  alias Core.ManualMergeCandidate
   alias Core.MergeCandidate
   alias Core.Person
   alias Core.PersonAddress
   alias Core.PersonDocument
   alias Core.Repo
+  alias Core.DeduplicationRepo
   alias Deduplication.Producer
   alias Deduplication.V2.Match
   alias Deduplication.V2.Model
@@ -68,21 +70,18 @@ defmodule Deduplication.V2.MatchTest do
 
     test "only matched persons" do
       person_ids =
-        Enum.map(1..5, fn _i ->
-          p =
-            insert(:mpi, :person,
-              tax_id: "123456789",
-              documents: [build(:document, number: "000123")],
-              authentication_methods: [
-                build(:authentication_method,
-                  type: "OTP",
-                  phone_number: "+380630000000"
-                )
-              ]
+        5
+        |> insert_list(:mpi, :person,
+          tax_id: "123456789",
+          documents: [build(:document, number: "000123")],
+          authentication_methods: [
+            build(:authentication_method,
+              type: "OTP",
+              phone_number: "+380630000000"
             )
-
-          p.id
-        end)
+          ]
+        )
+        |> Enum.map(& &1.id)
 
       persons = Model.get_unverified_persons(5)
       assert 5 = Match.deduplicate_persons(persons)
@@ -95,30 +94,27 @@ defmodule Deduplication.V2.MatchTest do
 
       assert candidate_count(5) == Enum.count(candidates)
 
-      Enum.each(candidates, fn c ->
-        assert c.person_id in person_ids
-        assert c.master_person_id in person_ids
-        assert c.person.id in c.master_person.merged_ids
+      Enum.each(candidates, fn candidate ->
+        assert candidate.person_id in person_ids
+        assert candidate.master_person_id in person_ids
+        assert candidate.person.id in candidate.master_person.merged_ids
       end)
     end
 
     test "matched persons by all fields with rest" do
       person_ids =
-        Enum.map(1..5, fn _i ->
-          p =
-            insert(:mpi, :person,
-              tax_id: "123456789",
-              documents: [build(:document, number: "000123")],
-              authentication_methods: [
-                build(:authentication_method,
-                  type: "OTP",
-                  phone_number: "+380630000000"
-                )
-              ]
+        5
+        |> insert_list(:mpi, :person,
+          tax_id: "123456789",
+          documents: [build(:document, number: "000123")],
+          authentication_methods: [
+            build(:authentication_method,
+              type: "OTP",
+              phone_number: "+380630000000"
             )
-
-          p.id
-        end)
+          ]
+        )
+        |> Enum.map(& &1.id)
 
       Enum.each(1..5, fn i ->
         p =
@@ -147,10 +143,44 @@ defmodule Deduplication.V2.MatchTest do
 
       assert candidate_count(5) == Enum.count(candidates)
 
-      Enum.each(candidates, fn c ->
-        assert c.person_id in person_ids
-        assert c.master_person_id in person_ids
-        assert c.person.id in c.master_person.merged_ids
+      Enum.each(candidates, fn candidate ->
+        assert candidate.person_id in person_ids
+        assert candidate.master_person_id in person_ids
+        assert candidate.person.id in candidate.master_person.merged_ids
+      end)
+    end
+  end
+
+  describe "persons deduplication creates manual merge candidates" do
+    test "only matched persons" do
+      expect(PyWeightMock, :weight, 3, fn %{} -> 0.85 end)
+      stub(PyWeightMock, :weight, fn %{} -> 0.95 end)
+
+      person_ids =
+        5
+        |> insert_list(:mpi, :person,
+          tax_id: "123456789",
+          documents: [build(:document, number: "000123")],
+          authentication_methods: [
+            build(:authentication_method,
+              type: "OTP",
+              phone_number: "+380630000000"
+            )
+          ]
+        )
+        |> Enum.map(& &1.id)
+
+      persons = Model.get_unverified_persons(5)
+      assert 5 = Match.deduplicate_persons(persons)
+      assert [] == Model.get_unverified_persons(13)
+
+      candidates = DeduplicationRepo.all(ManualMergeCandidate)
+
+      assert 3 == Enum.count(candidates)
+
+      Enum.each(candidates, fn candidate ->
+        assert candidate.person_id in person_ids
+        assert candidate.master_person_id in person_ids
       end)
     end
   end
@@ -221,10 +251,10 @@ defmodule Deduplication.V2.MatchTest do
       assert candidate_count(10) == Enum.count(candidates)
       matched_persons = t_person_ids ++ a_person_ids
 
-      Enum.each(candidates, fn c ->
-        assert c.person_id in matched_persons
-        assert c.master_person_id in matched_persons
-        assert c.person.id in c.master_person.merged_ids
+      Enum.each(candidates, fn candidate ->
+        assert candidate.person_id in matched_persons
+        assert candidate.master_person_id in matched_persons
+        assert candidate.person.id in candidate.master_person.merged_ids
       end)
     end
   end
@@ -277,10 +307,10 @@ defmodule Deduplication.V2.MatchTest do
 
       assert candidate_count(5) == Enum.count(candidates)
 
-      Enum.each(candidates, fn c ->
-        assert c.person_id in person_ids
-        assert c.master_person_id in person_ids
-        assert c.person.id in c.master_person.merged_ids
+      Enum.each(candidates, fn candidate ->
+        assert candidate.person_id in person_ids
+        assert candidate.master_person_id in person_ids
+        assert candidate.person.id in candidate.master_person.merged_ids
       end)
     end
 
@@ -345,10 +375,10 @@ defmodule Deduplication.V2.MatchTest do
 
       matched_persons = t_person_ids ++ a_person_ids
 
-      Enum.each(candidates, fn c ->
-        assert c.person_id in matched_persons
-        assert c.master_person_id in matched_persons
-        assert c.person.id in c.master_person.merged_ids
+      Enum.each(candidates, fn candidate ->
+        assert candidate.person_id in matched_persons
+        assert candidate.master_person_id in matched_persons
+        assert candidate.person.id in candidate.master_person.merged_ids
       end)
     end
   end
@@ -401,10 +431,10 @@ defmodule Deduplication.V2.MatchTest do
 
       assert candidate_count(5) == Enum.count(candidates)
 
-      Enum.each(candidates, fn c ->
-        assert c.person_id in person_ids
-        assert c.master_person_id in person_ids
-        assert c.person.id in c.master_person.merged_ids
+      Enum.each(candidates, fn candidate ->
+        assert candidate.person_id in person_ids
+        assert candidate.master_person_id in person_ids
+        assert candidate.person.id in candidate.master_person.merged_ids
       end)
     end
 
@@ -468,10 +498,10 @@ defmodule Deduplication.V2.MatchTest do
       assert candidate_count(10) == Enum.count(candidates)
       matched_persons = t_person_ids ++ a_person_ids
 
-      Enum.each(candidates, fn c ->
-        assert c.person_id in matched_persons
-        assert c.master_person_id in matched_persons
-        assert c.person.id in c.master_person.merged_ids
+      Enum.each(candidates, fn candidate ->
+        assert candidate.person_id in matched_persons
+        assert candidate.master_person_id in matched_persons
+        assert candidate.person.id in candidate.master_person.merged_ids
       end)
     end
   end
@@ -536,9 +566,9 @@ defmodule Deduplication.V2.MatchTest do
 
       assert candidate_count(3) == Enum.count(candidates)
 
-      Enum.each(candidates, fn c ->
-        assert c.person.tax_id == "123456789"
-        assert c.master_person.tax_id == "123456789"
+      Enum.each(candidates, fn candidate ->
+        assert candidate.person.tax_id == "123456789"
+        assert candidate.master_person.tax_id == "123456789"
       end)
     end
 
@@ -561,9 +591,9 @@ defmodule Deduplication.V2.MatchTest do
         |> preload([:master_person, :person])
         |> Repo.all()
 
-      Enum.each(candidates, fn c ->
-        assert c.person.tax_id == "123456789"
-        assert c.master_person.tax_id == "123456789"
+      Enum.each(candidates, fn candidate ->
+        assert candidate.person.tax_id == "123456789"
+        assert candidate.master_person.tax_id == "123456789"
       end)
 
       active_person =
