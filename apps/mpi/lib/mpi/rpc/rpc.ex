@@ -3,8 +3,10 @@ defmodule MPI.Rpc do
   This module contains functions that are called from other pods via RPC.
   """
 
+  alias Core.ManualMerge
   alias Core.Person
   alias Core.Persons.PersonsAPI
+  alias MPI.Web.ManualMergeRequestView
   alias MPI.Web.PersonView
   alias Scrivener.Page
 
@@ -41,6 +43,39 @@ defmodule MPI.Rpc do
           authentication_methods: map,
           gender: binary,
           birth_settlement: binary
+        }
+
+  @type manual_merge_request() :: %{
+          id: binary,
+          status: binary,
+          comment: binary,
+          assignee_id: binary,
+          manual_merge_candidate: manual_merge_candidate(),
+          inserted_at: DateTime,
+          updated_at: DateTime
+        }
+
+  @type manual_merge_candidate() :: %{
+          id: binary,
+          status: binary,
+          decision: binary,
+          assignee_id: binary,
+          person_id: binary,
+          master_person_id: binary,
+          inserted_at: DateTime,
+          updated_at: DateTime,
+          merge_candidate: merge_candidate()
+        }
+
+  @type merge_candidate() :: %{
+          status: binary,
+          config: map,
+          details: map,
+          score: float,
+          person: person(),
+          master_person: person(),
+          inserted_at: DateTime,
+          updated_at: DateTime
         }
 
   @type successfull_search_response() :: %Page{
@@ -123,7 +158,7 @@ defmodule MPI.Rpc do
   @spec search_persons(params :: map()) :: {:error, any()} | successfull_search_response
   def search_persons(%{} = params) do
     with %Page{entries: persons} = page <- PersonsAPI.search(params) do
-      %Page{page | entries: PersonView.render("persons.json", %{persons: persons})}
+      %Page{page | entries: PersonView.render("index.json", %{persons: persons})}
     end
   end
 
@@ -177,7 +212,7 @@ defmodule MPI.Rpc do
   @spec search_persons(list(), Keyword.t(), nil | {integer(), integer()}) :: {:error, any()} | {:ok, list(person)}
   def search_persons(filter, order_by \\ [], cursor \\ nil) when filter != [] do
     with persons when is_list(persons) <- PersonsAPI.search(filter, order_by, cursor) do
-      {:ok, PersonView.render("persons.json", %{persons: persons})}
+      {:ok, PersonView.render("index.json", %{persons: persons})}
     else
       {:query_error, reason} -> {:error, reason}
       err -> err
@@ -244,7 +279,7 @@ defmodule MPI.Rpc do
   @spec get_person_by_id(id :: binary()) :: nil | {:ok, person()}
   def get_person_by_id(id) do
     with %Person{} = person <- PersonsAPI.get_by_id(id) do
-      {:ok, PersonView.render("person.json", %{person: person})}
+      {:ok, PersonView.render("show.json", %{person: person})}
     end
   end
 
@@ -268,7 +303,7 @@ defmodule MPI.Rpc do
   @spec reset_auth_method(id :: binary(), actor_id :: binary()) :: {:error, term()} | {:ok, person()}
   def reset_auth_method(id, actor_id) do
     with {:ok, person} <- PersonsAPI.reset_auth_method(id, %{"authentication_methods" => [%{"type" => "NA"}]}, actor_id) do
-      {:ok, PersonView.render("person.json", %{person: person})}
+      {:ok, PersonView.render("show.json", %{person: person})}
     end
   end
 
@@ -284,6 +319,38 @@ defmodule MPI.Rpc do
   def get_auth_method(id) do
     with %Person{} = person <- PersonsAPI.get_by_id(id) do
       {:ok, PersonsAPI.get_person_auth_method(person)}
+    end
+  end
+
+  @doc """
+  Search for ManualMergeRequests with its references: manual_merge_candidate -> merge_candidate -> [person, master_person]
+  Check avaiable formats for filter here https://github.com/edenlabllc/ecto_filter
+
+  Available parameters:
+
+  | Parameter           | Type                          | Example                                   | Description                     |
+  | :-----------------: | :---------------------------: | :---------------------------------------: | :-----------------------------: |
+  | filter              | `list`                        | `[{:status, :equal, "MERGE"}]`            | Required. Uses filtering format |
+  | order_by            | `list`                        | `[asc: :inserted_at]` or `[desc: :status]`|                                 |
+  | cursor              | `{integer, integer}` or `nil` | `{0, 10}`                                 |                                 |
+
+  ## Examples
+      iex> MPI.Rpc.search_manual_merge_requests([{:status, :equal, "NEW"}], [desc: :status], {0, 10})
+      {:ok, %{
+        id: "6868d53f-6e37-46bc-af34-29e650446310",
+        assignee_id: "dbf7ba19-1186-4ac0-a410-6499abe40a7c",
+        comment: nil,
+        manual_merge_candidate: %{...},
+        status: "MERGE",
+        inserted_at: #DateTime<2019-02-04 14:08:42.434612Z>,
+        updated_at: #DateTime<2019-02-04 14:08:42.434619Z>
+      }}
+  """
+  @spec search_manual_merge_requests(list, list, {offset :: integer, limit :: integer} | nil) ::
+          {:ok, list(manual_merge_request)}
+  def search_manual_merge_requests([_ | _] = filter, order_by \\ [], cursor \\ nil) do
+    with {:ok, manual_merge_requests} <- ManualMerge.search_manual_merge_requests(filter, order_by, cursor) do
+      {:ok, ManualMergeRequestView.render("index.json", %{manual_merge_requests: manual_merge_requests})}
     end
   end
 end

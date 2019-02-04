@@ -15,7 +15,7 @@ defmodule MPI.Web.PersonController do
       conn
       |> put_status(:ok)
       |> put_view(PersonView)
-      |> render("persons.json", %{
+      |> render("index.json", %{
         persons: paging.entries,
         paging: paging
       })
@@ -36,7 +36,7 @@ defmodule MPI.Web.PersonController do
       conn
       |> put_status(:ok)
       |> put_view(PersonView)
-      |> render("person.json", %{person: person})
+      |> render("show.json", %{person: person})
     end
   end
 
@@ -45,7 +45,7 @@ defmodule MPI.Web.PersonController do
       conn
       |> put_status(status)
       |> put_view(PersonView)
-      |> render("person.json", %{person: person})
+      |> render("show.json", %{person: person})
     end
   end
 
@@ -56,7 +56,7 @@ defmodule MPI.Web.PersonController do
       conn
       |> put_status(:ok)
       |> put_view(PersonView)
-      |> render("person.json", %{person: person})
+      |> render("show.json", %{person: person})
     end
   end
 
@@ -68,7 +68,7 @@ defmodule MPI.Web.PersonController do
       conn
       |> put_status(:ok)
       |> put_view(PersonView)
-      |> render("person.json", %{person: person})
+      |> render("show.json", %{person: person})
     end
   end
 end

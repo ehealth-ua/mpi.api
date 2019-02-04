@@ -6,9 +6,13 @@ defmodule MPI.RpcTest do
   import Core.Factory
 
   alias Core.Person
+  alias Core.ManualMergeRequest
   alias MPI.Rpc
   alias Scrivener.Page
   alias Ecto.UUID
+
+  @status_new ManualMergeRequest.status(:new)
+  @status_merge ManualMergeRequest.status(:merge)
 
   describe "search_persons/1" do
     test "search person by documents list and status" do
@@ -292,6 +296,46 @@ defmodule MPI.RpcTest do
 
     test "person not found" do
       refute Rpc.get_auth_method(UUID.generate())
+    end
+  end
+
+  describe "search_manual_merge_requests/3" do
+    setup do
+      person = insert(:mpi, :person)
+      master_person = insert(:mpi, :person)
+      merge_candidate = insert(:mpi, :merge_candidate, person: person, master_person: master_person)
+
+      %{merge_candidate: merge_candidate}
+    end
+
+    test "success with filter params", %{
+      merge_candidate: %{id: merge_candidate_id, person: person, master_person: master_person}
+    } do
+      manual_merge_candidate = insert(:deduplication, :manual_merge_candidate, merge_candidate_id: merge_candidate_id)
+
+      insert_list(2, :deduplication, :manual_merge_request,
+        manual_merge_candidate: manual_merge_candidate,
+        status: @status_merge
+      )
+
+      insert_list(4, :deduplication, :manual_merge_request,
+        manual_merge_candidate: manual_merge_candidate,
+        status: @status_new
+      )
+
+      insert_list(8, :deduplication, :manual_merge_request)
+
+      assert {:ok, [resp_entity | _] = resp_entities} =
+               Rpc.search_manual_merge_requests([{:status, :equal, @status_merge}], [desc: :inserted_at], {0, 10})
+
+      assert 2 == length(resp_entities)
+
+      assert master_person.id == get_in(resp_entity, [:manual_merge_candidate, :merge_candidate, :master_person, :id])
+      assert person.id == get_in(resp_entity, [:manual_merge_candidate, :merge_candidate, :person, :id])
+    end
+
+    test "success on empty response" do
+      assert {:ok, []} == Rpc.search_manual_merge_requests([{:status, :equal, @status_new}], [], {0, 10})
     end
   end
 end

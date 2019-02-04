@@ -4,6 +4,7 @@ defmodule Core.ManualMergeCandidate do
   use Ecto.Schema
   import Ecto.Changeset
   alias Core.ManualMergeRequest
+  alias Core.MergeCandidate
   alias Ecto.UUID
 
   @status_new "NEW"
@@ -35,9 +36,10 @@ defmodule Core.ManualMergeCandidate do
     field(:assignee_id, UUID, default: nil)
     field(:person_id, UUID)
     field(:master_person_id, UUID)
-    field(:merge_candidate_id, UUID)
 
     has_many(:manual_merge_requests, ManualMergeRequest, foreign_key: :manual_merge_candidate_id)
+    # Refers to MPI db
+    belongs_to(:merge_candidate, MergeCandidate, type: UUID)
 
     timestamps(type: :utc_datetime)
   end

@@ -3,6 +3,7 @@ defmodule Core.Persons.PersonsAPI do
 
   import Ecto.Changeset
   import Ecto.Query
+  import Core.Query, only: [apply_cursor: 2]
 
   alias Core.Filters.Base, as: BaseFilter
   alias Core.Maybe
@@ -154,9 +155,6 @@ defmodule Core.Persons.PersonsAPI do
     _ in Postgrex.Error ->
       {:query_error, "invalid search characters"}
   end
-
-  defp apply_cursor(query, {offset, limit}), do: query |> offset(^offset) |> limit(^limit)
-  defp apply_cursor(query, _), do: query
 
   def person_search_query(params) do
     params = trim_name_spaces(params)

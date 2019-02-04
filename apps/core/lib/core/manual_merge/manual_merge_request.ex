@@ -3,6 +3,7 @@ defmodule Core.ManualMergeRequest do
 
   use Ecto.Schema
   import Ecto.Changeset
+
   alias Core.ManualMergeCandidate
   alias Ecto.UUID
 

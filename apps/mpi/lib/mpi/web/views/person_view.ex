@@ -4,11 +4,11 @@ defmodule MPI.Web.PersonView do
   use MPI.Web, :view
   alias Core.Person
 
-  def render("persons.json", %{persons: persons}) do
-    render_many(persons, __MODULE__, "person.json", as: :person)
+  def render("index.json", %{persons: persons}) do
+    render_many(persons, __MODULE__, "show.json", as: :person)
   end
 
-  def render("person.json", %{person: %Person{} = person}) do
+  def render("show.json", %{person: %Person{} = person}) do
     person
     |> Map.take(~w(
       id
