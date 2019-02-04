@@ -1,14 +1,14 @@
-defmodule Core.Rpc do
+defmodule MPI.Rpc do
   @moduledoc """
   This module contains functions that are called from other pods via RPC.
   """
 
   alias Core.Person
   alias Core.Persons.PersonsAPI
-  alias Core.Persons.Renderer
+  alias MPI.Web.PersonView
   alias Scrivener.Page
 
-  @type person() :: %Person{
+  @type person() :: %{
           process_disclosure_data_consent: boolean(),
           death_date: Date,
           documents: list(map),
@@ -73,10 +73,10 @@ defmodule Core.Rpc do
 
   ## Examples
 
-      iex> Core.Rpc.search_persons(%{"last_name" => "Іванов"})
+      iex> MPI.Rpc.search_persons(%{"last_name" => "Іванов"})
       %Scrivener.Page{
         entries: [
-          %Core.Person{
+          %{
             id: "26e673e1-1d68-413e-b96c-407b45d9f572",
             first_name: "Петро",
             last_name: "Іванов",
@@ -122,8 +122,8 @@ defmodule Core.Rpc do
 
   @spec search_persons(params :: map()) :: {:error, any()} | successfull_search_response
   def search_persons(%{} = params) do
-    with %Page{entries: entries} = page <- PersonsAPI.search(params) do
-      %Page{page | entries: Enum.map(entries, fn entry -> Renderer.render("person.json", entry) end)}
+    with %Page{entries: persons} = page <- PersonsAPI.search(params) do
+      %Page{page | entries: PersonView.render("persons.json", %{persons: persons})}
     end
   end
 
@@ -132,9 +132,9 @@ defmodule Core.Rpc do
 
   ## Examples
 
-      iex> Core.Rpc.search_persons([{:last_name, :equal, "Іванов"}], [asc: :inserted_at], {100, 50})
+      iex> MPI.Rpc.search_persons([{:last_name, :equal, "Іванов"}], [asc: :inserted_at], {100, 50})
       {:ok, [
-          %Core.Person{
+          %{
             id: "26e673e1-1d68-413e-b96c-407b45d9f572",
             first_name: "Петро",
             last_name: "Іванов",
@@ -177,7 +177,7 @@ defmodule Core.Rpc do
   @spec search_persons(list(), Keyword.t(), nil | {integer(), integer()}) :: {:error, any()} | {:ok, list(person)}
   def search_persons(filter, order_by \\ [], cursor \\ nil) when filter != [] do
     with persons when is_list(persons) <- PersonsAPI.search(filter, order_by, cursor) do
-      {:ok, Enum.map(persons, &Renderer.render("person.json", &1))}
+      {:ok, PersonView.render("persons.json", %{persons: persons})}
     else
       {:query_error, reason} -> {:error, reason}
       err -> err
@@ -189,10 +189,10 @@ defmodule Core.Rpc do
 
   ## Examples
 
-      iex> Core.Rpc.get_person_by_id("26e673e1-1d68-413e-b96c-407b45d9f572")
+      iex> MPI.Rpc.get_person_by_id("26e673e1-1d68-413e-b96c-407b45d9f572")
       {
         :ok,
-        %Core.Person{
+        %{
           id: "26e673e1-1d68-413e-b96c-407b45d9f572",
           first_name: "Петро",
           last_name: "Іванов",
@@ -206,8 +206,7 @@ defmodule Core.Rpc do
           email: "petroivanov@email.com",
           unzr: "19900101-0001",
           process_disclosure_data_consent: true,
-          addresses: [],
-          person_addresses: [%{
+          addresses: [%{
             "APARTMENT" => "",
             "BUILDING" => "48а",
             "COUNTRY" => "UA",
@@ -245,7 +244,7 @@ defmodule Core.Rpc do
   @spec get_person_by_id(id :: binary()) :: nil | {:ok, person()}
   def get_person_by_id(id) do
     with %Person{} = person <- PersonsAPI.get_by_id(id) do
-      {:ok, person}
+      {:ok, PersonView.render("person.json", %{person: person})}
     end
   end
 
@@ -254,10 +253,10 @@ defmodule Core.Rpc do
 
   ## Examples
 
-      iex> Core.Rpc.reset_auth_method("26e673e1-1d68-413e-b96c-407b45d9f572", "22f673e1-1d68-413e-b96c-407b45d9ffa3")
+      iex> MPI.Rpc.reset_auth_method("26e673e1-1d68-413e-b96c-407b45d9f572", "22f673e1-1d68-413e-b96c-407b45d9ffa3")
       {
         :ok,
-        %Core.Person{
+        %{
           id: "26e673e1-1d68-413e-b96c-407b45d9f572",
           authentication_methods: [
             %{"type" => "NA"}
@@ -268,7 +267,9 @@ defmodule Core.Rpc do
   """
   @spec reset_auth_method(id :: binary(), actor_id :: binary()) :: {:error, term()} | {:ok, person()}
   def reset_auth_method(id, actor_id) do
-    PersonsAPI.reset_auth_method(id, %{"authentication_methods" => [%{"type" => "NA"}]}, actor_id)
+    with {:ok, person} <- PersonsAPI.reset_auth_method(id, %{"authentication_methods" => [%{"type" => "NA"}]}, actor_id) do
+      {:ok, PersonView.render("person.json", %{person: person})}
+    end
   end
 
   @doc """
@@ -276,7 +277,7 @@ defmodule Core.Rpc do
 
   ## Examples
 
-      iex> Core.Rpc.get_auth_method("26e673e1-1d68-413e-b96c-407b45d9f572")
+      iex> MPI.Rpc.get_auth_method("26e673e1-1d68-413e-b96c-407b45d9f572")
       {:ok, %{"type" => "OTP", "phone_number" => "+380630000000"}}
   """
   @spec get_auth_method(id :: binary()) :: nil | {:ok, map()}

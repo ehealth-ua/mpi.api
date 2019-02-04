@@ -12,7 +12,7 @@ defmodule MPI.MixProject do
       deps: deps(),
       test_coverage: [tool: ExCoveralls],
       docs: [
-        filter_prefix: "Core.Rpc"
+        filter_prefix: "MPI.Rpc"
       ]
     ]
   end

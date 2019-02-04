@@ -1,4 +1,4 @@
-defmodule Core.RpcTest do
+defmodule MPI.RpcTest do
   @moduledoc false
 
   use Core.ModelCase, async: true
@@ -6,7 +6,7 @@ defmodule Core.RpcTest do
   import Core.Factory
 
   alias Core.Person
-  alias Core.Rpc
+  alias MPI.Rpc
   alias Scrivener.Page
   alias Ecto.UUID
 
@@ -236,7 +236,7 @@ defmodule Core.RpcTest do
     test "success" do
       %{id: id} = insert(:mpi, :person)
 
-      assert {:ok, %Person{id: ^id}} = Rpc.get_person_by_id(id)
+      assert {:ok, %{id: ^id}} = Rpc.get_person_by_id(id)
     end
 
     test "not found" do
@@ -250,7 +250,7 @@ defmodule Core.RpcTest do
 
       person = Rpc.reset_auth_method(id, UUID.generate())
 
-      assert {:ok, %Person{id: ^id, authentication_methods: [%{"type" => "NA"}]}} = person
+      assert {:ok, %{id: ^id, authentication_methods: [%{"type" => "NA"}]}} = person
     end
 
     test "person inactive" do
