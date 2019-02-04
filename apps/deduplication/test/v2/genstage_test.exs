@@ -138,10 +138,10 @@ defmodule Deduplication.V2.GenStageTest do
       end)
 
       Match.set_current_verified_ts(DateTime.utc_now())
-      assert 110 == Enum.count(Model.get_failed_unverified_persons(111, 0))
+      assert 110 == Enum.count(Model.get_locked_unverified_persons(111, 0))
       start_genstage(5000)
       assert 0 == Enum.count(Model.get_unverified_persons(110))
-      assert 0 == Enum.count(Model.get_failed_unverified_persons(1, 0))
+      assert 0 == Enum.count(Model.get_locked_unverified_persons(1, 0))
     end
   end
 
@@ -154,10 +154,10 @@ defmodule Deduplication.V2.GenStageTest do
 
       Match.set_current_verified_ts(DateTime.utc_now())
       Enum.map(1..103, fn _ -> insert(:mpi, :person) end)
-      assert 51 == Enum.count(Model.get_failed_unverified_persons(100, 0))
+      assert 51 == Enum.count(Model.get_locked_unverified_persons(100, 0))
       start_genstage(5000)
       assert 0 == Enum.count(Model.get_unverified_persons(300))
-      assert 0 == Enum.count(Model.get_failed_unverified_persons(1, 0))
+      assert 0 == Enum.count(Model.get_locked_unverified_persons(1, 0))
     end
   end
 end

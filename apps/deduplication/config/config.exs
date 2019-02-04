@@ -44,4 +44,11 @@ config :deduplication, Deduplication.V1.Match,
     phones: %{match: 0.3, no_match: -0.1}
   }
 
+# ENV DEDUPLICATION_MODE define how producer will get persons
+# :mixed - first get locked persons, then rest
+# :new - get only unlocked unverified persons
+# :locked - get only locked persons
+config :deduplication, Deduplication.Producer,
+  mode: {:system, :atom, "DEDUPLICATION_MODE", :mixed}
+
 import_config "#{Mix.env()}.exs"

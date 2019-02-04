@@ -2,6 +2,7 @@ defmodule Deduplication.Producer do
   @moduledoc """
   produce unverified persons
   """
+  use Confex, otp_app: :deduplication
   use GenStage
   alias Deduplication.V2.Model
   require Logger
@@ -13,21 +14,28 @@ defmodule Deduplication.Producer do
 
   @impl true
   def init(%{} = _state) do
-    {:producer, %{call: :zero, offset: 0}, []}
+    mode = config()[:mode]
+    {:producer, %{mode: mode, offset: 0}, []}
   end
 
   @impl true
-  def handle_demand(demand, %{call: :normal} = state) when demand > 0 do
+  def handle_demand(demand, %{mode: :new} = state) when demand > 0 do
     {:noreply, unverified_persons(demand), state}
   end
 
-  def handle_demand(demand, %{call: :zero, offset: offset}) when demand > 0 do
-    persons = Model.get_failed_unverified_persons(demand, offset)
+  def handle_demand(demand, %{mode: mode, offset: offset}) when demand > 0 do
+    locked_persons = Model.get_locked_unverified_persons(demand, offset)
 
-    if persons == [] do
-      {:noreply, unverified_persons(demand), %{call: :normal}}
-    else
-      {:noreply, persons, %{call: :zero, offset: offset + demand}}
+    # The order of cond is nessesary, first check does locked_persons is not empty
+    cond do
+      not Enum.empty?(locked_persons) ->
+        {:noreply, locked_persons, %{mode: mode, offset: offset + demand}}
+
+      mode == :locked ->
+        stop_application()
+
+      mode == :mixed ->
+        {:noreply, unverified_persons(demand), %{mode: :new}}
     end
   end
 

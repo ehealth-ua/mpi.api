@@ -61,7 +61,7 @@ defmodule Deduplication.V2.Model do
     {_, nil} = Repo.delete_all(from(p in VerifyingIds, where: p.id == ^person_id))
   end
 
-  def get_failed_unverified_persons(limit, offset) do
+  def get_locked_unverified_persons(limit, offset) do
     Person
     |> preload([:documents, :person_addresses])
     |> join(:inner, [p], v in VerifyingIds, v.id == p.id)
