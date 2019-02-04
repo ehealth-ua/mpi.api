@@ -3,6 +3,7 @@ defmodule Deduplication.V2.ModelTest do
   import Core.Factory
 
   alias Core.Person
+  alias Core.PersonDocument
   alias Deduplication.V2.Match
   alias Deduplication.V2.Model
 
@@ -30,6 +31,29 @@ defmodule Deduplication.V2.ModelTest do
     test "document_number returns nil for number containing letters only" do
       refute Model.document_number(nil)
       assert nil == Model.document_number("іфФ ‐Ї-є-Ґ-Ї—")
+    end
+
+    test "normalize_documents works" do
+      documents = [
+        %PersonDocument{number: "іЇє ҐфФ‐21345---Ї—", type: "BIRTH_CERTIFICATE"},
+        %PersonDocument{number: "EH  64 75 64", type: "PASSPORT"}
+      ]
+
+      assert [
+               %{document: "1їєґфф21345ї", number: "121345"},
+               %{document: "eh647564", number: "647564"}
+             ] = Model.normalize_documents(documents)
+    end
+
+    test "normalize_tax_id works" do
+      documents =
+        Model.normalize_documents([
+          %PersonDocument{number: "EH  64 75 64", type: "PASSPORT"},
+          %PersonDocument{number: "іЇє ҐфФ‐21345-5-67-Ї— 0", type: "BIRTH_CERTIFICATE"}
+        ])
+
+      assert "3347605422" == Model.normalize_tax_id("3347605422", documents)
+      assert "1213455670" == Model.normalize_tax_id(nil, documents)
     end
 
     test "normalize_birth_settlement works" do

@@ -230,17 +230,21 @@ defmodule Deduplication.V2.Model do
           last_name: last_name,
           second_name: second_name,
           birth_settlement: birth_settlement,
+          tax_id: tax_id,
           documents: documents,
           person_addresses: addresses
         } = person
       ) do
+    normalized_documents = normalize_documents(documents)
+
     %{
       person
       | first_name: normalize_text(first_name),
         last_name: normalize_text(last_name),
         second_name: normalize_text(second_name),
         birth_settlement: normalize_birth_settlement(birth_settlement),
-        documents: normalize_documents(documents),
+        tax_id: normalize_tax_id(tax_id, normalized_documents),
+        documents: normalized_documents,
         person_addresses: normalize_addresses(addresses)
     }
   end
@@ -254,6 +258,20 @@ defmodule Deduplication.V2.Model do
       )
 
     normalize_text(Regex.replace(r, birth_settlement, ""))
+  end
+
+  def normalize_tax_id(tax_id, _) when not is_nil(tax_id), do: tax_id
+
+  def normalize_tax_id(nil, documents) do
+    Enum.reduce_while(documents, nil, fn
+      %{number: nil}, _ ->
+        {:cont, nil}
+
+      %{number: number}, _ ->
+        if String.length(number) == 10,
+          do: {:halt, number},
+          else: {:cont, nil}
+    end)
   end
 
   def normalize_documents(documents) do
