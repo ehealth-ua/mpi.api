@@ -46,9 +46,9 @@ defmodule PersonDeactivator do
     |> Repo.all()
   end
 
-  def deactivate_candidates(candidate_ids, system_user_id) do
-    person_ids = Enum.map(candidate_ids, & &1[:person_id])
-    merge_candidates_ids = Enum.map(candidate_ids, &Map.get(&1, :id))
+  def deactivate_candidates(candidates, system_user_id) do
+    person_ids = Enum.map(candidates, & &1[:person_id])
+    merge_candidates_ids = Enum.map(candidates, &Map.get(&1, :id))
     deactivate_persons_query = from(p in Person, where: p.id in ^MapSet.to_list(MapSet.new(person_ids)))
     merge_candidates_query = from(m in MergeCandidate, where: m.id in ^merge_candidates_ids)
 

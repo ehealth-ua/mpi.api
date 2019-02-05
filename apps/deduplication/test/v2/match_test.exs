@@ -97,7 +97,6 @@ defmodule Deduplication.V2.MatchTest do
       Enum.each(candidates, fn candidate ->
         assert candidate.person_id in person_ids
         assert candidate.master_person_id in person_ids
-        assert candidate.person.id in candidate.master_person.merged_ids
       end)
     end
 
@@ -146,7 +145,6 @@ defmodule Deduplication.V2.MatchTest do
       Enum.each(candidates, fn candidate ->
         assert candidate.person_id in person_ids
         assert candidate.master_person_id in person_ids
-        assert candidate.person.id in candidate.master_person.merged_ids
       end)
     end
   end
@@ -254,7 +252,6 @@ defmodule Deduplication.V2.MatchTest do
       Enum.each(candidates, fn candidate ->
         assert candidate.person_id in matched_persons
         assert candidate.master_person_id in matched_persons
-        assert candidate.person.id in candidate.master_person.merged_ids
       end)
     end
   end
@@ -310,7 +307,6 @@ defmodule Deduplication.V2.MatchTest do
       Enum.each(candidates, fn candidate ->
         assert candidate.person_id in person_ids
         assert candidate.master_person_id in person_ids
-        assert candidate.person.id in candidate.master_person.merged_ids
       end)
     end
 
@@ -378,7 +374,6 @@ defmodule Deduplication.V2.MatchTest do
       Enum.each(candidates, fn candidate ->
         assert candidate.person_id in matched_persons
         assert candidate.master_person_id in matched_persons
-        assert candidate.person.id in candidate.master_person.merged_ids
       end)
     end
   end
@@ -434,7 +429,6 @@ defmodule Deduplication.V2.MatchTest do
       Enum.each(candidates, fn candidate ->
         assert candidate.person_id in person_ids
         assert candidate.master_person_id in person_ids
-        assert candidate.person.id in candidate.master_person.merged_ids
       end)
     end
 
@@ -501,7 +495,6 @@ defmodule Deduplication.V2.MatchTest do
       Enum.each(candidates, fn candidate ->
         assert candidate.person_id in matched_persons
         assert candidate.master_person_id in matched_persons
-        assert candidate.person.id in candidate.master_person.merged_ids
       end)
     end
   end

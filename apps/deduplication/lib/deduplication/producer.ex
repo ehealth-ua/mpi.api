@@ -6,7 +6,6 @@ defmodule Deduplication.Producer do
   use GenStage
   alias Deduplication.V2.Model
   require Logger
-  @behaviour Deduplication.Behaviours.ProducerBehaviour
 
   def start_link(%{id: id}) do
     GenStage.start_link(__MODULE__, %{}, name: id, id: id)
@@ -31,22 +30,16 @@ defmodule Deduplication.Producer do
       not Enum.empty?(locked_persons) ->
         {:noreply, locked_persons, %{mode: mode, offset: offset + demand}}
 
-      mode == :locked ->
-        stop_application()
-
       mode == :mixed ->
         {:noreply, unverified_persons(demand), %{mode: :new}}
+
+      mode == :locked ->
+        {:noreply, [], %{}}
     end
   end
 
   def handle_demand(_demand, state) do
     {:noreply, [], state}
-  end
-
-  @impl true
-  def stop_application do
-    Logger.info("Stop application")
-    System.halt(0)
   end
 
   defp unverified_persons(demand) do

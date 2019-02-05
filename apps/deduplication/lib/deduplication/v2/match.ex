@@ -23,33 +23,28 @@ defmodule Deduplication.V2.Match do
 
   def deduplicate_persons(persons) do
     persons
-    |> Enum.reduce(0, fn person, count ->
-      with %Person{} <- person do
-        candidates =
-          person
-          |> Model.get_candidates()
-          |> match_candidates(person)
+    |> Enum.reduce(0, fn %Person{} = person, count ->
+      person
+      |> Model.get_candidates()
+      |> match_candidates(person)
+      |> store_merge_candidates(person)
 
-        if candidates == [] do
-          :ok
-        else
-          system_user_id = Confex.fetch_env!(:core, :system_user)
-          candidates_ids = Enum.map(candidates, & &1[:candidate].id)
-
-          Repo.transaction(fn ->
-            person.id
-            |> merge_candidates(candidates, system_user_id)
-            |> manual_merge_candidates(system_user_id)
-
-            put_merge_candidates(person, candidates_ids, system_user_id)
-          end)
-        end
-
-        Model.unlock_person_after_verify(person.id)
-        set_current_verified_ts(person.updated_at)
-      end
+      Model.unlock_person_after_verify(person.id)
+      set_current_verified_ts(person.updated_at)
 
       count + 1
+    end)
+  end
+
+  def store_merge_candidates([]), do: :ok
+
+  def store_merge_candidates(candidates, person) do
+    system_user_id = Confex.fetch_env!(:core, :system_user)
+
+    Repo.transaction(fn ->
+      person.id
+      |> merge_candidates(candidates, system_user_id)
+      |> manual_merge_candidates(system_user_id)
     end)
   end
 
@@ -138,22 +133,6 @@ defmodule Deduplication.V2.Match do
       |> Model.async_stream_filter()
 
     create_audit_logs(changes)
-  end
-
-  defp put_merge_candidates(person, candidates_ids, system_user_id) do
-    merged_ids =
-      (person.merged_ids || [])
-      |> List.flatten(candidates_ids)
-      |> MapSet.new()
-      |> MapSet.to_list()
-
-    person_query =
-      from(p in Person,
-        where: p.id == ^person.id,
-        update: [set: [merged_ids: ^merged_ids, updated_by: ^system_user_id]]
-      )
-
-    {1, _} = Repo.update_all(person_query, [])
   end
 
   def set_current_verified_ts(updated_at) do
