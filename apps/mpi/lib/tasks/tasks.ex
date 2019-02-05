@@ -7,34 +7,37 @@ defmodule MPI.ReleaseTasks do
       mpi/bin/mpi command mpi_tasks migrate!
   """
 
+  alias Core.Repo
+  alias Core.DeduplicationRepo
   alias Ecto.Migrator
-
-  @repo Core.Repo
 
   def migrate do
     # Migrate
     migrations_dir = Application.app_dir(:core, "priv/repo/migrations")
+    deduplication_dir = Application.app_dir(:core, "priv/repo/deduplication_repo")
 
-    # Run migrations
-    @repo
-    |> start_repo
-    |> Migrator.run(migrations_dir, :up, all: true)
+    load_app()
+
+    run_migration(Repo, migrations_dir)
+    run_migration(DeduplicationRepo, deduplication_dir)
 
     System.halt(0)
     :init.stop()
   end
 
-  defp start_repo(repo) do
+  defp load_app do
     start_applications([:logger, :postgrex, :ecto])
     Application.load(:mpi)
-    # If you don't include Repo in application supervisor start it here manually
-    repo.start_link()
-    repo
   end
 
   defp start_applications(apps) do
     Enum.each(apps, fn app ->
       {_, _message} = Application.ensure_all_started(app)
     end)
+  end
+
+  def run_migration(repo, migrations_dir) do
+    repo.start_link()
+    Ecto.Migrator.run(repo, migrations_dir, :up, all: true)
   end
 end
