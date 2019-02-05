@@ -14,9 +14,9 @@ addons:
       - docker-ce
       - python3-pip
 elixir:
-  - 1.7
+  - 1.7.4
 otp_release:
-  - 20.3.8
+  - 21.2.5
 notifications:
   slack:
     rooms:

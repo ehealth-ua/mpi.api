@@ -1,4 +1,4 @@
-FROM elixir:1.7-alpine as builder
+FROM elixir:1.7.4-alpine as builder
 
 ARG APP_NAME
 
@@ -18,7 +18,7 @@ RUN mix do \
 
 RUN git log --pretty=format:"%H %cd %s" > commits.txt
 
-FROM alpine:3.8
+FROM alpine:3.9
 
 ARG APP_NAME
 
