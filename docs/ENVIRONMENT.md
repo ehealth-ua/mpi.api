@@ -41,6 +41,9 @@ Also sample `.env` can be used as payload for `docker run` cli.
 | DB_DEDUPLICATION_POOL_SIZE | `40` | Database pool size |
 
 ## Application variables
-| VAR_NAME      | Default Value | Description |
-| ------------- | ------------- | ----------- |
-| MAX_PERSONS_RESULT | `15` | Count of results for pagination when using person search |
+| VAR_NAME                       | Default Value | Description |
+| ------------------------------ | ------------- | ----------- |
+| MAX_PERSONS_RESULT             | `15`          | Count of results for pagination when using person search |
+| DEDUPLICATION_SCORE            | `0.7`         | Minimal deduplication score for creating Merge Candidate. Between 0 and 1.  
+| DEDUPLICATION_MANUAL_SCORE_MIN | `0.7`         | Minimal deduplication score range for creating Manual Merge Candidate. Between 0 and 1.
+| DEDUPLICATION_MANUAL_SCORE_MAX | `0.9`         | Maximum deduplication score range for creating Manual Merge Candidate. Between 0 and 1.
