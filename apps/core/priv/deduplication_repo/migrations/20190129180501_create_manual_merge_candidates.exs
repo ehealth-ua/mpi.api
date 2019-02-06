@@ -4,8 +4,9 @@ defmodule Core.DeduplicationRepo.Migrations.CreateManualMergeCandidates do
   def change do
     create table(:manual_merge_candidates, primary_key: false) do
       add(:id, :uuid, primary_key: true)
-      add(:status, :string, null: false)
-      add(:decision, :string, default: nil)
+      add(:status, :text, null: false)
+      add(:status_reason, :text, default: nil)
+      add(:decision, :text, default: nil)
       add(:assignee_id, :uuid)
       add(:person_id, :uuid, null: false)
       add(:master_person_id, :uuid, null: false)

@@ -323,8 +323,8 @@ defmodule MPI.Rpc do
   end
 
   @doc """
-  Search for ManualMergeRequests with its references: manual_merge_candidate -> merge_candidate -> [person, master_person]
-  Check avaiable formats for filter here https://github.com/edenlabllc/ecto_filter
+  Search for Manual Merge Requests with its references: manual_merge_candidate -> merge_candidate -> [person, master_person]
+  Check available formats for filter here https://github.com/edenlabllc/ecto_filter
 
   Available parameters:
 
@@ -351,6 +351,31 @@ defmodule MPI.Rpc do
   def search_manual_merge_requests([_ | _] = filter, order_by \\ [], cursor \\ nil) do
     with {:ok, manual_merge_requests} <- ManualMerge.search_manual_merge_requests(filter, order_by, cursor) do
       {:ok, ManualMergeRequestView.render("index.json", %{manual_merge_requests: manual_merge_requests})}
+    end
+  end
+
+  @doc """
+  Process Manual Merge Request, updates it status and if it necessary -
+  process Manual Merge Candidate and deactivate Person
+
+  ## Examples
+
+      iex> MPI.Rpc.process_manual_merge_request("26e673e1-1d68-413e-b96c-407b45d9f572", "MERGE", "5768d53f-6e37-46bc-af34-29e650446321")
+       {:ok, %{
+        id: "26e673e1-1d68-413e-b96c-407b45d9f572",
+        assignee_id: "5768d53f-6e37-46bc-af34-29e650446321",
+        comment: nil,
+        manual_merge_candidate: %{...},
+        status: "MERGE",
+        inserted_at: #DateTime<2019-02-04 14:08:42.434612Z>,
+        updated_at: #DateTime<2019-02-04 14:08:42.434619Z>
+      }}
+  """
+  @spec process_manual_merge_request(id :: binary(), status :: binary(), actor_id :: binary()) ::
+          {:ok, manual_merge_request()} | {:error, term()}
+  def process_manual_merge_request(id, status, actor_id) do
+    with {:ok, manual_merge_request} <- ManualMerge.process_merge_request(id, status, actor_id) do
+      {:ok, ManualMergeRequestView.render("show.json", %{manual_merge_request: manual_merge_request})}
     end
   end
 end

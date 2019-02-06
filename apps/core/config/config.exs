@@ -18,6 +18,8 @@ config :logger, :console,
   handle_otp_reports: true,
   level: :info
 
+config :core, Core.ManualMerge, quorum: {:system, :integer, "MANUAL_MERGE_QUORUM", 3}
+
 # It is also possible to import configuration files, relative to this
 # directory. For example, you can emulate configuration per environment
 # by uncommenting the line below and defining dev.exs, test.exs and such.

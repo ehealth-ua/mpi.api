@@ -338,4 +338,28 @@ defmodule MPI.RpcTest do
       assert {:ok, []} == Rpc.search_manual_merge_requests([{:status, :equal, @status_new}], [], {0, 10})
     end
   end
+
+  describe "process manual merge request" do
+    setup do
+      person = insert(:mpi, :person)
+      master_person = insert(:mpi, :person)
+      merge_candidate = insert(:mpi, :merge_candidate, person: person, master_person: master_person)
+
+      %{merge_candidate: merge_candidate}
+    end
+
+    test "successful postpone request", %{merge_candidate: merge_candidate} do
+      manual_merge_candidate =
+        insert(:deduplication, :manual_merge_candidate,
+          person_id: merge_candidate.master_person_id,
+          master_person_id: merge_candidate.person_id,
+          merge_candidate_id: merge_candidate.id
+        )
+
+      merge_request = insert(:deduplication, :manual_merge_request, manual_merge_candidate: manual_merge_candidate)
+
+      assert {:ok, %{status: @status_merge}} =
+               Rpc.process_manual_merge_request(merge_request.id, @status_merge, merge_request.assignee_id)
+    end
+  end
 end

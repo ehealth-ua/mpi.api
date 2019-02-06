@@ -10,6 +10,8 @@ defmodule Core.ManualMergeCandidate do
   @status_new "NEW"
   @status_processed "PROCESSED"
 
+  @status_reason_auto_merge "AUTO-MERGE"
+
   @decision_split "SPLIT"
   @decision_merge "MERGE"
   @decision_trash "TRASH"
@@ -18,20 +20,19 @@ defmodule Core.ManualMergeCandidate do
     person_id
     master_person_id
     merge_candidate_id
-    inserted_by
   )a
 
   @fields_optional ~w(
     status
     decision
     assignee_id
-    updated_by
   )a
 
   @primary_key {:id, Ecto.UUID, autogenerate: true}
   @derive {Poison.Encoder, except: [:__meta__]}
   schema "manual_merge_candidates" do
     field(:status, :string, default: @status_new)
+    field(:status_reason, :string, default: @status_new)
     field(:decision, :string, default: nil)
     field(:assignee_id, UUID, default: nil)
     field(:person_id, UUID)
@@ -52,6 +53,8 @@ defmodule Core.ManualMergeCandidate do
 
   def status(:new), do: @status_new
   def status(:processed), do: @status_processed
+
+  def status_reason(:auto_merge), do: @status_reason_auto_merge
 
   def decision(:split), do: @decision_split
   def decision(:merge), do: @decision_merge

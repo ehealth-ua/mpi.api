@@ -12,6 +12,7 @@ defmodule Core.Factories.Deduplication do
       def manual_merge_candidate_factory do
         %ManualMergeCandidate{
           status: ManualMergeCandidate.status(:new),
+          status_reason: nil,
           decision: nil,
           assignee_id: nil,
           person_id: UUID.generate(),
