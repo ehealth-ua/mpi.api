@@ -56,12 +56,12 @@ defmodule Core.ManualMerge do
     end
   end
 
-  def process_merge_request(id, status, actor_id) when is_binary(actor_id) do
+  def process_merge_request(id, status, actor_id, comment \\ nil) when is_binary(actor_id) do
     with {:ok, merge_request} <- fetch_merge_request_by_id(id),
          :ok <- validate_assignee(merge_request, actor_id),
          :ok <- validate_status_transition(merge_request, status) do
       DeduplicationRepo.transaction(fn ->
-        with {:ok, merge_request} <- update(merge_request, %{status: status}, actor_id),
+        with {:ok, merge_request} <- update(merge_request, %{status: status, comment: comment}, actor_id),
              merge_request <- DeduplicationRepo.preload(merge_request, [:manual_merge_candidate]),
              {:ok, manual_merge_candidate} <- process_merge_candidates(merge_request, actor_id),
              :ok <- deactivate_person(manual_merge_candidate) do

@@ -74,7 +74,9 @@ defmodule Core.Unit.ManualMergeTest do
       %{id: id} =
         insert(:deduplication, :manual_merge_request, manual_merge_candidate: candidate, assignee_id: actor_id)
 
-      assert {:ok, %ManualMergeRequest{}} = ManualMerge.process_merge_request(id, @merge, actor_id)
+      assert {:ok, merge_request} = ManualMerge.process_merge_request(id, @merge, actor_id, "some comment")
+      assert %ManualMergeRequest{} = merge_request
+      assert "some comment" == merge_request.comment
 
       assert %{decision: nil, status: @new, assignee_id: nil} =
                ManualMerge.get_by_id(ManualMergeCandidate, candidate.id)

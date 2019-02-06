@@ -9,6 +9,7 @@ defmodule MPI.RpcTest do
   alias Core.ManualMergeRequest
   alias MPI.Rpc
   alias Scrivener.Page
+  alias Ecto.Changeset
   alias Ecto.UUID
 
   @status_new ManualMergeRequest.status(:new)
@@ -348,7 +349,7 @@ defmodule MPI.RpcTest do
       %{merge_candidate: merge_candidate}
     end
 
-    test "successful postpone request", %{merge_candidate: merge_candidate} do
+    test "successful merge request", %{merge_candidate: merge_candidate} do
       manual_merge_candidate =
         insert(:deduplication, :manual_merge_candidate,
           person_id: merge_candidate.master_person_id,
@@ -360,6 +361,13 @@ defmodule MPI.RpcTest do
 
       assert {:ok, %{status: @status_merge}} =
                Rpc.process_manual_merge_request(merge_request.id, @status_merge, merge_request.assignee_id)
+    end
+
+    test "invalid comment type" do
+      %{id: id, assignee_id: assignee_id} = insert(:deduplication, :manual_merge_request)
+
+      assert {:error, %Changeset{valid?: false}} =
+               Rpc.process_manual_merge_request(id, @status_merge, assignee_id, %{invalid: :type})
     end
   end
 end

@@ -14,7 +14,7 @@ defmodule MPI.ReleaseTasks do
   def migrate do
     # Migrate
     migrations_dir = Application.app_dir(:core, "priv/repo/migrations")
-    deduplication_dir = Application.app_dir(:core, "priv/repo/deduplication_repo")
+    deduplication_dir = Application.app_dir(:core, "priv/deduplication_repo/migrations")
 
     load_app()
 

@@ -371,10 +371,14 @@ defmodule MPI.Rpc do
         updated_at: #DateTime<2019-02-04 14:08:42.434619Z>
       }}
   """
-  @spec process_manual_merge_request(id :: binary(), status :: binary(), actor_id :: binary()) ::
-          {:ok, manual_merge_request()} | {:error, term()}
-  def process_manual_merge_request(id, status, actor_id) do
-    with {:ok, manual_merge_request} <- ManualMerge.process_merge_request(id, status, actor_id) do
+  @spec process_manual_merge_request(
+          id :: binary(),
+          status :: binary(),
+          actor_id :: binary(),
+          comment :: binary() | nil
+        ) :: {:ok, manual_merge_request()} | {:error, term()}
+  def process_manual_merge_request(id, status, actor_id, comment \\ nil) do
+    with {:ok, manual_merge_request} <- ManualMerge.process_merge_request(id, status, actor_id, comment) do
       {:ok, ManualMergeRequestView.render("show.json", %{manual_merge_request: manual_merge_request})}
     end
   end
