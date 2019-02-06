@@ -340,7 +340,33 @@ defmodule MPI.RpcTest do
     end
   end
 
-  describe "process manual merge request" do
+  describe "assign_manual_merge_candidate/1" do
+    setup do
+      person = insert(:mpi, :person)
+      master_person = insert(:mpi, :person)
+      merge_candidate = insert(:mpi, :merge_candidate, person: person, master_person: master_person)
+
+      %{merge_candidate: merge_candidate}
+    end
+
+    test "success", %{merge_candidate: merge_candidate} do
+      manual_merge_candidate = insert(:deduplication, :manual_merge_candidate, merge_candidate_id: merge_candidate.id)
+
+      manual_merge_candidate_id = manual_merge_candidate.id
+      actor_id = UUID.generate()
+
+      assert {:ok,
+              %{
+                assignee_id: ^actor_id,
+                manual_merge_candidate: %{
+                  id: ^manual_merge_candidate_id,
+                  assignee_id: ^actor_id
+                }
+              }} = Rpc.assign_manual_merge_candidate(actor_id)
+    end
+  end
+
+  describe "process_manual_merge_request/4" do
     setup do
       person = insert(:mpi, :person)
       master_person = insert(:mpi, :person)

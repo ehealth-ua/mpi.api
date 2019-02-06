@@ -2,6 +2,7 @@ defmodule Core.ManualMergeRequest do
   @moduledoc false
 
   use Ecto.Schema
+
   import Ecto.Changeset
 
   alias Core.ManualMergeCandidate
@@ -15,12 +16,12 @@ defmodule Core.ManualMergeRequest do
 
   @fields_required ~w(
     assignee_id
-    manual_merge_candidate_id
   )a
 
   @fields_optional ~w(
     status
     comment
+    manual_merge_candidate_id
   )a
 
   @primary_key {:id, Ecto.UUID, autogenerate: true}
@@ -39,6 +40,17 @@ defmodule Core.ManualMergeRequest do
     merge_request
     |> cast(params, @fields_required ++ @fields_optional)
     |> validate_required(@fields_required)
+    |> unique_constraint(:assignee_id,
+      name: :manual_merge_requests_assignee_status_index,
+      message: "new request is already present"
+    )
+    |> unique_constraint(:manual_merge_candidate_id,
+      name: :manual_merge_requests_assignee_merge_candidate_index
+    )
+    |> check_constraint(:assignee_id,
+      name: :manual_merge_requests_postponed_count_check,
+      message: "postponed requests limit exceeded"
+    )
   end
 
   def status(:new), do: @status_new

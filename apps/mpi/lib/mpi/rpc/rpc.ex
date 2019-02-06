@@ -355,6 +355,35 @@ defmodule MPI.Rpc do
   end
 
   @doc """
+  Assign merge candidate to review
+
+  Available parameters:
+
+  | Parameter           | Type                | Example                                  | Description                     |
+  | :-----------------: | :-----------------: | :--------------------------------------: | :-----------------------------: |
+  | actor_id            | `binary`            | `"1e6a23b8-d7d0-42f7-a414-fd08b86c6497"` | Required. ID of the acting user |
+
+  ## Examples
+
+      iex> MPI.Rpc.assign_merge_candidate("1e6a23b8-d7d0-42f7-a414-fd08b86c6497")
+      {:ok, %{
+        id: "acdb554f-455d-47c8-b379-6d9c4d7e18f4",
+        assignee_id: "1e6a23b8-d7d0-42f7-a414-fd08b86c6497",
+        comment: nil,
+        manual_merge_candidate: %{...},
+        status: "NEW",
+        inserted_at: #DateTime<2019-02-04 14:08:42.434612Z>,
+        updated_at: #DateTime<2019-02-04 14:08:42.434619Z>
+      }}
+  """
+  @spec assign_manual_merge_candidate(actor_id :: binary()) :: {:ok, manual_merge_request()} | {:error, term()}
+  def assign_manual_merge_candidate(actor_id) do
+    with {:ok, merge_request} <- ManualMerge.assign_merge_candidate(actor_id) do
+      {:ok, ManualMergeRequestView.render("show.json", %{manual_merge_request: merge_request})}
+    end
+  end
+
+  @doc """
   Process Manual Merge Request, updates it status and if it necessary -
   process Manual Merge Candidate and deactivate Person
 

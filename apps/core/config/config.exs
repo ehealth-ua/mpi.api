@@ -28,6 +28,12 @@ config :core, Core.ManualMerge, quorum: {:system, :integer, "MANUAL_MERGE_QUORUM
 
 config :ecto_trail, table_name: "audit_log_mpi"
 
+config :core, Core.DeduplicationRepo,
+  after_connect: {Core.DeduplicationRepo, :set_runtime_params, []},
+  runtime_params: [
+    {"manual_merge_requests.max_postponed", {:system, "MAX_POSTPONED_MANUAL_MERGE_REQUESTS", "5"}}
+  ]
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{Mix.env()}.exs"

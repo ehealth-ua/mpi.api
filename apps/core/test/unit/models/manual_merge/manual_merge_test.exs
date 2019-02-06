@@ -2,10 +2,9 @@ defmodule Core.Unit.ManualMergeTest do
   use Core.ModelCase, async: false
 
   import Core.Factory
-  alias Core.ManualMerge
-  alias Core.ManualMergeRequest
-  alias Core.ManualMergeCandidate
-  alias Ecto.UUID
+
+  alias Core.{ManualMerge, ManualMergeCandidate, ManualMergeRequest}
+  alias Ecto.{Changeset, UUID}
 
   @merge ManualMergeRequest.status(:merge)
   @split ManualMergeRequest.status(:split)
@@ -15,18 +14,84 @@ defmodule Core.Unit.ManualMergeTest do
   @processed ManualMergeCandidate.status(:processed)
   @auto_merge ManualMergeCandidate.status_reason(:auto_merge)
 
-  describe "create manual merge request" do
-    test "successful" do
+  @merge_request_status_new ManualMergeRequest.status(:new)
+  @merge_request_status_postpone ManualMergeRequest.status(:postpone)
+
+  describe "assign merge candidate" do
+    test "success" do
+      merge_candidates = insert_list(3, :deduplication, :manual_merge_candidate)
+
+      for {merge_candidate, merge_requests_count} <- merge_candidates |> Enum.reverse() |> Enum.with_index(),
+          i <- 0..merge_requests_count,
+          i > 0 do
+        insert(:deduplication, :manual_merge_request, manual_merge_candidate: merge_candidate)
+      end
+
+      %{id: expected_merge_candidate_id} = hd(merge_candidates)
       actor_id = UUID.generate()
-      %{id: merge_candidate_id} = insert(:deduplication, :manual_merge_candidate)
 
-      params = %{
-        assignee_id: UUID.generate(),
-        manual_merge_candidate_id: merge_candidate_id
-      }
+      assert {:ok,
+              %ManualMergeRequest{
+                assignee_id: ^actor_id,
+                status: @merge_request_status_new,
+                manual_merge_candidate: %ManualMergeCandidate{
+                  id: ^expected_merge_candidate_id
+                }
+              }} = ManualMerge.assign_merge_candidate(actor_id)
+    end
 
-      assert {:ok, %ManualMergeRequest{manual_merge_candidate_id: merge_candidate_id}} =
-               ManualMerge.create(%ManualMergeRequest{}, params, actor_id)
+    test "fail when all available merge candidates are assigned" do
+      merge_candidates = insert_list(2, :deduplication, :manual_merge_candidate, assignee_id: UUID.generate())
+      actor_id = UUID.generate()
+
+      assert {:error, {:not_found, _}} = ManualMerge.assign_merge_candidate(actor_id)
+    end
+
+    test "fail when all available merge candidates are processed" do
+      actor_id = UUID.generate()
+
+      merge_candidates = insert_list(2, :deduplication, :manual_merge_candidate)
+
+      for merge_candidate <- merge_candidates do
+        insert(:deduplication, :manual_merge_request,
+          manual_merge_candidate: merge_candidate,
+          assignee_id: actor_id,
+          status: @merge_request_status_postpone
+        )
+      end
+
+      assert {:error, {:not_found, _}} = ManualMerge.assign_merge_candidate(actor_id)
+    end
+
+    test "fail when new request already assigned" do
+      insert_list(2, :deduplication, :manual_merge_candidate)
+
+      actor_id = UUID.generate()
+
+      insert(:deduplication, :manual_merge_request, assignee_id: actor_id, status: @merge_request_status_new)
+
+      assert {:error,
+              %Changeset{
+                errors: [assignee_id: {"new request is already present", []}],
+                valid?: false
+              }} = ManualMerge.assign_merge_candidate(actor_id)
+    end
+
+    test "fail when postponed requests limit exceeded" do
+      actor_id = UUID.generate()
+
+      insert(:deduplication, :manual_merge_candidate)
+
+      insert_list(5, :deduplication, :manual_merge_request,
+        assignee_id: actor_id,
+        status: @merge_request_status_postpone
+      )
+
+      assert {:error,
+              %Changeset{
+                errors: [assignee_id: {"postponed requests limit exceeded", []}],
+                valid?: false
+              }} = ManualMerge.assign_merge_candidate(actor_id)
     end
   end
 
