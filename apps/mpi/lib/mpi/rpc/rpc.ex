@@ -336,7 +336,7 @@ defmodule MPI.Rpc do
 
   ## Examples
       iex> MPI.Rpc.search_manual_merge_requests([{:status, :equal, "NEW"}], [desc: :status], {0, 10})
-      {:ok, %{
+      {:ok, [%{
         id: "6868d53f-6e37-46bc-af34-29e650446310",
         assignee_id: "dbf7ba19-1186-4ac0-a410-6499abe40a7c",
         comment: nil,
@@ -344,7 +344,7 @@ defmodule MPI.Rpc do
         status: "MERGE",
         inserted_at: #DateTime<2019-02-04 14:08:42.434612Z>,
         updated_at: #DateTime<2019-02-04 14:08:42.434619Z>
-      }}
+      }]}
   """
   @spec search_manual_merge_requests(list, list, {offset :: integer, limit :: integer} | nil) ::
           {:ok, list(manual_merge_request)}
@@ -411,4 +411,14 @@ defmodule MPI.Rpc do
       {:ok, ManualMergeRequestView.render("show.json", %{manual_merge_request: manual_merge_request})}
     end
   end
+
+  @doc """
+  Checks if could assign new ManualMergeRequest
+
+  ## Examples
+      iex> MPI.Rpc.can_assign_new_manual_merge_request("05127087-5f95-4348-83aa-ea5d259b6601")
+      {:ok, true}
+  """
+  @spec can_assign_new_manual_merge_request(binary) :: {:ok, boolean}
+  def can_assign_new_manual_merge_request(assignee_id), do: {:ok, ManualMerge.can_assign_new?(assignee_id)}
 end

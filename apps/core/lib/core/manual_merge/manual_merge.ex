@@ -210,4 +210,22 @@ defmodule Core.ManualMerge do
   defp update_and_log(changeset, _actor_id) do
     DeduplicationRepo.update(changeset)
   end
+
+  def can_assign_new?(assignee_id) do
+    postponed_limit = config()[:max_postponed_requests]
+
+    merge_request_statuses =
+      ManualMergeRequest
+      |> where([m], m.status in [@status_new, @status_postpone])
+      |> group_by([m], m.status)
+      |> select([m], {m.status, count(m.id)})
+      |> DeduplicationRepo.all()
+      |> Enum.into(%{})
+
+    cond do
+      Map.has_key?(merge_request_statuses, @status_new) -> false
+      Map.get(merge_request_statuses, @status_postpone, 0) >= postponed_limit -> false
+      true -> true
+    end
+  end
 end

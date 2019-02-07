@@ -14,6 +14,7 @@ defmodule MPI.RpcTest do
 
   @status_new ManualMergeRequest.status(:new)
   @status_merge ManualMergeRequest.status(:merge)
+  @status_postpone ManualMergeRequest.status(:postpone)
 
   describe "search_persons/1" do
     test "search person by documents list and status" do
@@ -394,6 +395,55 @@ defmodule MPI.RpcTest do
 
       assert {:error, %Changeset{valid?: false}} =
                Rpc.process_manual_merge_request(id, @status_merge, assignee_id, %{invalid: :type})
+    end
+  end
+
+  describe "can_assign_new_manual_merge_request/1" do
+    setup %{max_postponed_requests: max_postponed_requests} do
+      prev_config = Application.get_env(:core, Core.ManualMerge)
+
+      Application.put_env(
+        :core,
+        Core.ManualMerge,
+        Keyword.replace!(prev_config, :max_postponed_requests, max_postponed_requests)
+      )
+
+      on_exit(fn -> Application.put_env(:core, Core.ManualMerge, prev_config) end)
+
+      :ok
+    end
+
+    @tag max_postponed_requests: 1
+    test "suceess with no merge_requests" do
+      assert {:ok, true} == Rpc.can_assign_new_manual_merge_request(UUID.generate())
+    end
+
+    @tag max_postponed_requests: 3
+    test "suceess with few merge_requests" do
+      assignee_id = UUID.generate()
+      insert_list(2, :deduplication, :manual_merge_request, assignee_id: assignee_id, status: @status_postpone)
+      assert {:ok, true} == Rpc.can_assign_new_manual_merge_request(UUID.generate())
+    end
+
+    @tag max_postponed_requests: 0
+    test "fail with zero limit" do
+      assert {:ok, false} == Rpc.can_assign_new_manual_merge_request(UUID.generate())
+    end
+
+    @tag max_postponed_requests: 5
+    test "fail when already has new merge_request" do
+      assignee_id = UUID.generate()
+      insert(:deduplication, :manual_merge_request, assignee_id: assignee_id, status: @status_new)
+
+      assert {:ok, false} == Rpc.can_assign_new_manual_merge_request(UUID.generate())
+    end
+
+    @tag max_postponed_requests: 5
+    test "fail to assign new merge_request due to limit" do
+      assignee_id = UUID.generate()
+      insert_list(5, :deduplication, :manual_merge_request, assignee_id: assignee_id, status: @status_postpone)
+
+      assert {:ok, false} == Rpc.can_assign_new_manual_merge_request(assignee_id)
     end
   end
 end
