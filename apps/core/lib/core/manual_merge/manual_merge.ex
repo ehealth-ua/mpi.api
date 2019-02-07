@@ -10,6 +10,8 @@ defmodule Core.ManualMerge do
   alias Core.Filters.Base, as: BaseFilter
   alias Core.{DeduplicationRepo, Repo}
   alias Core.{ManualMergeCandidate, ManualMergeRequest}
+  alias Core.MergeCandidate
+  alias Core.MergeCandidates.API, as: MergeCandidates
   alias Ecto.{Changeset, UUID}
 
   @status_new ManualMergeRequest.status(:new)
@@ -104,7 +106,7 @@ defmodule Core.ManualMerge do
         with {:ok, merge_request} <- do_update(merge_request, %{status: status, comment: comment}, actor_id),
              merge_request <- DeduplicationRepo.preload(merge_request, [:manual_merge_candidate]),
              {:ok, manual_merge_candidate} <- process_merge_candidates(merge_request, actor_id),
-             :ok <- deactivate_person(manual_merge_candidate) do
+             :ok <- deactivate_person(manual_merge_candidate, actor_id) do
           preload_merge_request_associations(merge_request)
         else
           {:error, reason} -> DeduplicationRepo.rollback(reason)
@@ -174,12 +176,16 @@ defmodule Core.ManualMerge do
     config()[:quorum] <= requests
   end
 
-  defp deactivate_person(%ManualMergeCandidate{status: @status_merge} = candidate) do
-    # ToDo: put into deactivation consumer
-    :ok
+  defp deactivate_person(%ManualMergeCandidate{decision: @status_merge} = manual_merge_candidate, actor_id) do
+    with %MergeCandidate{} = merge_candidate <- MergeCandidates.get_by_id(manual_merge_candidate.merge_candidate_id),
+         {:ok, _} <- MergeCandidates.update_merge_candidate(merge_candidate, %{score: 1.0}, actor_id) do
+      :ok
+    else
+      err -> {:error, "Cannot update Merge Candidate for Person deactivation with #{inspect(err)}}"}
+    end
   end
 
-  defp deactivate_person(_), do: :ok
+  defp deactivate_person(_, _), do: :ok
 
   defp preload_merge_request_associations(merge_request) do
     person_references = [:documents, :phones]

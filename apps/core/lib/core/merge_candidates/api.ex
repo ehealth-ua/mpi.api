@@ -22,7 +22,6 @@ defmodule Core.MergeCandidates.API do
   end
 
   def changeset(struct, params \\ %{}) do
-    struct
-    |> cast(params, [:status])
+    cast(struct, params, ~w(status score))
   end
 end

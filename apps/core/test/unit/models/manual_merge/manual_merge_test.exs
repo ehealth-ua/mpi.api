@@ -4,6 +4,7 @@ defmodule Core.Unit.ManualMergeTest do
   import Core.Factory
 
   alias Core.{ManualMerge, ManualMergeCandidate, ManualMergeRequest}
+  alias Core.MergeCandidates.API, as: MergeCandidates
   alias Ecto.{Changeset, UUID}
 
   @merge ManualMergeRequest.status(:merge)
@@ -41,7 +42,7 @@ defmodule Core.Unit.ManualMergeTest do
     end
 
     test "fail when all available merge candidates are assigned" do
-      merge_candidates = insert_list(2, :deduplication, :manual_merge_candidate, assignee_id: UUID.generate())
+      insert_list(2, :deduplication, :manual_merge_candidate, assignee_id: UUID.generate())
       actor_id = UUID.generate()
 
       assert {:error, {:not_found, _}} = ManualMerge.assign_merge_candidate(actor_id)
@@ -134,41 +135,56 @@ defmodule Core.Unit.ManualMergeTest do
     end
 
     test "set merge status, request created, quorum NOT obtained", %{actor_id: actor_id} do
-      candidate = insert(:deduplication, :manual_merge_candidate, assignee_id: actor_id)
+      candidate = insert(:mpi, :merge_candidate, score: 0.86)
+
+      manual_candidate =
+        insert(:deduplication, :manual_merge_candidate, assignee_id: actor_id, merge_candidate_id: candidate.id)
 
       %{id: id} =
-        insert(:deduplication, :manual_merge_request, manual_merge_candidate: candidate, assignee_id: actor_id)
+        insert(:deduplication, :manual_merge_request, manual_merge_candidate: manual_candidate, assignee_id: actor_id)
 
       assert {:ok, merge_request} = ManualMerge.process_merge_request(id, @merge, actor_id, "some comment")
       assert %ManualMergeRequest{} = merge_request
       assert "some comment" == merge_request.comment
 
       assert %{decision: nil, status: @new, assignee_id: nil} =
-               ManualMerge.get_by_id(ManualMergeCandidate, candidate.id)
+               ManualMerge.get_by_id(ManualMergeCandidate, manual_candidate.id)
+
+      assert %{score: 0.86} = MergeCandidates.get_by_id(candidate.id)
     end
 
     test "set MERGE status, quorum obtained, candidate processed, related candidates auto merged", %{actor_id: actor_id} do
-      candidate = insert(:deduplication, :manual_merge_candidate, assignee_id: actor_id)
+      candidate = insert(:mpi, :merge_candidate)
 
-      related_candidate =
+      manual_candidate =
         insert(:deduplication, :manual_merge_candidate,
           person_id: candidate.master_person_id,
           master_person_id: candidate.person_id,
+          assignee_id: actor_id,
+          merge_candidate_id: candidate.id
+        )
+
+      related_candidate =
+        insert(:deduplication, :manual_merge_candidate,
+          person_id: manual_candidate.master_person_id,
+          master_person_id: manual_candidate.person_id,
           assignee_id: actor_id
         )
 
-      insert_list(2, :deduplication, :manual_merge_request, status: @merge, manual_merge_candidate: candidate)
+      insert_list(2, :deduplication, :manual_merge_request, status: @merge, manual_merge_candidate: manual_candidate)
 
       %{id: id} =
-        insert(:deduplication, :manual_merge_request, manual_merge_candidate: candidate, assignee_id: actor_id)
+        insert(:deduplication, :manual_merge_request, manual_merge_candidate: manual_candidate, assignee_id: actor_id)
 
       assert {:ok, %ManualMergeRequest{}} = ManualMerge.process_merge_request(id, @merge, actor_id)
 
       assert %{decision: @merge, status: @processed, assignee_id: nil} =
-               ManualMerge.get_by_id(ManualMergeCandidate, candidate.id)
+               ManualMerge.get_by_id(ManualMergeCandidate, manual_candidate.id)
 
       assert %{decision: @merge, status: @processed, assignee_id: nil, status_reason: @auto_merge} =
                ManualMerge.get_by_id(ManualMergeCandidate, related_candidate.id)
+
+      assert %{score: 1.0} = MergeCandidates.get_by_id(candidate.id)
     end
 
     test "set TRASH status, quorum obtained, candidate processed", %{actor_id: actor_id} do
