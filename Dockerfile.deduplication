@@ -1,4 +1,4 @@
-FROM elixir:1.7 as builder
+FROM elixir:1.8.1 as builder
 
 ARG APP_NAME
 
