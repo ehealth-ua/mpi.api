@@ -4,7 +4,6 @@ defmodule Deduplication.V2.ModelTest do
 
   alias Core.Person
   alias Core.PersonDocument
-  alias Deduplication.V2.Match
   alias Deduplication.V2.Model
 
   describe "regexp" do
@@ -105,7 +104,7 @@ defmodule Deduplication.V2.ModelTest do
 
   describe "unverified person by tax_id" do
     setup do
-      Match.set_current_verified_ts(DateTime.utc_now())
+      Model.set_current_verified_ts(DateTime.utc_now())
       :ok
     end
 
@@ -129,14 +128,17 @@ defmodule Deduplication.V2.ModelTest do
 
     test "unverified persons limit" do
       insert(:mpi, :person)
-      Match.set_current_verified_ts(DateTime.utc_now())
+      Model.set_current_verified_ts(DateTime.utc_now())
       assert [] == Model.get_unverified_persons(1)
 
-      Match.set_current_verified_ts(DateTime.utc_now())
+      Model.set_current_verified_ts(DateTime.utc_now())
       person = insert(:mpi, :person)
+      person2 = insert(:mpi, :person)
+
       assert [%Person{id: id}] = Model.get_unverified_persons(1)
       assert id == person.id
-      assert [%Person{}] = Model.get_unverified_persons(5)
+      assert [%Person{id: id2}] = Model.get_unverified_persons(5)
+      assert id2 == person2.id
     end
 
     test "get candidates works" do
@@ -144,7 +146,7 @@ defmodule Deduplication.V2.ModelTest do
       insert(:mpi, :person, tax_id: "999999999")
       p10 = insert(:mpi, :person, tax_id: "123456789").id
 
-      Match.set_current_verified_ts(DateTime.utc_now())
+      Model.set_current_verified_ts(DateTime.utc_now())
 
       p11 =
         insert(:mpi, :person, tax_id: "123456789", documents: [build(:document, number: "1")]).id

@@ -12,7 +12,6 @@ defmodule Deduplication.V2.Match do
   alias Core.MergeCandidate
   alias Core.Person
   alias Core.Repo
-  alias Core.VerifiedTs
   alias Deduplication.V2.CandidatesDistance
   alias Deduplication.V2.Model
   alias Ecto.UUID
@@ -29,9 +28,6 @@ defmodule Deduplication.V2.Match do
       |> match_candidates(person)
       |> store_merge_candidates(person)
 
-      Model.unlock_person_after_verify(person.id)
-      set_current_verified_ts(person.updated_at)
-
       count + 1
     end)
   end
@@ -45,6 +41,8 @@ defmodule Deduplication.V2.Match do
       person.id
       |> merge_candidates(candidates, system_user_id)
       |> manual_merge_candidates(system_user_id)
+
+      Model.unlock_person_after_verify(person.id)
     end)
   end
 
@@ -93,7 +91,7 @@ defmodule Deduplication.V2.Match do
       end)
       |> Model.async_stream_filter()
 
-    Repo.insert_all(MergeCandidate, merge_candidates)
+    Repo.insert_all(MergeCandidate, merge_candidates, on_conflict: :nothing)
     log_insert(:mpi, merge_candidates, system_user_id)
     merge_candidates
   end
@@ -104,7 +102,10 @@ defmodule Deduplication.V2.Match do
       |> Task.async_stream(&filter_manual_merge_candidate/1)
       |> Model.async_stream_filter()
 
-    DeduplicationRepo.insert_all(ManualMergeCandidate, manual_merge_candidates)
+    DeduplicationRepo.insert_all(ManualMergeCandidate, manual_merge_candidates,
+      on_conflict: :nothing
+    )
+
     # ToDo: add audit log
     # log_insert(:deduplication, manual_merge_candidates, system_user_id)
   end
@@ -133,16 +134,5 @@ defmodule Deduplication.V2.Match do
       |> Model.async_stream_filter()
 
     create_audit_logs(changes)
-  end
-
-  def set_current_verified_ts(updated_at) do
-    query =
-      from(p in VerifiedTs,
-        where: p.id == ^0,
-        update: [set: [inserted_at: ^DateTime.utc_now(), updated_at: ^updated_at]]
-      )
-
-    {row_updated, _} = Repo.update_all(query, [])
-    true = row_updated in [0, 1]
   end
 end

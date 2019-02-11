@@ -12,7 +12,6 @@ defmodule Deduplication.V2.GenStageTest do
   alias Core.VerifyingIds
   alias Deduplication.Consumer
   alias Deduplication.Producer
-  alias Deduplication.V2.Match
   alias Deduplication.V2.Model
 
   setup :verify_on_exit!
@@ -20,7 +19,7 @@ defmodule Deduplication.V2.GenStageTest do
 
   setup do
     GenStage.start_link(Producer, %{offset: 0}, name: Producer)
-    Match.set_current_verified_ts(DateTime.utc_now())
+    Model.set_current_verified_ts(DateTime.utc_now())
     :ok
   end
 
@@ -51,7 +50,7 @@ defmodule Deduplication.V2.GenStageTest do
     @tag :pending
     test "for completed db works" do
       Enum.map(1..300, fn _ -> insert(:mpi, :person) end)
-      Match.set_current_verified_ts(DateTime.utc_now())
+      Model.set_current_verified_ts(DateTime.utc_now())
       start_genstage(100)
       assert 0 == Enum.count(Model.get_unverified_persons(300))
     end
@@ -137,7 +136,7 @@ defmodule Deduplication.V2.GenStageTest do
         insert(:mpi, :verifying_ids, id: person.id)
       end)
 
-      Match.set_current_verified_ts(DateTime.utc_now())
+      Model.set_current_verified_ts(DateTime.utc_now())
       assert 110 == Enum.count(Model.get_locked_unverified_persons(111, 0))
       start_genstage(5000)
       assert 0 == Enum.count(Model.get_unverified_persons(110))
@@ -152,7 +151,7 @@ defmodule Deduplication.V2.GenStageTest do
         insert(:mpi, :verifying_ids, id: person.id)
       end)
 
-      Match.set_current_verified_ts(DateTime.utc_now())
+      Model.set_current_verified_ts(DateTime.utc_now())
       Enum.map(1..103, fn _ -> insert(:mpi, :person) end)
       assert 51 == Enum.count(Model.get_locked_unverified_persons(100, 0))
       start_genstage(5000)

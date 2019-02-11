@@ -14,19 +14,12 @@ defmodule Deduplication.V2.MatchTest do
   alias Core.PersonDocument
   alias Core.Repo
   alias Core.DeduplicationRepo
-  alias Deduplication.Producer
   alias Deduplication.V2.Match
   alias Deduplication.V2.Model
   alias Ecto.UUID
 
   setup :verify_on_exit!
   setup :set_mox_global
-
-  setup do
-    GenStage.start_link(Producer, %{offset: 0}, name: Producer)
-    Match.set_current_verified_ts(DateTime.utc_now())
-    :ok
-  end
 
   def candidate_count(n), do: candidate_count(n, 0)
 
@@ -37,6 +30,11 @@ defmodule Deduplication.V2.MatchTest do
   end
 
   describe "retrieve_candidates" do
+    setup do
+      Model.set_current_verified_ts(DateTime.utc_now())
+      :ok
+    end
+
     test "number of candidates > candidates_batch_size  works" do
       stub(PyWeightMock, :weight, fn %{} -> 1 end)
 
@@ -65,6 +63,7 @@ defmodule Deduplication.V2.MatchTest do
   describe "test Match.deduplicate_persons by tax_id + auth phone + documents" do
     setup do
       stub(PyWeightMock, :weight, fn %{} -> 1 end)
+      Model.set_current_verified_ts(DateTime.utc_now())
       :ok
     end
 
@@ -150,6 +149,11 @@ defmodule Deduplication.V2.MatchTest do
   end
 
   describe "persons deduplication creates manual merge candidates" do
+    setup do
+      Model.set_current_verified_ts(DateTime.utc_now())
+      :ok
+    end
+
     test "only matched persons" do
       expect(PyWeightMock, :weight, 3, fn %{} -> 0.85 end)
       stub(PyWeightMock, :weight, fn %{} -> 0.95 end)
@@ -186,6 +190,7 @@ defmodule Deduplication.V2.MatchTest do
   describe "auth phone number + document number only" do
     setup do
       stub(PyWeightMock, :weight, fn %{} -> 1 end)
+      Model.set_current_verified_ts(DateTime.utc_now())
       :ok
     end
 
@@ -259,6 +264,7 @@ defmodule Deduplication.V2.MatchTest do
   describe "test Worker.deduplicate/0 by tax_id + auth documents only" do
     setup do
       stub(PyWeightMock, :weight, fn %{} -> 1 end)
+      Model.set_current_verified_ts(DateTime.utc_now())
       :ok
     end
 
@@ -381,6 +387,7 @@ defmodule Deduplication.V2.MatchTest do
   describe "test Worker.deduplicate/0 by tax_id + auth phone only" do
     setup do
       stub(PyWeightMock, :weight, fn %{} -> 1 end)
+      Model.set_current_verified_ts(DateTime.utc_now())
       :ok
     end
 
@@ -502,6 +509,7 @@ defmodule Deduplication.V2.MatchTest do
   describe "test Worker.deduplicate/0 by tax_id only" do
     setup do
       stub(PyWeightMock, :weight, fn %{} -> 1 end)
+      Model.set_current_verified_ts(DateTime.utc_now())
       :ok
     end
 
@@ -509,7 +517,7 @@ defmodule Deduplication.V2.MatchTest do
       persons = Model.get_unverified_persons(0)
       assert 0 = Match.deduplicate_persons(persons)
       insert(:mpi, :person)
-      Match.set_current_verified_ts(DateTime.utc_now())
+      Model.set_current_verified_ts(DateTime.utc_now())
       persons = Model.get_unverified_persons(0)
       assert 0 = Match.deduplicate_persons(persons)
     end
@@ -604,6 +612,7 @@ defmodule Deduplication.V2.MatchTest do
   describe "settlement_id" do
     setup do
       stub(PyWeightMock, :weight, fn %{} -> 1 end)
+      Model.set_current_verified_ts(DateTime.utc_now())
       :ok
     end
 

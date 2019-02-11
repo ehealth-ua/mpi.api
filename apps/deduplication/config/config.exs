@@ -15,10 +15,10 @@ config :deduplication,
 
 config :deduplication, Deduplication.Application,
   env: Mix.env(),
-  parallel_consumers: {:system, :integer, "DEDUPLICATION_PARALLEL_TASKS", 500}
+  parallel_consumers: {:system, :integer, "DEDUPLICATION_PARALLEL_TASKS", 20}
 
 config :deduplication, Deduplication.Consumer,
-  deduplication_persons_limit: {:system, :integer, "DEDUPLICATION_PERSON_LIMIT", 100}
+  deduplication_persons_limit: {:system, :integer, "DEDUPLICATION_PERSON_LIMIT", 40}
 
 config :deduplication, Deduplication.V2.Model,
   candidates_batch_size: {:system, :integer, "DEDUPLICATION_CANDIDATES_BATCH_SIZE", 50_000}
@@ -49,6 +49,7 @@ config :deduplication, Deduplication.V1.Match,
 # :new - get only unlocked unverified persons
 # :locked - get only locked persons
 config :deduplication, Deduplication.Producer,
-  mode: {:system, :atom, "DEDUPLICATION_MODE", :locked}
+  mode: {:system, :atom, "DEDUPLICATION_MODE", :mixed},
+  refresh_timeout: {:system, :integer, "DEDUPLICATION_VACUUM_REFRESH_TIMEOUT", 3_600_000}
 
 import_config "#{Mix.env()}.exs"

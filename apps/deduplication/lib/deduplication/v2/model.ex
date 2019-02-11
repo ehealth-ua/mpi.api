@@ -9,6 +9,7 @@ defmodule Deduplication.V2.Model do
   alias Core.PersonAddress
   alias Core.PersonDocument
   alias Core.Repo
+  alias Core.VerifiedTs
   alias Core.VerifyingIds
 
   def async_stream_filter(streamlist) do
@@ -53,12 +54,47 @@ defmodule Deduplication.V2.Model do
     end
   end
 
-  def lock_persons_on_verify(person_ids) do
-    {_, nil} = Repo.insert_all(VerifyingIds, Enum.map(person_ids, &%{id: &1}))
+  def set_current_verified_ts(updated_at) do
+    query =
+      from(p in VerifiedTs,
+        where: p.id == ^0,
+        update: [set: [inserted_at: ^DateTime.utc_now(), updated_at: ^updated_at]]
+      )
+
+    {row_updated, _} = Repo.update_all(query, [])
+    true = row_updated in [0, 1]
+  end
+
+  def lock_persons_on_verify([]), do: []
+
+  def lock_persons_on_verify(persons) do
+    person_ids = Enum.map(persons, &%{id: &1.id})
+
+    max_updated_at =
+      persons
+      |> Enum.map(& &1.updated_at)
+      |> Enum.sort(fn x, y ->
+        case DateTime.compare(x, y) do
+          :gt -> true
+          _ -> false
+        end
+      end)
+      |> hd
+
+    {_, nil} = Repo.insert_all(VerifyingIds, person_ids)
+    set_current_verified_ts(max_updated_at)
+    persons
   end
 
   def unlock_person_after_verify(person_id) do
     {_, nil} = Repo.delete_all(from(p in VerifyingIds, where: p.id == ^person_id))
+  end
+
+  def no_locked_pesons? do
+    VerifyingIds
+    |> limit(^1)
+    |> Repo.all()
+    |> Enum.empty?()
   end
 
   def get_locked_unverified_persons(limit, offset) do
@@ -86,6 +122,7 @@ defmodule Deduplication.V2.Model do
     |> order_by([p], p.updated_at)
     |> limit(^limit)
     |> Repo.all()
+    |> lock_persons_on_verify()
   end
 
   def settlement_name_query(query, :first_name, first_name) do
