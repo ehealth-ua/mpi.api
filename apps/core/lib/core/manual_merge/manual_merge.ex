@@ -223,6 +223,7 @@ defmodule Core.ManualMerge do
     merge_request_statuses =
       ManualMergeRequest
       |> where([m], m.status in [@status_new, @status_postpone])
+      |> where([m], m.assignee_id == ^assignee_id)
       |> group_by([m], m.status)
       |> select([m], {m.status, count(m.id)})
       |> DeduplicationRepo.all()

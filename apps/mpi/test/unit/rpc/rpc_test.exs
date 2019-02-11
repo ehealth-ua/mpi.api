@@ -415,19 +415,25 @@ defmodule MPI.RpcTest do
 
     @tag max_postponed_requests: 1
     test "suceess with no merge_requests" do
-      assert {:ok, true} == Rpc.can_assign_new_manual_merge_request(UUID.generate())
+      assignee_id = UUID.generate()
+
+      assert {:ok, true} == Rpc.can_assign_new_manual_merge_request(assignee_id)
     end
 
     @tag max_postponed_requests: 3
-    test "suceess with few merge_requests" do
+    test "suceess with few merge_requests, filter by assignee_id" do
       assignee_id = UUID.generate()
       insert_list(2, :deduplication, :manual_merge_request, assignee_id: assignee_id, status: @status_postpone)
-      assert {:ok, true} == Rpc.can_assign_new_manual_merge_request(UUID.generate())
+      insert_list(4, :deduplication, :manual_merge_request, status: @status_postpone)
+
+      assert {:ok, true} == Rpc.can_assign_new_manual_merge_request(assignee_id)
     end
 
     @tag max_postponed_requests: 0
     test "fail with zero limit" do
-      assert {:ok, false} == Rpc.can_assign_new_manual_merge_request(UUID.generate())
+      assignee_id = UUID.generate()
+
+      assert {:ok, false} == Rpc.can_assign_new_manual_merge_request(assignee_id)
     end
 
     @tag max_postponed_requests: 5
@@ -435,7 +441,7 @@ defmodule MPI.RpcTest do
       assignee_id = UUID.generate()
       insert(:deduplication, :manual_merge_request, assignee_id: assignee_id, status: @status_new)
 
-      assert {:ok, false} == Rpc.can_assign_new_manual_merge_request(UUID.generate())
+      assert {:ok, false} == Rpc.can_assign_new_manual_merge_request(assignee_id)
     end
 
     @tag max_postponed_requests: 5
