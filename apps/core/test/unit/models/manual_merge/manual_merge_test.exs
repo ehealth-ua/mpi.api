@@ -3,7 +3,8 @@ defmodule Core.Unit.ManualMergeTest do
 
   import Core.Factory
 
-  alias Core.{ManualMerge, ManualMergeCandidate, ManualMergeRequest}
+  alias Core.{DeduplicationRepo, ManualMerge, ManualMergeCandidate, ManualMergeRequest}
+  alias Core.ManualMerge.AuditLog
   alias Core.MergeCandidates.API, as: MergeCandidates
   alias Ecto.{Changeset, UUID}
 
@@ -181,8 +182,14 @@ defmodule Core.Unit.ManualMergeTest do
       assert %{decision: @merge, status: @processed, assignee_id: nil} =
                ManualMerge.get_by_id(ManualMergeCandidate, manual_candidate.id)
 
-      assert %{decision: @merge, status: @processed, assignee_id: nil, status_reason: @auto_merge} =
-               ManualMerge.get_by_id(ManualMergeCandidate, related_candidate.id)
+      related_candidate = ManualMerge.get_by_id(ManualMergeCandidate, related_candidate.id)
+      assert %ManualMergeCandidate{} = related_candidate
+      assert @merge == related_candidate.decision
+      assert @processed == related_candidate.status
+      assert @auto_merge == related_candidate.status_reason
+      refute related_candidate.assignee_id
+
+      assert 4 == length(DeduplicationRepo.all(AuditLog))
 
       assert %{score: 1.0} = MergeCandidates.get_by_id(candidate.id)
     end

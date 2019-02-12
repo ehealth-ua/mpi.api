@@ -95,7 +95,7 @@ defmodule Core.ManualMerge do
     %ManualMergeRequest{}
     |> ManualMergeRequest.changeset(%{assignee_id: actor_id})
     |> Changeset.put_assoc(:manual_merge_candidate, merge_candidate)
-    |> insert_and_log(actor_id)
+    |> DeduplicationRepo.insert_and_log(actor_id)
   end
 
   def process_merge_request(id, status, actor_id, comment \\ nil) when is_binary(actor_id) do
@@ -156,9 +156,7 @@ defmodule Core.ManualMerge do
     ManualMergeCandidate
     |> where([c], c.person_id == ^person_id)
     |> or_where([c], c.master_person_id == ^person_id)
-    |> DeduplicationRepo.update_all(set: update_data)
-
-    # ToDo: add audit log for SQL update
+    |> DeduplicationRepo.update_all_and_log([set: update_data], actor_id)
 
     :ok
   end
@@ -202,19 +200,7 @@ defmodule Core.ManualMerge do
        when is_binary(actor_id) and struct in [ManualMergeCandidate, ManualMergeRequest] do
     entity
     |> struct.changeset(params)
-    |> update_and_log(actor_id)
-  end
-
-  # ToDo: Ecto.Trail doesn't support multi repos.
-  # At now it possible log just in audit_log_mpi table
-  defp insert_and_log(changeset, _actor_id) do
-    DeduplicationRepo.insert(changeset)
-  end
-
-  # ToDo: Ecto.Trail doesn't support multi repos.
-  # At now it possible log just in audit_log_mpi table
-  defp update_and_log(changeset, _actor_id) do
-    DeduplicationRepo.update(changeset)
+    |> DeduplicationRepo.update_and_log(actor_id)
   end
 
   def can_assign_new?(assignee_id) do

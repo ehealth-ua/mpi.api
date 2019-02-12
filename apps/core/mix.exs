@@ -45,7 +45,7 @@ defmodule Core.MixProject do
       {:kube_rpc, git: "https://github.com/edenlabllc/kube_rpc.git"},
       {:confex, "~> 3.4"},
       {:scrivener_ecto, "~> 1.2"},
-      {:ecto_trail, "~> 0.2.4"},
+      {:ecto_trail, "~> 0.3"},
       {:httpoison, "~> 1.3"},
       {:poison, "~> 3.1", override: true},
       {:postgrex, ">= 0.0.0"},
