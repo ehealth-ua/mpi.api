@@ -55,11 +55,14 @@ defmodule Core.Repo.Migrations.CleanupPassportNumbers do
       {0, []} ->
         :ok
 
+      {1, _} ->
+        :ok
+
       {_, updates} ->
         last_inserted_at =
           updates
-          |> List.last()
-          |> Map.get(:inserted_at)
+          |> Enum.map(&Map.get(&1, :inserted_at))
+          |> Enum.max_by(&DateTime.to_unix(&1, :microsecond))
 
         Repo.update_all("cleanup_passport_numbers_temp", set: [last_inserted_at: last_inserted_at])
 
