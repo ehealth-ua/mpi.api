@@ -8,16 +8,13 @@ defmodule Core.Unit.ManualMergeTest do
   alias Core.MergeCandidates.API, as: MergeCandidates
   alias Ecto.{Changeset, UUID}
 
+  @new ManualMergeCandidate.status(:new)
+  @postpone ManualMergeRequest.status(:postpone)
   @merge ManualMergeRequest.status(:merge)
   @split ManualMergeRequest.status(:split)
   @trash ManualMergeRequest.status(:trash)
-  @postpone ManualMergeRequest.status(:postpone)
-  @new ManualMergeCandidate.status(:new)
   @processed ManualMergeCandidate.status(:processed)
   @auto_merge ManualMergeCandidate.status_reason(:auto_merge)
-
-  @merge_request_status_new ManualMergeRequest.status(:new)
-  @merge_request_status_postpone ManualMergeRequest.status(:postpone)
 
   describe "assign merge candidate" do
     test "success" do
@@ -35,7 +32,7 @@ defmodule Core.Unit.ManualMergeTest do
       assert {:ok,
               %ManualMergeRequest{
                 assignee_id: ^actor_id,
-                status: @merge_request_status_new,
+                status: @new,
                 manual_merge_candidate: %ManualMergeCandidate{
                   id: ^expected_merge_candidate_id
                 }
@@ -58,9 +55,14 @@ defmodule Core.Unit.ManualMergeTest do
         insert(:deduplication, :manual_merge_request,
           manual_merge_candidate: merge_candidate,
           assignee_id: actor_id,
-          status: @merge_request_status_postpone
+          status: @postpone
         )
       end
+
+      insert(:deduplication, :manual_merge_request,
+        manual_merge_candidate: hd(merge_candidates),
+        status: @merge
+      )
 
       assert {:error, {:not_found, _}} = ManualMerge.assign_merge_candidate(actor_id)
     end
@@ -70,7 +72,7 @@ defmodule Core.Unit.ManualMergeTest do
 
       actor_id = UUID.generate()
 
-      insert(:deduplication, :manual_merge_request, assignee_id: actor_id, status: @merge_request_status_new)
+      insert(:deduplication, :manual_merge_request, assignee_id: actor_id, status: @new)
 
       assert {:error,
               %Changeset{
@@ -86,7 +88,7 @@ defmodule Core.Unit.ManualMergeTest do
 
       insert_list(5, :deduplication, :manual_merge_request,
         assignee_id: actor_id,
-        status: @merge_request_status_postpone
+        status: @postpone
       )
 
       assert {:error,

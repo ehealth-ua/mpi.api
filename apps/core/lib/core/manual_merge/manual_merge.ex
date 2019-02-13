@@ -66,8 +66,8 @@ defmodule Core.ManualMerge do
     ManualMergeCandidate
     |> where([c], c.status == @status_new and is_nil(c.assignee_id))
     |> join(:left, [c], r in assoc(c, :manual_merge_requests))
-    |> where([_, r], r.assignee_id != ^actor_id or is_nil(r.id))
     |> group_by([c], c.id)
+    |> having([_, r], fragment("every(?)", r.assignee_id != ^actor_id or is_nil(r.id)))
     |> select([c, r], {c, fragment("count(?) as request_count", r.id)})
     |> order_by(desc: fragment("request_count"))
     |> limit(1)
