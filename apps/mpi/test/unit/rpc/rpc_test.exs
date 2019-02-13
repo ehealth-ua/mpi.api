@@ -6,6 +6,7 @@ defmodule MPI.RpcTest do
   import Core.Factory
 
   alias Core.Person
+  alias Core.Persons.PersonsAPI
   alias Core.ManualMergeRequest
   alias MPI.Rpc
   alias Scrivener.Page
@@ -377,6 +378,8 @@ defmodule MPI.RpcTest do
     end
 
     test "successful merge request", %{merge_candidate: merge_candidate} do
+      expect(PersonDeactivatorKafkaMock, :publish_person_merged_event, fn _, _ -> :ok end)
+
       manual_merge_candidate =
         insert(:deduplication, :manual_merge_candidate,
           person_id: merge_candidate.master_person_id,
@@ -386,8 +389,16 @@ defmodule MPI.RpcTest do
 
       merge_request = insert(:deduplication, :manual_merge_request, manual_merge_candidate: manual_merge_candidate)
 
+      insert_list(2, :deduplication, :manual_merge_request,
+        status: @status_merge,
+        manual_merge_candidate: manual_merge_candidate
+      )
+
       assert {:ok, %{status: @status_merge}} =
                Rpc.process_manual_merge_request(merge_request.id, @status_merge, merge_request.assignee_id)
+
+      person = PersonsAPI.get_by_id(merge_candidate.person_id)
+      assert Person.status(:inactive) == person.status
     end
 
     test "invalid comment type" do

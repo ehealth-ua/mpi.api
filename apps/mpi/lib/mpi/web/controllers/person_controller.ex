@@ -5,10 +5,11 @@ defmodule MPI.Web.PersonController do
   alias Core.Person
   alias Core.Persons.PersonsAPI
   alias MPI.ConnUtils
+  alias MPI.Web.FallbackController
   alias MPI.Web.PersonView
   alias Scrivener.Page
 
-  action_fallback(MPI.Web.FallbackController)
+  action_fallback(FallbackController)
 
   def index(conn, params) do
     with %Page{} = paging <- PersonsAPI.search(params) do

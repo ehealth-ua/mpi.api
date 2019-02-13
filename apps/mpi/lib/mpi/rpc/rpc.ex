@@ -407,7 +407,8 @@ defmodule MPI.Rpc do
           comment :: binary() | nil
         ) :: {:ok, manual_merge_request()} | {:error, term()}
   def process_manual_merge_request(id, status, actor_id, comment \\ nil) do
-    with {:ok, manual_merge_request} <- ManualMerge.process_merge_request(id, status, actor_id, comment) do
+    with {:ok, manual_merge_request} <- ManualMerge.process_merge_request(id, status, actor_id, comment),
+         :ok <- PersonDeactivator.deactivate_persons(manual_merge_request.manual_merge_candidate, actor_id) do
       {:ok, ManualMergeRequestView.render("show.json", %{manual_merge_request: manual_merge_request})}
     end
   end

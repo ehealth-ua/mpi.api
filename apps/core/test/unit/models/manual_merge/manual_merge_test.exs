@@ -192,8 +192,6 @@ defmodule Core.Unit.ManualMergeTest do
       refute related_candidate.assignee_id
 
       assert 4 == length(DeduplicationRepo.all(AuditLog))
-
-      assert %{score: 1.0} = MergeCandidates.get_by_id(candidate.id)
     end
 
     test "set TRASH status, quorum obtained, candidate processed", %{actor_id: actor_id} do

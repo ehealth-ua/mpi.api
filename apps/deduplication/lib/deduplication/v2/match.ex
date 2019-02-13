@@ -3,8 +3,7 @@ defmodule Deduplication.V2.Match do
 
   use Confex, otp_app: :deduplication
 
-  import Core.AuditLogs, only: [create_audit_logs: 1]
-  import Ecto.Query
+  import Core.AuditLogs, only: [create_audit_logs: 2]
 
   alias Core.DeduplicationRepo
   alias Core.ManualMerge
@@ -106,8 +105,7 @@ defmodule Deduplication.V2.Match do
       on_conflict: :nothing
     )
 
-    # ToDo: add audit log
-    # log_insert(:deduplication, manual_merge_candidates, system_user_id)
+    log_insert(:deduplication, manual_merge_candidates, system_user_id)
   end
 
   defp filter_manual_merge_candidate(%{score: score} = merge_candidate) do
@@ -120,7 +118,7 @@ defmodule Deduplication.V2.Match do
     end
   end
 
-  def log_insert(:mpi, merge_candidates, system_user_id) do
+  def log_insert(db, merge_candidates, system_user_id) do
     changes =
       merge_candidates
       |> Task.async_stream(fn mc ->
@@ -133,6 +131,6 @@ defmodule Deduplication.V2.Match do
       end)
       |> Model.async_stream_filter()
 
-    create_audit_logs(changes)
+    create_audit_logs(db, changes)
   end
 end
