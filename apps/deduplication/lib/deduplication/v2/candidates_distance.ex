@@ -25,8 +25,8 @@ defmodule Deduplication.V2.CandidatesDistance do
       d_first_name_bin: d_first_name_bin(model.distance_first_name),
       d_last_name_bin: d_last_name_bin(model.distance_last_name),
       d_second_name_bin: d_second_name_bin(model.distance_second_name),
-      d_documents_bin: d_documents_bin(model.distance_documents),
-      docs_same_number_bin: model.docs_same_number,
+      d_documents_bin: d_documents_bin(model.distance_documents, model.document_number_length),
+      docs_same_number_bin: docs_same_number_bin(model.docs_same_number, model.document_distinct),
       birth_settlement_substr_bin: model.birth_settlement_substr,
       d_tax_id_bin: d_tax_id_bin(model.distance_tax_id),
       authentication_methods_flag_bin: model.authentication_methods_flag,
@@ -38,8 +38,7 @@ defmodule Deduplication.V2.CandidatesDistance do
 
   def d_first_name_bin(distance_first_name) do
     cond do
-      distance_first_name == 0 -> 0
-      distance_first_name == 1 -> 1
+      distance_first_name in 0..1 -> 0
       distance_first_name == 2 -> 2
       true -> 3
     end
@@ -49,33 +48,51 @@ defmodule Deduplication.V2.CandidatesDistance do
     cond do
       distance_last_name in 0..1 -> 1
       distance_last_name == 2 -> 2
-      true -> 3
+      distance_last_name == 3 -> 3
+      true -> 4
     end
   end
 
   def d_second_name_bin(distance_second_name) do
     cond do
       distance_second_name in 0..2 -> 1
-      is_nil(distance_second_name) -> 2
-      distance_second_name in 3..4 -> 3
+      distance_second_name == nil -> 2
+      distance_second_name in 3..6 -> 3
       true -> 4
     end
   end
 
-  def d_documents_bin(distance_documents) do
+  def d_documents_bin(distance_documents, document_number_length) do
     cond do
-      distance_documents == 0 -> 1
-      distance_documents in 1..3 -> 2
-      distance_documents in 4..6 or is_nil(distance_documents) -> 3
-      true -> 4
+      (distance_documents == 0 or distance_documents == nil) and document_number_length == nil -> "0x1"
+      distance_documents == 0 and document_number_length <= 4 -> "0x<4"
+      distance_documents == 0 and document_number_length <= 6 -> "0x<6"
+      distance_documents == 0 and document_number_length > 6 -> "0x>6"
+      distance_documents == 1 and (document_number_length <= 6 or document_number_length == nil) -> "1x<6"
+      distance_documents == 1 and document_number_length > 6 -> "1x>6"
+      distance_documents <= 3 -> "2"
+      true -> "3"
+    end
+  end
+
+  def docs_same_number_bin(docs_same_number, document_distinct) when not is_nil(document_distinct) do
+    cond do
+      docs_same_number == 0 and document_distinct == 1 -> "0x1"
+      docs_same_number == 0 and document_distinct == 2 -> "0x2"
+      docs_same_number == 0 and document_distinct == 3 -> "0x3"
+      docs_same_number == 0 and document_distinct > 3 -> "0x4"
+      docs_same_number == 1 and document_distinct == 0 -> "1x0"
+      docs_same_number == 1 and document_distinct <= 3 -> "1x2"
+      docs_same_number == 1 and document_distinct >= 4 -> "1x3"
     end
   end
 
   def d_tax_id_bin(distance_tax_id) do
     cond do
       distance_tax_id == 0 -> 0
-      is_nil(distance_tax_id) -> 1
-      true -> 2
+      distance_tax_id == nil -> 1
+      distance_tax_id in 1..2 -> 2
+      true -> 3
     end
   end
 
@@ -93,6 +110,8 @@ defmodule Deduplication.V2.CandidatesDistance do
       ) do
     %{} = document_levenshtein = match_document_levenshtein(person_documents, candidate_documents)
 
+    {document_number_length, document_distinct} = compare_document_numbers(person_documents, candidate_documents)
+
     %DistanceModel{
       person_id: person.id,
       candidate_id: candidate.id,
@@ -101,8 +120,9 @@ defmodule Deduplication.V2.CandidatesDistance do
       distance_second_name: levenshtein(person.second_name, candidate.second_name),
       distance_documents: document_levenshtein[:levenshtein],
       docs_same_number: document_levenshtein[:same_number],
-      birth_settlement_substr:
-        birth_settlement_substr(person.birth_settlement, candidate.birth_settlement),
+      document_number_length: document_number_length,
+      document_distinct: document_distinct,
+      birth_settlement_substr: birth_settlement_substr(person.birth_settlement, candidate.birth_settlement),
       distance_tax_id: levenshtein(person.tax_id, candidate.tax_id),
       residence_settlement_flag: equal_residence_addresses(person_addresses, candidate_addresses),
       authentication_methods_flag: equal_auth_phones(person_phones, candidate_phones),
@@ -174,11 +194,9 @@ defmodule Deduplication.V2.CandidatesDistance do
             if %{levenshtein: 0, same_number: 0} == acc do
               {:halt, acc}
             else
-              levenshtein =
-                check_documents_levenshtein(Map.get(pd, :document), Map.get(cd, :document), acc)
+              levenshtein = check_documents_levenshtein(Map.get(pd, :document), Map.get(cd, :document), acc)
 
-              same_number =
-                check_documents_same_number(Map.get(pd, :number), Map.get(cd, :number), acc)
+              same_number = check_documents_same_number(Map.get(pd, :number), Map.get(cd, :number), acc)
 
               {:cont, %{levenshtein: levenshtein, same_number: same_number}}
             end
@@ -249,5 +267,33 @@ defmodule Deduplication.V2.CandidatesDistance do
 
   def document_number_abs(n1, n2) do
     abs(String.to_integer(n1) - String.to_integer(n2))
+  end
+
+  def compare_document_numbers(person_documents, candidate_documents) do
+    all_documents = []
+    all_documents = all_documents ++ person_documents || []
+    all_documents = all_documents ++ candidate_documents || []
+
+    Enum.reduce(all_documents, {nil, nil}, fn doc, {shortest_number, shortest_distinct_digits} ->
+      case Map.get(doc, :number) do
+        nil -> {shortest_number, shortest_distinct_digits}
+        number -> do_compare_document_numbers(number, shortest_number, shortest_distinct_digits)
+      end
+    end)
+  end
+
+  defp do_compare_document_numbers(doc_number, shortest_number, shortest_distinct_digits) do
+    digits = String.split(doc_number, "", trim: true)
+    nums_length = length(digits)
+    distinct_digs = length(Enum.uniq(digits))
+
+    shortest_number = if nums_length < shortest_number, do: nums_length, else: shortest_number
+
+    shortest_distinct_digits =
+      if distinct_digs < shortest_distinct_digits,
+        do: distinct_digs,
+        else: shortest_distinct_digits
+
+    {shortest_number, shortest_distinct_digits}
   end
 end

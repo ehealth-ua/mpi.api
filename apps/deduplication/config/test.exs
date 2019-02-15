@@ -18,5 +18,4 @@ config :deduplication, Deduplication.Consumer,
 config :deduplication, Deduplication.V2.GenStageTest,
   parallel_consumers: {:system, :integer, "DEDUPLICATION_PARALLEL_TASKS", 4}
 
-config :deduplication, Deduplication.Producer,
-  mode: {:system, :atom, "DEDUPLICATION_MODE", :mixed}
+config :deduplication, Deduplication.Producer, mode: {:system, :atom, "DEDUPLICATION_MODE", :mixed}

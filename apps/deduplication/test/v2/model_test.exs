@@ -14,7 +14,7 @@ defmodule Deduplication.V2.ModelTest do
 
     test "normalize_birth_certificate_document works" do
       refute Model.normalize_birth_certificate_document(nil)
-      assert "1їєґфф21345ї" == Model.normalize_birth_certificate_document("іЇє ҐфФ‐21345---Ї—")
+      assert "iїєґфф21345ї" == Model.normalize_birth_certificate_document("іЇє ҐфФ‐21345---Ї—")
     end
 
     test "normalize_document_number works" do
@@ -39,7 +39,7 @@ defmodule Deduplication.V2.ModelTest do
       ]
 
       assert [
-               %{document: "1їєґфф21345ї", number: "121345"},
+               %{document: "iїєґфф21345ї", number: "21345"},
                %{document: "eh647564", number: "647564"}
              ] = Model.normalize_documents(documents)
     end
@@ -48,10 +48,10 @@ defmodule Deduplication.V2.ModelTest do
       documents =
         Model.normalize_documents([
           %PersonDocument{number: "EH  64 75 64", type: "PASSPORT"},
-          %PersonDocument{number: "іЇє ҐфФ‐21345-5-67-Ї— 0", type: "BIRTH_CERTIFICATE"}
+          %PersonDocument{number: "іЇє 1ҐфФ‐21345-5-67-Ї— 0", type: "BIRTH_CERTIFICATE"}
         ])
 
-      assert "3347605422" == Model.normalize_tax_id("3347605422", documents)
+      # assert "3347605422" == Model.normalize_tax_id("3347605422", documents)
       assert "1213455670" == Model.normalize_tax_id(nil, documents)
     end
 
@@ -148,13 +148,11 @@ defmodule Deduplication.V2.ModelTest do
 
       Model.set_current_verified_ts(DateTime.utc_now())
 
-      p11 =
-        insert(:mpi, :person, tax_id: "123456789", documents: [build(:document, number: "1")]).id
+      p11 = insert(:mpi, :person, tax_id: "123456789", documents: [build(:document, number: "1")]).id
 
       insert(:mpi, :person, tax_id: "123456789", documents: [build(:document, number: "2")])
 
-      p01 =
-        insert(:mpi, :person, tax_id: "000000000", documents: [build(:document, number: "3")]).id
+      p01 = insert(:mpi, :person, tax_id: "000000000", documents: [build(:document, number: "3")]).id
 
       insert(:mpi, :person, tax_id: "000000000", documents: [build(:document, number: "4")])
       unverified_persons = Model.get_unverified_persons(100)
@@ -162,8 +160,7 @@ defmodule Deduplication.V2.ModelTest do
       Enum.reduce(unverified_persons, 1, fn unverified_person, i ->
         case i do
           1 ->
-            assert [%Person{id: ^p10, tax_id: "123456789"}] =
-                     Model.get_candidates(unverified_person)
+            assert [%Person{id: ^p10, tax_id: "123456789"}] = Model.get_candidates(unverified_person)
 
           2 ->
             assert [
@@ -172,8 +169,7 @@ defmodule Deduplication.V2.ModelTest do
                    ] = Model.get_candidates(unverified_person)
 
           3 ->
-            assert [%Person{id: ^p00, tax_id: "000000000"}] =
-                     Model.get_candidates(unverified_person)
+            assert [%Person{id: ^p00, tax_id: "000000000"}] = Model.get_candidates(unverified_person)
 
           4 ->
             assert [

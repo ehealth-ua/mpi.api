@@ -101,9 +101,7 @@ defmodule Deduplication.V2.Match do
       |> Task.async_stream(&filter_manual_merge_candidate/1)
       |> Model.async_stream_filter()
 
-    DeduplicationRepo.insert_all(ManualMergeCandidate, manual_merge_candidates,
-      on_conflict: :nothing
-    )
+    DeduplicationRepo.insert_all(ManualMergeCandidate, manual_merge_candidates, on_conflict: :nothing)
 
     log_insert(:deduplication, manual_merge_candidates, system_user_id)
   end

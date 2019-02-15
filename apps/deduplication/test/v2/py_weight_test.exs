@@ -3,48 +3,28 @@ defmodule Deduplication.V2.PyWeightTest do
 
   alias Deduplication.V2.PyWeight
 
-  test "weight close to 0" do
+  test "correct weight for single data set" do
     final_weights = %{
-      person_id: "01d562de-af94-4983-8bfd-07808a7d394b",
-      candidate_id: "856be911-b564-4504-b959-5085a9572f7f",
-      d_first_name_bin: 3,
-      d_last_name_bin: 3,
+      person_id: "0050e680-8ceb-472e-a151-93a863e7768e",
+      candidate_id: "2ee5e195-9d42-47c6-a2a7-4fff85dcbd89",
+      d_first_name_bin: 0,
+      d_last_name_bin: 4,
       d_second_name_bin: 3,
-      d_documents_bin: 1,
-      docs_same_number_bin: 0,
+      d_documents_bin: "0x<6",
+      docs_same_number_bin: "0x4",
       birth_settlement_substr_bin: 1,
       d_tax_id_bin: 1,
       authentication_methods_flag_bin: 1,
-      residence_settlement_flag_bin: 1,
-      gender_flag_bin: 1,
-      twins_flag_bin: 0
-    }
-
-    assert Float.round(0.003128425723215751, 5) == PyWeight.weight(final_weights)
-  end
-
-  test "weight close to 1" do
-    final_weights = %{
-      person_id: "0342bb3c-df11-42fa-b850-0456bb61dd2b",
-      candidate_id: "4df3b577-de71-4025-b762-2e39cdb40177",
-      d_first_name_bin: 0,
-      d_last_name_bin: 1,
-      d_second_name_bin: 2,
-      d_documents_bin: 1,
-      docs_same_number_bin: 0,
-      birth_settlement_substr_bin: 0,
-      d_tax_id_bin: 1,
-      authentication_methods_flag_bin: 0,
       residence_settlement_flag_bin: 0,
       gender_flag_bin: 0,
       twins_flag_bin: 0
     }
 
-    assert Float.round(0.9949005101396697, 5) == PyWeight.weight(final_weights)
+    assert Float.round(0.40259353, 5) == PyWeight.weight(final_weights)
   end
 
   test "test on CSV dataset" do
-    Path.join(__DIR__, "model_boosted_without_registration.csv")
+    Path.join(__DIR__, "docs_issue_sample_test_result.csv")
     |> File.read!()
     |> String.split()
     |> Enum.drop(1)
@@ -72,8 +52,8 @@ defmodule Deduplication.V2.PyWeightTest do
         d_first_name_bin: parse_int(d_first_name_bin),
         d_last_name_bin: parse_int(d_last_name_bin),
         d_second_name_bin: parse_int(d_second_name_bin),
-        d_documents_bin: parse_int(d_documents_bin),
-        docs_same_number_bin: parse_int(docs_same_number_bin),
+        d_documents_bin: d_documents_bin,
+        docs_same_number_bin: docs_same_number_bin,
         birth_settlement_substr_bin: parse_int(birth_settlement_substr_bin),
         d_tax_id_bin: parse_int(d_tax_id_bin),
         authentication_methods_flag_bin: parse_int(authentication_methods_flag_bin),

@@ -38,8 +38,7 @@ defmodule Deduplication.V2.MatchTest do
     test "number of candidates > candidates_batch_size  works" do
       stub(PyWeightMock, :weight, fn %{} -> 1 end)
 
-      batch_size =
-        Confex.fetch_env!(:deduplication, Deduplication.V2.Model)[:candidates_batch_size]
+      batch_size = Confex.fetch_env!(:deduplication, Deduplication.V2.Model)[:candidates_batch_size]
 
       n = batch_size * 5
 
@@ -529,8 +528,7 @@ defmodule Deduplication.V2.MatchTest do
       assert 2 = Match.deduplicate_persons(persons)
       assert [] == Model.get_unverified_persons(1)
 
-      assert [%MergeCandidate{master_person_id: actual_id, person_id: stale_id}] =
-               Repo.all(MergeCandidate)
+      assert [%MergeCandidate{master_person_id: actual_id, person_id: stale_id}] = Repo.all(MergeCandidate)
 
       assert stale_id == stale.id
       assert actual_id == actual.id
@@ -710,12 +708,12 @@ defmodule Deduplication.V2.MatchTest do
                  authentication_methods_flag_bin: 0,
                  birth_settlement_substr_bin: 0,
                  candidate_id: "ebf38e27-7eda-48cd-8639-5b9ca66f9fe8",
-                 d_documents_bin: 1,
-                 d_first_name_bin: 1,
+                 d_documents_bin: "0x>6",
+                 d_first_name_bin: 0,
                  d_last_name_bin: 1,
                  d_second_name_bin: 1,
                  d_tax_id_bin: 0,
-                 docs_same_number_bin: 0,
+                 docs_same_number_bin: "0x3",
                  gender_flag_bin: 0,
                  person_id: "4b889b15-b4c9-4cf1-9cb7-2bbc245d676d",
                  residence_settlement_flag_bin: 0,
@@ -773,12 +771,12 @@ defmodule Deduplication.V2.MatchTest do
                  authentication_methods_flag_bin: 0,
                  birth_settlement_substr_bin: 0,
                  candidate_id: "04ca5d87-1918-4f3c-be29-606adf8dd53c",
-                 d_documents_bin: 1,
+                 d_documents_bin: "0x<6",
                  d_first_name_bin: 0,
                  d_last_name_bin: 1,
                  d_second_name_bin: 1,
                  d_tax_id_bin: 0,
-                 docs_same_number_bin: 0,
+                 docs_same_number_bin: "0x3",
                  gender_flag_bin: 0,
                  person_id: "ebf38e27-7eda-48cd-8639-5b9ca66f9fe8",
                  residence_settlement_flag_bin: 0,
@@ -836,12 +834,12 @@ defmodule Deduplication.V2.MatchTest do
                  authentication_methods_flag_bin: 1,
                  birth_settlement_substr_bin: 0,
                  candidate_id: "5268b461-075e-4fc1-8efe-1fc73a4d00c0",
-                 d_documents_bin: 2,
+                 d_documents_bin: "2",
                  d_first_name_bin: 0,
-                 d_last_name_bin: 3,
+                 d_last_name_bin: 4,
                  d_second_name_bin: 2,
                  d_tax_id_bin: 1,
-                 docs_same_number_bin: 1,
+                 docs_same_number_bin: "0x1",
                  gender_flag_bin: 1,
                  person_id: "eaa1e6cd-e6ad-4eef-8962-a15e702249e4",
                  residence_settlement_flag_bin: 1,
@@ -864,7 +862,7 @@ defmodule Deduplication.V2.MatchTest do
           nil,
           nil,
           "BIRTH_CERTIFICATE",
-          "СМ-С",
+          "СМ-С1",
           "БІЛА ЦЕРКВА",
           "БІЛА ЦЕРКВА",
           "+380671111111"
@@ -883,7 +881,7 @@ defmodule Deduplication.V2.MatchTest do
           nil,
           nil,
           "BIRTH_CERTIFICATE",
-          "СMC",
+          "СMC1",
           "ГАДЯЧ",
           "ГАДЯЧ",
           nil

@@ -73,9 +73,7 @@ defmodule Deduplication.V1.Match do
         Poison.encode!(%{
           "log_type" => "info",
           "message" =>
-            "Found duplicates. Will insert the following {master_person_id, person_id} pairs: #{
-              inspect(short_pairs)
-            }"
+            "Found duplicates. Will insert the following {master_person_id, person_id} pairs: #{inspect(short_pairs)}"
         })
       end)
 

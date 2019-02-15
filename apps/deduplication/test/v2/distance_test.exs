@@ -42,8 +42,7 @@ defmodule Deduplication.V2.CandidatesDistanceTest do
     end
 
     test "match_document_levenshtein no match works" do
-      assert %{levenshtein: nil, same_number: 1} =
-               CandidatesDistance.match_document_levenshtein([], [])
+      assert %{levenshtein: nil, same_number: 1} = CandidatesDistance.match_document_levenshtein([], [])
 
       assert %{levenshtein: nil, same_number: 1} ==
                CandidatesDistance.match_document_levenshtein(
@@ -379,6 +378,8 @@ defmodule Deduplication.V2.CandidatesDistanceTest do
                distance_last_name: 2,
                distance_documents: 1,
                docs_same_number: 0,
+               document_number_length: 4,
+               document_distinct: 4,
                birth_settlement_substr: 0,
                distance_tax_id: 1,
                residence_settlement_flag: 0,
@@ -433,6 +434,8 @@ defmodule Deduplication.V2.CandidatesDistanceTest do
                distance_last_name: 1,
                distance_documents: 2,
                docs_same_number: 1,
+               document_number_length: 4,
+               document_distinct: 3,
                birth_settlement_substr: 0,
                distance_tax_id: 1,
                residence_settlement_flag: 0,
@@ -441,12 +444,38 @@ defmodule Deduplication.V2.CandidatesDistanceTest do
                twins_flag: 1
              } == CandidatesDistance.levenshtein_weight(person, clone)
     end
+
+    test "compare_document_numbers compares all persons document numbers" do
+      assert {4, 3} ==
+               CandidatesDistance.compare_document_numbers(
+                 [%{type: "PASSPORT", document: "пп7422", number: "7422"}],
+                 [%{type: "PASSPORT", document: "пп7422", number: "7422"}]
+               )
+
+      assert {3, 2} ==
+               CandidatesDistance.compare_document_numbers(
+                 [
+                   %{type: "PASSPORT", document: "a1212", number: "1212"},
+                   %{type: "BIRTH_CERTIFICATE", document: "a123", number: "123"}
+                 ],
+                 [%{type: "PASSPORT", document: "a1234", number: "1234"}]
+               )
+
+      assert {1, 1} ==
+               CandidatesDistance.compare_document_numbers(
+                 [
+                   %{type: "PASSPORT", document: "abc123", number: "123"},
+                   %{type: "BIRTH_CERTIFICATE", document: "a1", number: "1"}
+                 ],
+                 [%{type: "PASSPORT", document: "a123", number: "123"}]
+               )
+    end
   end
 
   describe "finalize distance functions" do
     test "d_first_name_bin works" do
       assert 0 == CandidatesDistance.d_first_name_bin(0)
-      assert 1 == CandidatesDistance.d_first_name_bin(1)
+      assert 0 == CandidatesDistance.d_first_name_bin(1)
       assert 2 == CandidatesDistance.d_first_name_bin(2)
       assert 3 == CandidatesDistance.d_first_name_bin(3)
       assert 3 == CandidatesDistance.d_first_name_bin(4)
@@ -456,9 +485,9 @@ defmodule Deduplication.V2.CandidatesDistanceTest do
       assert 1 == CandidatesDistance.d_last_name_bin(0)
       assert 1 == CandidatesDistance.d_last_name_bin(1)
       assert 2 == CandidatesDistance.d_last_name_bin(2)
-      assert 3 == CandidatesDistance.d_last_name_bin(nil)
+      assert 4 == CandidatesDistance.d_last_name_bin(nil)
       assert 3 == CandidatesDistance.d_last_name_bin(3)
-      assert 3 == CandidatesDistance.d_last_name_bin(4)
+      assert 4 == CandidatesDistance.d_last_name_bin(4)
     end
 
     test "d_second_name_bin works" do
@@ -468,21 +497,52 @@ defmodule Deduplication.V2.CandidatesDistanceTest do
       assert 2 == CandidatesDistance.d_second_name_bin(nil)
       assert 3 == CandidatesDistance.d_second_name_bin(3)
       assert 3 == CandidatesDistance.d_second_name_bin(4)
-      assert 4 == CandidatesDistance.d_second_name_bin(5)
+      assert 3 == CandidatesDistance.d_second_name_bin(5)
       assert 4 == CandidatesDistance.d_second_name_bin(11)
     end
 
     test "d_documents_bin works" do
-      assert 1 == CandidatesDistance.d_documents_bin(0)
-      assert 2 == CandidatesDistance.d_documents_bin(1)
-      assert 2 == CandidatesDistance.d_documents_bin(2)
-      assert 2 == CandidatesDistance.d_documents_bin(3)
-      assert 3 == CandidatesDistance.d_documents_bin(nil)
-      assert 3 == CandidatesDistance.d_documents_bin(4)
-      assert 3 == CandidatesDistance.d_documents_bin(5)
-      assert 3 == CandidatesDistance.d_documents_bin(6)
-      assert 4 == CandidatesDistance.d_documents_bin(7)
-      assert 4 == CandidatesDistance.d_documents_bin(110)
+      assert "0x1" == CandidatesDistance.d_documents_bin(nil, nil)
+      assert "0x1" == CandidatesDistance.d_documents_bin(0, nil)
+
+      assert "0x<4" == CandidatesDistance.d_documents_bin(0, 1)
+      assert "0x<4" == CandidatesDistance.d_documents_bin(0, 2)
+      assert "0x<4" == CandidatesDistance.d_documents_bin(0, 3)
+      assert "0x<4" == CandidatesDistance.d_documents_bin(0, 4)
+
+      assert "0x<6" == CandidatesDistance.d_documents_bin(0, 5)
+      assert "0x<6" == CandidatesDistance.d_documents_bin(0, 6)
+
+      assert "0x>6" == CandidatesDistance.d_documents_bin(0, 7)
+      assert "0x>6" == CandidatesDistance.d_documents_bin(0, 10)
+
+      assert "1x<6" == CandidatesDistance.d_documents_bin(1, nil)
+      assert "1x<6" == CandidatesDistance.d_documents_bin(1, 1)
+      assert "1x<6" == CandidatesDistance.d_documents_bin(1, 2)
+      assert "1x<6" == CandidatesDistance.d_documents_bin(1, 3)
+      assert "1x<6" == CandidatesDistance.d_documents_bin(1, 4)
+      assert "1x<6" == CandidatesDistance.d_documents_bin(1, 5)
+      assert "1x<6" == CandidatesDistance.d_documents_bin(1, 6)
+
+      assert "2" == CandidatesDistance.d_documents_bin(2, nil)
+      assert "2" == CandidatesDistance.d_documents_bin(2, 10)
+
+      assert "3" == CandidatesDistance.d_documents_bin(4, nil)
+      assert "3" == CandidatesDistance.d_documents_bin(10, 10)
+    end
+
+    test "docs_same_number_bin works" do
+      assert "0x1" == CandidatesDistance.docs_same_number_bin(0, 1)
+      assert "0x2" == CandidatesDistance.docs_same_number_bin(0, 2)
+      assert "0x3" == CandidatesDistance.docs_same_number_bin(0, 3)
+      assert "0x4" == CandidatesDistance.docs_same_number_bin(0, 4)
+      assert "0x4" == CandidatesDistance.docs_same_number_bin(0, 10)
+
+      assert "1x0" == CandidatesDistance.docs_same_number_bin(1, 0)
+      assert "1x2" == CandidatesDistance.docs_same_number_bin(1, 2)
+      assert "1x2" == CandidatesDistance.docs_same_number_bin(1, 3)
+      assert "1x3" == CandidatesDistance.docs_same_number_bin(1, 4)
+      assert "1x3" == CandidatesDistance.docs_same_number_bin(1, 10)
     end
 
     test "d_tax_id_bin works" do
@@ -490,7 +550,7 @@ defmodule Deduplication.V2.CandidatesDistanceTest do
       assert 1 == CandidatesDistance.d_tax_id_bin(nil)
       assert 2 == CandidatesDistance.d_tax_id_bin(1)
       assert 2 == CandidatesDistance.d_tax_id_bin(2)
-      assert 2 == CandidatesDistance.d_tax_id_bin(3)
+      assert 3 == CandidatesDistance.d_tax_id_bin(3)
     end
   end
 
@@ -505,8 +565,8 @@ defmodule Deduplication.V2.CandidatesDistanceTest do
                d_first_name_bin: 3,
                d_last_name_bin: 1,
                d_second_name_bin: 2,
-               d_documents_bin: 1,
-               docs_same_number_bin: 0,
+               d_documents_bin: "0x1",
+               docs_same_number_bin: "0x4",
                birth_settlement_substr_bin: 1,
                d_tax_id_bin: 2,
                authentication_methods_flag_bin: 0,
@@ -522,6 +582,8 @@ defmodule Deduplication.V2.CandidatesDistanceTest do
                  distance_last_name: 0,
                  distance_documents: 0,
                  docs_same_number: 0,
+                 document_number_length: nil,
+                 document_distinct: 4,
                  birth_settlement_substr: 1,
                  distance_tax_id: 1,
                  residence_settlement_flag: 1,

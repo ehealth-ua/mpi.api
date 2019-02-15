@@ -7,6 +7,8 @@ defmodule Deduplication.V2.DistanceModel do
             distance_second_name: nil,
             distance_documents: nil,
             docs_same_number: nil,
+            document_number_length: nil,
+            document_distinct: nil,
             birth_settlement_substr: nil,
             distance_tax_id: nil,
             residence_settlement_flag: nil,

@@ -33,16 +33,17 @@ defmodule Deduplication.V2.Model do
 
   def normalize_birth_certificate_document(text) do
     dc_str = String.downcase(text)
-    norm_str = Regex.replace(~r/[\/\%#№_ \-–—−‐]/iu, dc_str, "")
+    norm_str = Regex.replace(~r/[():*''|",.?<=+\\\/%#№ _\-–—−‐]/iu, dc_str, "")
 
-    Regex.replace(~r/^[iі!IІ]/iu, norm_str, "1")
+    # TODO: replace with '1' instead of 'i' ???
+    Regex.replace(~r/^[qjJlL1iі!!IІ]/iu, norm_str, "i")
   end
 
   def normalize_document_number(nil), do: nil
 
   def normalize_document_number(text) do
     dc_str = String.downcase(text)
-    Regex.replace(~r/[\/\%#№_ \-–—−‐]/iu, dc_str, "")
+    Regex.replace(~r/[():*''|",.?<=+\\\/%#№ _\-–—−‐]/iu, dc_str, "")
   end
 
   def document_number(nil), do: nil
