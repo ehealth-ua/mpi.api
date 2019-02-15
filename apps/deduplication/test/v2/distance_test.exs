@@ -469,6 +469,15 @@ defmodule Deduplication.V2.CandidatesDistanceTest do
                  ],
                  [%{type: "PASSPORT", document: "a123", number: "123"}]
                )
+
+      assert {nil, 0} =
+               CandidatesDistance.compare_document_numbers(
+                 [
+                   %{type: "PASSPORT", document: "abc", number: ""},
+                   %{type: "BIRTH_CERTIFICATE", document: "a", number: ""}
+                 ],
+                 [%{type: "PASSPORT", document: "a", number: ""}]
+               )
     end
   end
 

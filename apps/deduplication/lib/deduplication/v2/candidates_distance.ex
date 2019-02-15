@@ -274,7 +274,7 @@ defmodule Deduplication.V2.CandidatesDistance do
     all_documents = all_documents ++ person_documents || []
     all_documents = all_documents ++ candidate_documents || []
 
-    Enum.reduce(all_documents, {nil, nil}, fn doc, {shortest_number, shortest_distinct_digits} ->
+    Enum.reduce(all_documents, {nil, 0}, fn doc, {shortest_number, shortest_distinct_digits} ->
       case Map.get(doc, :number) do
         nil -> {shortest_number, shortest_distinct_digits}
         number -> do_compare_document_numbers(number, shortest_number, shortest_distinct_digits)
@@ -283,14 +283,14 @@ defmodule Deduplication.V2.CandidatesDistance do
   end
 
   defp do_compare_document_numbers(doc_number, shortest_number, shortest_distinct_digits) do
-    digits = String.split(doc_number, "", trim: true)
-    nums_length = length(digits)
+    digits = String.codepoints(doc_number)
+    nums_length = if digits == [], do: nil, else: length(digits)
     distinct_digs = length(Enum.uniq(digits))
 
     shortest_number = if nums_length < shortest_number, do: nums_length, else: shortest_number
 
     shortest_distinct_digits =
-      if distinct_digs < shortest_distinct_digits,
+      if shortest_distinct_digits == 0 or distinct_digs < shortest_distinct_digits,
         do: distinct_digs,
         else: shortest_distinct_digits
 
