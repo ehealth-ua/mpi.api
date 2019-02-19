@@ -395,7 +395,7 @@ defmodule MPI.RpcTest do
       assert {:ok, %{status: @status_merge}} =
                Rpc.process_manual_merge_request(merge_request.id, @status_merge, merge_request.assignee_id)
 
-      person = PersonsAPI.get_by_id(merge_candidate.person_id)
+      _person = PersonsAPI.get_by_id(merge_candidate.person_id)
       # temporary it's not working
       # assert Person.status(:inactive) == person.status
     end

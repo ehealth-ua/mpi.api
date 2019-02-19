@@ -28,16 +28,11 @@ config :person_updates_producer, PersonUpdatesProducer.Jobs.PersonUpdatesPublish
 config :person_updates_producer, PersonUpdatesProducer.Worker,
   person_updates_producer_schedule: {:system, :string, "PERSON_UPDATES_SCHEDULE", "*/15 * * * *"}
 
-config :kafka_ex,
-  brokers: "localhost:9092",
-  disable_default_worker: false,
-  sync_timeout: 3000,
-  max_restarts: 10,
-  max_seconds: 60,
-  commit_interval: 5_000,
-  auto_offset_reset: :earliest,
-  commit_threshold: 100,
-  kafka_version: "1.1.0"
+config :kaffe,
+  kafka_mod: :brod,
+  producer: [
+    endpoints: [localhost: 9092]
+  ]
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

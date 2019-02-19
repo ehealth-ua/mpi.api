@@ -11,16 +11,11 @@ config :person_deactivator, PersonDeactivator,
 
 config :person_deactivator, PersonDeactivator.Application, env: Mix.env()
 
-config :kafka_ex,
-  brokers: "localhost:9092",
-  consumer_group: "deactivate_person_events",
-  disable_default_worker: false,
-  sync_timeout: 3000,
-  max_restarts: 10,
-  max_seconds: 60,
-  commit_interval: 5_000,
-  auto_offset_reset: :earliest,
-  commit_threshold: 100,
-  kafka_version: "1.1.0"
+config :kaffe,
+  kafka_mod: :brod,
+  producer: [
+    endpoints: [localhost: 9092],
+    topics: ["deactivate_person_events"]
+  ]
 
 import_config "#{Mix.env()}.exs"
