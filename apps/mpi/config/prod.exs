@@ -11,6 +11,12 @@ config :mpi, MPI.Web.Endpoint,
   debug_errors: false,
   code_reloader: false
 
+config :kaffe,
+  producer: [
+    endpoints: {:system, :string, "KAFKA_BROKERS"},
+    topics: ["deactivate_person_events"]
+  ]
+
 # If you are doing OTP releases, you need to instruct Phoenix
 # to start the server for all endpoints:
 config :phoenix, :serve_endpoints, true

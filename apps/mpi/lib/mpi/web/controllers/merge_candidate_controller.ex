@@ -9,6 +9,8 @@ defmodule MPI.Web.MergeCandidateController do
 
   action_fallback(MPI.Web.FallbackController)
 
+  @deactivation_client Application.get_env(:mpi, :person_deactivator_producer)
+
   def index(conn, params) do
     merge_candidates = API.get_all(prepare_params(params))
     render(conn, %{merge_candidates: merge_candidates})
@@ -18,7 +20,8 @@ defmodule MPI.Web.MergeCandidateController do
     consumer_id = ConnUtils.get_consumer_id(conn)
 
     with %MergeCandidate{} = merge_candidate <- API.get_by_id(id),
-         {:ok, updated_merge_candidate} <- API.update_merge_candidate(merge_candidate, attrs, consumer_id) do
+         {:ok, updated_merge_candidate} <- API.update_merge_candidate(merge_candidate, attrs, consumer_id),
+         :ok <- @deactivation_client.publish_person_deactivation_event(updated_merge_candidate, consumer_id) do
       render(conn, %{merge_candidate: updated_merge_candidate})
     end
   end

@@ -3,7 +3,6 @@ defmodule MPI.Web.PersonControllerTest do
 
   use MPI.Web.ConnCase
   import Core.Factory
-  import Mox
   alias Core.Repo
   alias Core.Person
   alias Core.Persons.PersonsAPI
@@ -64,7 +63,6 @@ defmodule MPI.Web.PersonControllerTest do
   end
 
   test "successful create person", %{conn: conn} do
-    expect(KafkaMock, :publish_person_event, fn _, _, _ -> :ok end)
     person_data = string_params_for(:person)
     person_data["documents"]
 
@@ -86,8 +84,6 @@ defmodule MPI.Web.PersonControllerTest do
   end
 
   test "spaces are trimmed when person is created", %{conn: conn} do
-    expect(KafkaMock, :publish_person_event, fn _, _, _ -> :ok end)
-
     person_data =
       string_params_for(:person, %{
         first_name: "   first   name ",
@@ -116,7 +112,6 @@ defmodule MPI.Web.PersonControllerTest do
   end
 
   test "successful create person with inserted_by, updayed_by by x-consumer-id", %{conn: conn} do
-    expect(KafkaMock, :publish_person_event, fn _, _, _ -> :ok end)
     user_id = UUID.generate()
 
     person_data =
@@ -136,8 +131,6 @@ defmodule MPI.Web.PersonControllerTest do
   end
 
   test "successful create person without phones", %{conn: conn} do
-    expect(KafkaMock, :publish_person_event, fn _, _, _ -> :ok end)
-
     person_data =
       :person
       |> string_params_for()
@@ -236,8 +229,6 @@ defmodule MPI.Web.PersonControllerTest do
 
   describe "test first API declaration requests eheath" do
     test "success create person without no_tax_id", %{conn: conn} do
-      expect(KafkaMock, :publish_person_event, fn _, _, _ -> :ok end)
-
       person_data =
         :person
         |> string_params_for()
@@ -252,7 +243,6 @@ defmodule MPI.Web.PersonControllerTest do
     end
 
     test "success create person without without unzr with NATIONAL_ID document", %{conn: conn} do
-      expect(KafkaMock, :publish_person_event, fn _, _, _ -> :ok end)
       document = build(:document, type: "NATIONAL_ID")
 
       person =
@@ -271,8 +261,6 @@ defmodule MPI.Web.PersonControllerTest do
 
   describe "create or update person" do
     test "success create and update person", %{conn: conn} do
-      expect(KafkaMock, :publish_person_event, fn _, _, _ -> :ok end)
-
       person_data =
         :person
         |> string_params_for()

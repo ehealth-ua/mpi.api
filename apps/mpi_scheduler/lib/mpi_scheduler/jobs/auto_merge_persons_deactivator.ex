@@ -1,0 +1,27 @@
+defmodule MPIScheduler.Jobs.AutoMergePersonsDeactivator do
+  @moduledoc false
+
+  use Confex, otp_app: :mpi_scheduler
+  import Ecto.Query
+  alias Core.MergeCandidate
+  alias Core.Repo
+  require Logger
+
+  @deactivation_client Application.get_env(:mpi_scheduler, :person_deactivator_producer)
+
+  def run do
+    config = config()
+    system_user_id = Confex.fetch_env!(:core, :system_user)
+    candidates = get_merge_candidates(config[:score], config[:batch_size])
+
+    @deactivation_client.publish_person_deactivation_event(candidates, system_user_id)
+  end
+
+  def get_merge_candidates(score, batch_size) do
+    MergeCandidate
+    |> select([m], %{id: m.id, person_id: m.person_id})
+    |> where([m], m.status == ^MergeCandidate.status(:new) and m.score >= ^score)
+    |> limit(^batch_size)
+    |> Repo.all()
+  end
+end

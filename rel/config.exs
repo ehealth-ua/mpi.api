@@ -32,6 +32,18 @@ release :mpi do
   set(config_providers: [ConfexConfigProvider])
 end
 
+release :mpi_scheduler do
+  set(version: current_version(:mpi_scheduler))
+
+  set(
+    applications: [
+      mpi_scheduler: :permanent
+    ]
+  )
+
+  set(config_providers: [ConfexConfigProvider])
+end
+
 release :person_updates_producer do
   set(version: current_version(:person_updates_producer))
 

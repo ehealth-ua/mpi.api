@@ -1,17 +1,20 @@
 defmodule PersonDeactivator.Application do
   @moduledoc false
-  import Supervisor.Spec
   use Application
-  use Confex, otp_app: :person_deactivator
 
-  alias PersonDeactivator.Worker
+  alias Kaffe.Consumer
 
   def start(_type, _args) do
-    children = if config(:env) == :test, do: [], else: [worker(Worker, [], restart: :transient)]
+    Application.put_env(:kaffe, :consumer, Application.get_env(:person_deactivator, :kaffe_consumer))
+
+    children = [
+      %{
+        id: Consumer,
+        start: {Consumer, :start_link, []}
+      }
+    ]
 
     opts = [strategy: :one_for_one, name: PersonDeactivator.Supervisor]
     Supervisor.start_link(children, opts)
   end
-
-  defp config(key) when is_atom(key), do: config()[key]
 end
