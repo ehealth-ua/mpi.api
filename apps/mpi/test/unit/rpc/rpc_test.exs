@@ -204,15 +204,26 @@ defmodule MPI.RpcTest do
       insert_list(10, :mpi, :person)
 
       insert_list(
-        3,
+        2,
         :mpi,
         :person,
-        status: Person.status(:active),
+        no_tax_id: true,
         documents: [build(:document, type: "PASSPORT", number: document_number)],
         birth_date: birth_date,
         tax_id: tax_id,
         authentication_methods: build_list(1, :authentication_method, phone_number: phone_number)
       )
+
+      person =
+        insert(
+          :mpi,
+          :person,
+          no_tax_id: false,
+          documents: [build(:document, type: "PASSPORT", number: document_number)],
+          birth_date: birth_date,
+          tax_id: tax_id,
+          authentication_methods: build_list(1, :authentication_method, phone_number: phone_number)
+        )
 
       filter = [
         {:authentication_methods, :contains, [%{"phone_number" => phone_number}]},
@@ -221,9 +232,10 @@ defmodule MPI.RpcTest do
         {:documents, nil, [{:number, :equal, document_number}, {:type, :equal, "PASSPORT"}]}
       ]
 
-      {:ok, persons} = Rpc.search_persons(filter, [asc: :birth_date], {0, 10})
+      {:ok, persons} = Rpc.search_persons(filter, [asc: :no_tax_id], {0, 10})
 
       assert 3 == length(persons)
+      assert person.id == hd(persons).id
     end
 
     test "success by persons id" do
