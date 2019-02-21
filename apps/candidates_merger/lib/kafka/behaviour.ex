@@ -1,4 +1,4 @@
-defmodule MPIScheduler.Behaviours.KafkaProducerBehaviour do
+defmodule CandidatesMerger.Kafka.Behaviour do
   @moduledoc false
 
   @callback publish_person_deactivation_event(candidates :: list, updated_by :: binary) ::

@@ -13,12 +13,7 @@ defmodule Core.ManualMerge do
   alias Ecto.{Changeset, UUID}
 
   @status_new ManualMergeRequest.status(:new)
-  @status_split ManualMergeRequest.status(:split)
-  @status_merge ManualMergeRequest.status(:merge)
-  @status_trash ManualMergeRequest.status(:trash)
   @status_postpone ManualMergeRequest.status(:postpone)
-  @status_processed ManualMergeCandidate.status(:processed)
-  @status_reason_auto_merge ManualMergeCandidate.status_reason(:auto_merge)
 
   def new_candidate(merge_candidate) do
     %{
@@ -96,84 +91,7 @@ defmodule Core.ManualMerge do
     |> DeduplicationRepo.insert_and_log(actor_id)
   end
 
-  def process_merge_request(id, status, actor_id, comment \\ nil) when is_binary(actor_id) do
-    with {:ok, merge_request} <- fetch_merge_request_by_id(id),
-         :ok <- validate_assignee(merge_request, actor_id),
-         :ok <- validate_status_transition(merge_request, status) do
-      DeduplicationRepo.transaction(fn ->
-        with {:ok, merge_request} <- update_and_log(merge_request, %{status: status, comment: comment}, actor_id),
-             merge_request <- DeduplicationRepo.preload(merge_request, [:manual_merge_candidate]),
-             {:ok, manual_merge_candidate} <- process_merge_candidates(merge_request, actor_id) do
-          merge_request
-          |> Map.put(:manual_merge_candidate, manual_merge_candidate)
-          |> preload_merge_request_associations()
-        else
-          {:error, reason} -> DeduplicationRepo.rollback(reason)
-        end
-      end)
-    end
-  end
-
-  defp validate_assignee(%ManualMergeRequest{assignee_id: assignee_id}, assignee_id), do: :ok
-  defp validate_assignee(_, _), do: {:error, {:forbidden, "Current client is not allowed to access this resource"}}
-
-  defp validate_status_transition(%ManualMergeRequest{status: @status_new}, update_status)
-       when update_status in [@status_split, @status_merge, @status_trash, @status_postpone],
-       do: :ok
-
-  defp validate_status_transition(%ManualMergeRequest{status: @status_postpone}, update_status)
-       when update_status in [@status_split, @status_merge, @status_trash],
-       do: :ok
-
-  defp validate_status_transition(_, _), do: {:error, {:conflict, "Incorrect transition status"}}
-
-  defp process_merge_candidates(%ManualMergeRequest{} = request, actor_id) do
-    if quorum_obtained?(request) do
-      with update_data <- %{status: @status_processed, decision: request.status, assignee_id: nil},
-           {:ok, manual_merge_candidate} <- update_and_log(request.manual_merge_candidate, update_data, actor_id),
-           :ok <- process_related_merge_candidates(request, actor_id) do
-        {:ok, manual_merge_candidate}
-      end
-    else
-      with {:ok, _} <- update_and_log(request.manual_merge_candidate, %{assignee_id: nil}, actor_id) do
-        {:ok, nil}
-      end
-    end
-  end
-
-  defp process_related_merge_candidates(%ManualMergeRequest{status: @status_merge} = request, actor_id) do
-    person_id = request.manual_merge_candidate.person_id
-
-    update_data = [
-      decision: @status_merge,
-      status: @status_processed,
-      status_reason: @status_reason_auto_merge,
-      assignee_id: nil,
-      updated_at: DateTime.utc_now()
-    ]
-
-    ManualMergeCandidate
-    |> where([c], c.person_id == ^person_id)
-    |> or_where([c], c.master_person_id == ^person_id)
-    |> DeduplicationRepo.update_all_and_log([set: update_data], actor_id)
-
-    :ok
-  end
-
-  defp process_related_merge_candidates(_, _), do: :ok
-
-  defp quorum_obtained?(%ManualMergeRequest{manual_merge_candidate_id: candidate_id, status: status}) do
-    requests =
-      ManualMergeRequest
-      |> select([m], count(m.id))
-      |> where([m], m.manual_merge_candidate_id == ^candidate_id)
-      |> where([m], m.status == ^status)
-      |> DeduplicationRepo.one()
-
-    config()[:quorum] <= requests
-  end
-
-  defp preload_merge_request_associations(merge_request) do
+  def preload_merge_request_associations(merge_request) do
     person_references = [:documents, :phones, :addresses]
 
     merge_request
@@ -183,8 +101,8 @@ defmodule Core.ManualMerge do
     )
   end
 
-  defp update_and_log(%{__struct__: struct} = entity, params, actor_id)
-       when is_binary(actor_id) and struct in [ManualMergeCandidate, ManualMergeRequest] do
+  def update_and_log(%{__struct__: struct} = entity, params, actor_id)
+      when is_binary(actor_id) and struct in [ManualMergeCandidate, ManualMergeRequest] do
     entity
     |> struct.changeset(params)
     |> DeduplicationRepo.update_and_log(actor_id)

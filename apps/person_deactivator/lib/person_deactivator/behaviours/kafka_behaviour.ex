@@ -1,7 +1,7 @@
 defmodule PersonDeactivatorProducer.Behaviours.KafkaProducerBehaviour do
   @moduledoc false
 
-  @callback publish_person_merged_event(merged_person_id :: binary, updated_by :: binary) ::
+  @callback publish_declaration_deactivation_event(merged_person_id :: binary, updated_by :: binary) ::
               :ok
               | {:ok, integer}
               | {:error, :closed}

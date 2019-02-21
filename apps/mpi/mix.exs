@@ -47,6 +47,7 @@ defmodule MPI.Mixfile do
       {:postgrex, ">= 0.0.0"},
       {:timex, "~> 3.3.0"},
       {:plug_logger_json, "~> 0.5"},
+      {:candidates_merger, in_umbrella: true},
       {:core, in_umbrella: true}
     ]
   end

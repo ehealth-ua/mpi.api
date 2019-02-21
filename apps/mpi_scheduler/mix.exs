@@ -35,8 +35,8 @@ defmodule MPIScheduler.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:kaffe, git: "https://github.com/AlexKovalevych/kaffe.git", branch: "string_endpoints_sasl"},
       {:quantum, "~> 2.3"},
+      {:candidates_merger, in_umbrella: true},
       {:core, in_umbrella: true}
     ]
   end

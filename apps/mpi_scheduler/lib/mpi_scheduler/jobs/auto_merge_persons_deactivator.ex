@@ -7,14 +7,14 @@ defmodule MPIScheduler.Jobs.AutoMergePersonsDeactivator do
   alias Core.Repo
   require Logger
 
-  @deactivation_client Application.get_env(:mpi_scheduler, :person_deactivator_producer)
+  @kafka_producer Application.get_env(:candidates_merger, :producer)
 
   def run do
     config = config()
     system_user_id = Confex.fetch_env!(:core, :system_user)
     candidates = get_merge_candidates(config[:score], config[:batch_size])
 
-    @deactivation_client.publish_person_deactivation_event(candidates, system_user_id)
+    @kafka_producer.publish_person_deactivation_event(candidates, system_user_id)
   end
 
   def get_merge_candidates(score, batch_size) do

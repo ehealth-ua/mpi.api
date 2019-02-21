@@ -3,13 +3,9 @@ defmodule MPI.Web.MergeCandidateControllerTest do
 
   use MPI.Web.ConnCase
 
-  import Mox
-
   alias Core.Factory
   alias Core.MergeCandidate
   alias Core.Repo
-
-  setup :verify_on_exit!
 
   test "GET /merge_candidates", %{conn: conn} do
     merge_candidate_1 = Factory.insert(:mpi, :merge_candidate, status: "NEW")
@@ -27,8 +23,6 @@ defmodule MPI.Web.MergeCandidateControllerTest do
   end
 
   test "update /merge_candidates/:id", %{conn: conn} do
-    expect(MPIKafkaMock, :publish_person_deactivation_event, fn _, _ -> :ok end)
-
     merge_candidate = Factory.insert(:mpi, :merge_candidate, status: "NEW")
     id = merge_candidate.id
 

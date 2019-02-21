@@ -12,11 +12,10 @@ defmodule PersonDeactivatorTest do
   alias Ecto.UUID
 
   setup :verify_on_exit!
-  setup :set_mox_global
 
   describe "deactivate_persons/2" do
     test "deactivate_persons success" do
-      expect(PersonDeactivatorKafkaMock, :publish_person_merged_event, 10, fn _, _ -> :ok end)
+      expect(PersonDeactivatorKafkaMock, :publish_declaration_deactivation_event, 10, fn _, _ -> :ok end)
 
       actor_id = UUID.generate()
       candidates = prepare_candidates(10)

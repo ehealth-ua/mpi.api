@@ -4,10 +4,12 @@ defmodule MPI.RpcTest do
   use Core.ModelCase, async: true
 
   import Core.Factory
+  import Mox
 
+  alias Core.DeduplicationRepo
   alias Core.Person
-  alias Core.Persons.PersonsAPI
   alias Core.ManualMergeRequest
+  alias Core.ManualMergeCandidate
   alias MPI.Rpc
   alias Scrivener.Page
   alias Ecto.Changeset
@@ -16,6 +18,8 @@ defmodule MPI.RpcTest do
   @status_new ManualMergeRequest.status(:new)
   @status_merge ManualMergeRequest.status(:merge)
   @status_postpone ManualMergeRequest.status(:postpone)
+
+  setup :verify_on_exit!
 
   describe "search_persons/1" do
     test "search person by documents list and status" do
@@ -421,10 +425,15 @@ defmodule MPI.RpcTest do
     end
 
     test "successful merge request", %{merge_candidate: merge_candidate} do
+      expect(CandidatesMergerKafkaMock, :publish_person_deactivation_event, fn candidates, _system_user_id ->
+        assert [%{id: merge_candidate.id, person_id: merge_candidate.person_id}] == candidates
+        :ok
+      end)
+
       manual_merge_candidate =
         insert(:deduplication, :manual_merge_candidate,
-          person_id: merge_candidate.master_person_id,
-          master_person_id: merge_candidate.person_id,
+          person_id: merge_candidate.person_id,
+          master_person_id: merge_candidate.master_person_id,
           merge_candidate_id: merge_candidate.id
         )
 
@@ -438,9 +447,8 @@ defmodule MPI.RpcTest do
       assert {:ok, %{status: @status_merge}} =
                Rpc.process_manual_merge_request(merge_request.id, @status_merge, merge_request.assignee_id)
 
-      _person = PersonsAPI.get_by_id(merge_candidate.person_id)
-      # temporary it's not working
-      # assert Person.status(:inactive) == person.status
+      manual_merge_candidate = DeduplicationRepo.get(ManualMergeCandidate, manual_merge_candidate.id)
+      assert ManualMergeCandidate.status(:processed) == manual_merge_candidate.status
     end
 
     test "invalid comment type" do

@@ -12,7 +12,7 @@ defmodule PersonDeactivator do
   alias Ecto.Multi
 
   @status_inactive Person.status(:inactive)
-  @deduplication_client Application.get_env(:person_deactivator, :producer)
+  @kafka_producer Application.get_env(:person_deactivator, :producer)
 
   def deactivate_persons(candidates, actor_id) do
     candidates
@@ -22,7 +22,7 @@ defmodule PersonDeactivator do
 
   defp deactivate_candidates_declarations(merge_candidates, actor_id) do
     Enum.each(merge_candidates, fn %{person_id: person_id} ->
-      @deduplication_client.publish_person_merged_event(person_id, actor_id)
+      @kafka_producer.publish_declaration_deactivation_event(person_id, actor_id)
     end)
 
     merge_candidates

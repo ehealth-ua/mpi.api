@@ -5,6 +5,3 @@ use Mix.Config
 config :mpi, MPI.Web.Endpoint,
   http: [port: 4001],
   server: false
-
-config :mpi,
-  person_deactivator_producer: MPIKafkaMock
