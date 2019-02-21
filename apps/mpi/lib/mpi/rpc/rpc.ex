@@ -153,12 +153,32 @@ defmodule MPI.Rpc do
         total_entries: 1,
         total_pages: 1
       }
+
+      iex> MPI.Rpc.search_persons([:id, :first_name, :last_name], %{"ids" => ["26e673e1-1d68-413e-b96c-407b45d9f572"]})
+      {:ok, [
+          %{
+            id: "26e673e1-1d68-413e-b96c-407b45d9f572",
+            first_name: "Петро",
+            last_name: "Іванов"
+          }
+        ]
+      }
   """
 
   @spec search_persons(params :: map()) :: {:error, any()} | successfull_search_response
-  def search_persons(%{} = params) do
-    with %Page{entries: persons} = page <- PersonsAPI.search(params) do
-      %Page{page | entries: PersonView.render("index.json", %{persons: persons})}
+  def search_persons(%{} = params), do: search_persons(params, nil)
+
+  @spec search_persons(params :: map(), fields :: list()) :: {:error, any()} | successfull_search_response
+  def search_persons(%{} = params, fields) do
+    with {:search_params, true} <- {:search_params, !Enum.empty?(params)},
+         %Page{entries: persons} = page <- PersonsAPI.search(params, fields) do
+      if is_nil(fields),
+        do: %Page{page | entries: PersonView.render("index.json", %{persons: persons})},
+        else: {:ok, Enum.map(persons, &PersonView.render("person_short.json", %{person: &1, fields: fields}))}
+    else
+      {:search_params, false} -> {:error, "search params is not specified"}
+      {:query_error, reason} -> {:error, reason}
+      err -> err
     end
   end
 
@@ -209,8 +229,7 @@ defmodule MPI.Rpc do
       }
   """
 
-  @spec search_persons(list(), Keyword.t(), nil | {integer(), integer()}) :: {:error, any()} | {:ok, list(person)}
-  def search_persons(filter, order_by \\ [], cursor \\ nil) when filter != [] do
+  def search_persons(filter, order_by \\ [], cursor \\ nil) when is_list(filter) and filter != [] do
     with persons when is_list(persons) <- PersonsAPI.search(filter, order_by, cursor) do
       {:ok, PersonView.render("index.json", %{persons: persons})}
     else

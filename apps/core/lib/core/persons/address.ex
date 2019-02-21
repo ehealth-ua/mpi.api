@@ -56,6 +56,8 @@ defmodule Core.PersonAddress do
     timestamps(type: :utc_datetime)
   end
 
+  def fields, do: @fields
+
   def cast_addresses(%__MODULE__{} = person_address, params \\ %{}, person_changeset, person) do
     first_name = person_changeset.changes[:first_name] || person.first_name
     last_name = person_changeset.changes[:last_name] || person.last_name
@@ -74,6 +76,4 @@ defmodule Core.PersonAddress do
     |> cast(params, @fields)
     |> validate_required(@fields_required)
   end
-
-  def fields, do: @fields
 end

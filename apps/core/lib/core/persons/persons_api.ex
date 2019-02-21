@@ -13,7 +13,6 @@ defmodule Core.Persons.PersonsAPI do
   alias Core.PersonPhone
   alias Core.Repo
   alias Ecto.Changeset
-  alias Scrivener.Page
 
   @person_status_active Person.status(:active)
 
@@ -28,33 +27,24 @@ defmodule Core.Persons.PersonsAPI do
     |> Map.merge(params, fn _key, value1, _value2 -> value1 end)
   end
 
-  def cast_changes(params, person) do
-    params
-    |> trim_name_spaces()
-    |> Map.put("person_addresses", params["addresses"] || person.addresses)
-  end
-
   def changeset(%Person{} = person, params) do
     person_changes =
       person
-      |> Repo.preload([:phones, :documents, :person_addresses])
-      |> cast(cast_changes(params, person), Person.fields())
+      |> Repo.preload([:phones, :documents, :addresses])
+      |> cast(trim_name_spaces(params), Person.fields())
 
     person_changes
-    |> cast_assoc(:person_addresses, with: &PersonAddress.cast_addresses(&1, &2, person_changes, person))
+    |> cast_assoc(:addresses, with: &PersonAddress.cast_addresses(&1, &2, person_changes, person), required: true)
     |> cast_assoc(:phones)
     |> cast_assoc(:documents, required: true)
     |> validate_required(Person.fields_required())
-    |> unique_constraint(
-      :last_name,
-      name: :persons_first_name_last_name_second_name_tax_id_birth_date_inde
-    )
+    |> unique_constraint(:last_name, name: :persons_first_name_last_name_second_name_tax_id_birth_date_inde)
   end
 
   def get_by_id(id) do
     Person
     |> where([p], p.id == ^id)
-    |> preload([:phones, :documents, :person_addresses])
+    |> preload([:phones, :documents, :addresses])
     |> Repo.one()
   end
 
@@ -107,46 +97,12 @@ defmodule Core.Persons.PersonsAPI do
     end
   end
 
-  defp search_by_unzr(unzr) do
-    Person
-    |> preload([:documents, :phones, :person_addresses])
-    |> where([p], p.unzr == ^unzr)
-    |> where([p], p.status == @person_status_active)
-    |> Repo.one()
-  end
-
-  def search(%{"unzr" => unzr} = params) do
-    person = search_by_unzr(unzr)
-
-    if person do
-      %Page{entries: [person], page_size: 1, page_number: 1, total_entries: 1, total_pages: 1}
-    else
-      params |> Map.delete("unzr") |> search()
-    end
-  end
-
-  def search(params) do
-    subquery =
-      params
-      |> person_search_query()
-      |> order_by([p], desc: p.inserted_at)
-
-    paging_params = Map.merge(%{"page_size" => Confex.get_env(:core, :max_persons_result)}, params)
-
-    try do
-      Person
-      |> preload([:documents, :phones, :person_addresses])
-      |> join(:inner, [p], s in subquery(subquery), p.id == s.id)
-      |> Repo.paginate(paging_params)
-    rescue
-      _ in Postgrex.Error ->
-        {:query_error, "invalid search characters"}
-    end
-  end
-
+  @doc """
+  used only for graphql
+  """
   def search(filter, order_by, cursor) do
     Person
-    |> preload([:documents, :phones, :person_addresses])
+    |> preload([:documents, :phones, :addresses])
     |> BaseFilter.filter(filter)
     |> apply_cursor(cursor)
     |> order_by(^order_by)
@@ -156,7 +112,32 @@ defmodule Core.Persons.PersonsAPI do
       {:query_error, "invalid search characters"}
   end
 
-  def person_search_query(params) do
+  def search(params, fields \\ nil) do
+    paging_params = Map.merge(%{"page_size" => Confex.get_env(:core, :max_persons_result)}, params)
+
+    persons =
+      Person
+      |> person_preload_query(fields)
+      |> join(:inner, [p], s in subquery(person_search_query(params)), p.id == s.id)
+      |> order_by([p], desc: p.inserted_at)
+      |> Repo.paginate(paging_params)
+
+    if Enum.empty?(persons) and params["unzr"], do: search(Map.delete(params, "unzr")), else: persons
+  rescue
+    _ in Postgrex.Error ->
+      {:query_error, "invalid search characters"}
+  end
+
+  defp person_preload_query(Person = query, fields) when is_list(fields), do: select(query, ^fields)
+  defp person_preload_query(Person = query, _), do: preload(query, [:documents, :phones, :addresses])
+
+  defp person_search_query(%{"unzr" => unzr}) do
+    Person
+    |> where([p], p.unzr == ^unzr)
+    |> where([p], p.status == @person_status_active)
+  end
+
+  defp person_search_query(params) do
     params = trim_name_spaces(params)
 
     direct_params =

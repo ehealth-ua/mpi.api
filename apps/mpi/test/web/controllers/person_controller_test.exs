@@ -5,7 +5,10 @@ defmodule MPI.Web.PersonControllerTest do
   import Core.Factory
   alias Core.Repo
   alias Core.Person
+  alias Core.PersonAddress
+  alias Core.PersonDocument
   alias Core.Persons.PersonsAPI
+  alias Core.PersonPhone
   alias Ecto.UUID
 
   def is_equal?(key, person_key, attributes, data) do
@@ -333,6 +336,34 @@ defmodule MPI.Web.PersonControllerTest do
       assert conn
              |> post(person_path(conn, :create), %{"id" => person.id})
              |> json_response(409)
+    end
+  end
+
+  describe "addresses and person_adresses" do
+    test "update by id adresses for existing person with addresses", %{conn: conn} do
+      person = insert(:mpi, :person, addresses: [build(:person_address, settlement: "Київ")])
+      addresses = [string_params_for(:person_address, settlement: "Коростень")]
+
+      assert resp =
+               conn
+               |> put(person_path(conn, :update, person.id), %{
+                 first_name: "Ольга",
+                 last_name: "Ігорівна",
+                 addresses: addresses
+               })
+               |> json_response(200)
+
+      assert [%{"settlement" => "Коростень"}] = resp["data"]["addresses"]
+
+      assert %Person{
+               addresses: [
+                 %Core.PersonAddress{
+                   person_first_name: "Ольга",
+                   person_last_name: "Ігорівна",
+                   settlement: "Коростень"
+                 }
+               ]
+             } = PersonsAPI.get_by_id(person.id)
     end
   end
 
@@ -797,9 +828,6 @@ defmodule MPI.Web.PersonControllerTest do
              "updated_by" => _,
              "birth_country" => _,
              "birth_settlement" => _,
-             "addresses" => _,
-             "documents" => _,
-             "phones" => _,
              "secret" => _,
              "emergency_contact" => _,
              "confidant_person" => _,
@@ -807,19 +835,26 @@ defmodule MPI.Web.PersonControllerTest do
              "patient_signed" => _,
              "process_disclosure_data_consent" => _,
              "authentication_methods" => _,
-             "merged_ids" => _
+             "merged_ids" => _,
+             "addresses" => _,
+             "documents" => _,
+             "phones" => _
            } = data
 
     assert is_list(data["merged_ids"])
     assert is_list(data["documents"])
 
     Enum.each(data["documents"], fn document -> assert_document(document) end)
+    Enum.each(data["phones"], fn phone -> assert_phone(phone) end)
+    Enum.each(data["addresses"], fn address -> assert_address(address) end)
   end
 
-  defp assert_document(document) do
-    Enum.each(~w(type number issued_by issued_at expiration_date), fn field ->
-      assert Map.has_key?(document, field)
-    end)
+  defp assert_phone(phone), do: assert_keys(PersonPhone.fields(), phone)
+  defp assert_document(document), do: assert_keys(PersonDocument.fields(), document)
+  defp assert_address(address), do: assert_keys(PersonAddress.fields(), address)
+
+  defp assert_keys(fields, entities) do
+    Enum.each(fields, fn field -> assert Map.has_key?(entities, to_string(field)) end)
   end
 
   defp assert_person_search(data) do

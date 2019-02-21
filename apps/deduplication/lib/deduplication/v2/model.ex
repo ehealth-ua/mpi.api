@@ -100,7 +100,7 @@ defmodule Deduplication.V2.Model do
 
   def get_locked_unverified_persons(limit, offset) do
     Person
-    |> preload([:documents, :person_addresses])
+    |> preload([:documents, :addresses])
     |> join(:inner, [p], v in VerifyingIds, v.id == p.id)
     |> order_by([p, v], p.id)
     |> limit(^limit)
@@ -110,7 +110,7 @@ defmodule Deduplication.V2.Model do
 
   def get_unverified_persons(limit) do
     Person
-    |> preload([:documents, :person_addresses])
+    |> preload([:documents, :addresses])
     |> join(:left, [p], v in VerifyingIds, v.id == p.id)
     |> where(
       [p, v],
@@ -146,7 +146,7 @@ defmodule Deduplication.V2.Model do
     auth_phone_number = person_auth_phone(person.authentication_methods)
 
     settlement_ids =
-      person.person_addresses
+      person.addresses
       |> Enum.map(fn address ->
         {:ok, id} = Ecto.UUID.dump(address.settlement_id)
         id
@@ -191,7 +191,7 @@ defmodule Deduplication.V2.Model do
     # add false if null - subquery parametrs can not be removed
     current_candidates =
       Person
-      |> preload([p, ca], [:documents, :person_addresses])
+      |> preload([p, ca], [:documents, :addresses])
       |> join(
         # allow right join, to avoid long nested loop
         :right,
@@ -270,7 +270,7 @@ defmodule Deduplication.V2.Model do
           birth_settlement: birth_settlement,
           tax_id: tax_id,
           documents: documents,
-          person_addresses: addresses
+          addresses: addresses
         } = person
       ) do
     normalized_documents = normalize_documents(documents)
@@ -283,7 +283,7 @@ defmodule Deduplication.V2.Model do
         birth_settlement: normalize_birth_settlement(birth_settlement),
         tax_id: normalize_tax_id(tax_id, normalized_documents),
         documents: normalized_documents,
-        person_addresses: normalize_addresses(addresses)
+        addresses: normalize_addresses(addresses)
     }
   end
 

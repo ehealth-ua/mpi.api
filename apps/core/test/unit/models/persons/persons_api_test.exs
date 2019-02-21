@@ -29,9 +29,7 @@ defmodule Core.Persons.PersonTest do
 
   test "creates person" do
     active = Person.status(:active)
-
     assert {:created, {:ok, %Person{id: id}}} = PersonsAPI.create(build_person_map(), @test_consumer_id)
-
     assert [%PersonUpdate{person_id: ^id, updated_by: @test_consumer_id, status: ^active}] = Repo.all(PersonUpdate)
   end
 

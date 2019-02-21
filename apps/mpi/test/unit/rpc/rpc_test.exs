@@ -243,11 +243,42 @@ defmodule MPI.RpcTest do
 
       persons = insert_list(2, :mpi, :person)
       persons_ids = Enum.map(persons, & &1.id)
-
       filter = [{:id, :in, persons_ids}]
       {:ok, persons} = Rpc.search_persons(filter)
 
       assert 2 == length(persons)
+    end
+  end
+
+  describe "search_persons/2 with fields" do
+    test "search_persons/2 by ids" do
+      fields = ~w(id first_name last_name second_name birth_date)a
+      %{id: id1} = insert(:mpi, :person)
+      %{id: id2} = insert(:mpi, :person)
+      insert(:mpi, :person)
+
+      Rpc.search_persons(%{"ids" => Enum.join([id1, id2], ",")}, fields)
+    end
+
+    test "search_persons/2 with fields by ids not found" do
+      fields = ~w(id first_name last_name second_name birth_date)a
+      insert(:mpi, :person)
+
+      {:ok, []} = Rpc.search_persons(%{"ids" => Enum.join([UUID.generate()], ",")}, fields)
+    end
+
+    test "search_persons/2 with empty search params" do
+      fields = ~w(id first_name last_name second_name birth_date)a
+      insert(:mpi, :person)
+
+      {:error, "search params is not specified"} = Rpc.search_persons(%{}, fields)
+    end
+
+    test "search_persons/2  with not-existing field return error" do
+      %{id: id} = insert(:mpi, :person)
+
+      assert {:error, "invalid search characters"} ==
+               Rpc.search_persons(%{"id" => id}, [:id, :not_existing_field])
     end
   end
 

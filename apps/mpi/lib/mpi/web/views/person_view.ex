@@ -3,64 +3,35 @@ defmodule MPI.Web.PersonView do
 
   use MPI.Web, :view
   alias Core.Person
+  alias Core.PersonAddress
+  alias Core.PersonDocument
+  alias Core.PersonPhone
 
   def render("index.json", %{persons: persons}) do
     render_many(persons, __MODULE__, "show.json", as: :person)
   end
 
+  def render("person_short.json", %{person: %{} = person, fields: fields}) do
+    person
+    |> Map.take(fields)
+    |> Enum.reduce(%{}, fn {field, value}, person_enc -> Map.put(person_enc, to_string(field), value) end)
+  end
+
   def render("show.json", %{person: %Person{} = person}) do
     person
-    |> Map.take(~w(
-      id
-      version
-      first_name
-      last_name
-      second_name
-      birth_date
-      birth_country
-      birth_settlement
-      gender
-      email
-      tax_id
-      unzr
-      death_date
-      preferred_way_communication
-      invalid_tax_id
-      is_active
-      addresses
-      secret
-      emergency_contact
-      confidant_person
-      patient_signed
-      process_disclosure_data_consent
-      status
-      inserted_by
-      updated_by
-      authentication_methods
-      no_tax_id
-      inserted_at
-      updated_at
-    )a)
+    |> Map.take(extended_field(Person.fields()))
     |> Map.merge(%{
       merged_ids: Map.get(person, :merged_ids, []),
       documents: render("person_documents.json", person),
-      phones: render("person_phones.json", person)
+      phones: render("person_phones.json", person),
+      addresses: render("person_address.json", person)
     })
   end
 
   def render("person_documents.json", %{id: person_id, documents: [_ | _] = documents}) do
     Enum.map(documents, fn document ->
       document
-      |> Map.take(~w(
-        id
-        type
-        number
-        issued_at
-        expiration_date
-        issued_by
-        inserted_at
-        updated_at
-      )a)
+      |> Map.take(extended_field(PersonDocument.fields()))
       |> Map.put(:person_id, person_id)
     end)
   end
@@ -70,17 +41,24 @@ defmodule MPI.Web.PersonView do
   def render("person_phones.json", %{id: person_id, phones: phones}) do
     Enum.map(phones, fn phone ->
       phone
-      |> Map.take(~w(
-        id
-        type
-        number
-        person_id
-        inserted_at
-        updated_at
-      )a)
+      |> Map.take(extended_field(PersonPhone.fields()))
       |> Map.put(:person_id, person_id)
     end)
   end
 
   def render("person_phones.json", _), do: []
+
+  def render("person_address.json", %{id: person_id, addresses: addresses}) do
+    Enum.map(addresses, fn address ->
+      address
+      |> Map.take(extended_field(PersonAddress.fields()))
+      |> Map.put(:person_id, person_id)
+    end)
+  end
+
+  def render("person_address.json", _), do: []
+
+  defp extended_field(fields) do
+    ~w(id inserted_at updated_at)a ++ fields
+  end
 end

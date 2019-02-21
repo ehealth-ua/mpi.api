@@ -9,7 +9,6 @@ defmodule MPI.ReleaseTasks do
 
   alias Core.Repo
   alias Core.DeduplicationRepo
-  alias Ecto.Migrator
 
   def migrate do
     # Migrate

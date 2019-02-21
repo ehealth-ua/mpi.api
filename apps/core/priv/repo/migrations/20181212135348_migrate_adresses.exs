@@ -15,9 +15,9 @@ defmodule Core.Repo.Migrations.MigrateAdresses do
   def make_person_addresses(persons) do
     persons
     |> Task.async_stream(fn
-      %Person{
-        addresses: addresses,
+      %{
         id: id,
+        addresses: addresses,
         last_name: last_name,
         first_name: first_name,
         updated_at: updated_at,
@@ -52,14 +52,7 @@ defmodule Core.Repo.Migrations.MigrateAdresses do
   def chunk_persons_process(:cont, limit) do
     persons =
       Person
-      |> select([p, a], %Person{
-        addresses: p.addresses,
-        first_name: p.first_name,
-        last_name: p.last_name,
-        id: p.id,
-        updated_at: p.updated_at,
-        inserted_at: p.inserted_at
-      })
+      |> select([p, a], [:id, :addresses, :first_name, :last_name, :updated_at, :inserted_at])
       |> join(:left, [p], a in PersonAddress, a.person_id == p.id)
       |> where(
         [p, a],

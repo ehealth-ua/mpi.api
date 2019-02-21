@@ -15,7 +15,9 @@ defmodule Core.PersonPhone do
     timestamps(type: :utc_datetime)
   end
 
-  @fields [:number, :type]
+  @fields ~w(number type)a
+
+  def fields, do: @fields
 
   def changeset(%__MODULE__{} = person_phone, params \\ %{}) do
     person_phone

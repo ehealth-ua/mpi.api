@@ -47,7 +47,6 @@ defmodule Core.Factories.MPI do
           death_date: ~D[2117-11-09],
           preferred_way_communication: "email",
           is_active: true,
-          addresses: build_list(2, :address),
           secret: sequence(:secret, &"secret-#{&1}"),
           emergency_contact: build(:emergency_contact),
           confidant_person: build_list(1, :confidant_person),
@@ -60,7 +59,7 @@ defmodule Core.Factories.MPI do
           merged_ids: [],
           phones: build_list(1, :person_phone),
           documents: build_list(2, :person_document),
-          person_addresses: build_list(2, :person_address, person_first_name: first_name, person_last_name: last_name)
+          addresses: build_list(2, :person_address, person_first_name: first_name, person_last_name: last_name)
         }
       end
 
@@ -69,23 +68,6 @@ defmodule Core.Factories.MPI do
           person_id: UUID.generate(),
           status: Person.status(:active),
           updated_by: UUID.generate()
-        }
-      end
-
-      def address_factory do
-        %{
-          type: "RESIDENCE",
-          country: "UA",
-          area: region(),
-          region: region(),
-          settlement: city(),
-          settlement_type: "city",
-          settlement_id: UUID.generate(),
-          street_type: street_type(),
-          street: street(),
-          building: "#{Enum.random(1..120)}",
-          apartment: "#{Enum.random(1..24)}",
-          zip: "#{Enum.random(10000..99999)}"
         }
       end
 

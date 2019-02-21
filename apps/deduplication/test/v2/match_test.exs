@@ -622,7 +622,7 @@ defmodule Deduplication.V2.MatchTest do
           tax_id: "#{i}",
           first_name: "Iv",
           documents: [build(:document, number: "999#{i}")],
-          person_addresses: [
+          addresses: [
             build(:person_address,
               settlement_id: settlement_id,
               person_first_name: "Iv"
@@ -638,7 +638,7 @@ defmodule Deduplication.V2.MatchTest do
             build(:document, number: "#{i}")
           ],
           authentication_methods: [build(:authentication_method, type: "OFFLINE")],
-          person_addresses: [build(:person_address, settlement_id: UUID.generate())]
+          addresses: [build(:person_address, settlement_id: UUID.generate())]
         )
       end)
 
@@ -662,7 +662,7 @@ defmodule Deduplication.V2.MatchTest do
           tax_id: "#{i}",
           last_name: "Kusto",
           documents: [build(:document, number: "999#{i}")],
-          person_addresses: [
+          addresses: [
             build(:person_address,
               settlement_id: settlement_id,
               person_last_name: "Kusto"
@@ -676,7 +676,7 @@ defmodule Deduplication.V2.MatchTest do
       insert(:mpi, :person,
         tax_id: "#{3}",
         documents: [build(:document, number: "0000")],
-        person_addresses: [build(:person_address, settlement_id: another_settlement_id)]
+        addresses: [build(:person_address, settlement_id: another_settlement_id)]
       )
 
       Enum.each(1..3, fn i ->
@@ -684,7 +684,7 @@ defmodule Deduplication.V2.MatchTest do
           tax_id: "00000#{i}",
           documents: [build(:document, number: "#{i}")],
           authentication_methods: [build(:authentication_method, type: "OFFLINE")],
-          person_addresses: [build(:person_address, settlement_id: UUID.generate())]
+          addresses: [build(:person_address, settlement_id: UUID.generate())]
         )
       end)
 
@@ -923,7 +923,7 @@ defmodule Deduplication.V2.MatchTest do
         create_person_document(document_type1, number1),
         create_person_document(document_type2, number2)
       ],
-      person_addresses: [
+      addresses: [
         create_address("RESIDENCE", residence_address_settlement),
         create_address("REGISTRATION", registration_address_settlement)
       ],

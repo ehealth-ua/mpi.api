@@ -80,7 +80,7 @@ defmodule Core.ManualMerge do
     merge_candidate_params = %{assignee_id: actor_id, updated_at: DateTime.utc_now()}
 
     DeduplicationRepo.transaction(fn ->
-      with {:ok, merge_candidate} <- do_update(merge_candidate, merge_candidate_params, actor_id),
+      with {:ok, merge_candidate} <- update_and_log(merge_candidate, merge_candidate_params, actor_id),
            {:ok, merge_request} <- create_merge_request(merge_candidate, actor_id) do
         merge_request
       else
@@ -101,7 +101,7 @@ defmodule Core.ManualMerge do
          :ok <- validate_assignee(merge_request, actor_id),
          :ok <- validate_status_transition(merge_request, status) do
       DeduplicationRepo.transaction(fn ->
-        with {:ok, merge_request} <- do_update(merge_request, %{status: status, comment: comment}, actor_id),
+        with {:ok, merge_request} <- update_and_log(merge_request, %{status: status, comment: comment}, actor_id),
              merge_request <- DeduplicationRepo.preload(merge_request, [:manual_merge_candidate]),
              {:ok, manual_merge_candidate} <- process_merge_candidates(merge_request, actor_id) do
           merge_request
@@ -130,12 +130,12 @@ defmodule Core.ManualMerge do
   defp process_merge_candidates(%ManualMergeRequest{} = request, actor_id) do
     if quorum_obtained?(request) do
       with update_data <- %{status: @status_processed, decision: request.status, assignee_id: nil},
-           {:ok, manual_merge_candidate} <- do_update(request.manual_merge_candidate, update_data, actor_id),
+           {:ok, manual_merge_candidate} <- update_and_log(request.manual_merge_candidate, update_data, actor_id),
            :ok <- process_related_merge_candidates(request, actor_id) do
         {:ok, manual_merge_candidate}
       end
     else
-      with {:ok, _} <- do_update(request.manual_merge_candidate, %{assignee_id: nil}, actor_id) do
+      with {:ok, _} <- update_and_log(request.manual_merge_candidate, %{assignee_id: nil}, actor_id) do
         {:ok, nil}
       end
     end
@@ -174,7 +174,7 @@ defmodule Core.ManualMerge do
   end
 
   defp preload_merge_request_associations(merge_request) do
-    person_references = [:documents, :phones]
+    person_references = [:documents, :phones, :addresses]
 
     merge_request
     |> DeduplicationRepo.preload(:manual_merge_candidate)
@@ -183,8 +183,7 @@ defmodule Core.ManualMerge do
     )
   end
 
-  # TODO: We need more meaningful name for this function
-  defp do_update(%{__struct__: struct} = entity, params, actor_id)
+  defp update_and_log(%{__struct__: struct} = entity, params, actor_id)
        when is_binary(actor_id) and struct in [ManualMergeCandidate, ManualMergeRequest] do
     entity
     |> struct.changeset(params)

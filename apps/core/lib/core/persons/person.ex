@@ -27,7 +27,6 @@ defmodule Core.Person do
     field(:preferred_way_communication, :string)
     field(:invalid_tax_id, :boolean, default: false)
     field(:is_active, :boolean, default: true)
-    field(:addresses, {:array, :map})
     field(:secret, :string)
     field(:emergency_contact, :map)
     field(:confidant_person, {:array, :map})
@@ -42,14 +41,14 @@ defmodule Core.Person do
 
     has_many(:documents, PersonDocument, on_delete: :delete_all, on_replace: :delete)
     has_many(:phones, PersonPhone, on_delete: :delete_all, on_replace: :delete)
-    has_many(:person_addresses, PersonAddress, on_delete: :delete_all, on_replace: :delete)
+    has_many(:addresses, PersonAddress, on_delete: :delete_all, on_replace: :delete)
     timestamps(type: :utc_datetime)
   end
 
   def status(:active), do: @status_active
   def status(:inactive), do: @status_inactive
 
-  @fields ~W(
+  @fields ~w(
     version
     first_name
     last_name
@@ -65,7 +64,6 @@ defmodule Core.Person do
     preferred_way_communication
     invalid_tax_id
     is_active
-    addresses
     secret
     emergency_contact
     confidant_person
@@ -77,7 +75,7 @@ defmodule Core.Person do
     authentication_methods
     merged_ids
     no_tax_id
-  )
+  )a
 
   @fields_required ~w(
     version
@@ -88,7 +86,6 @@ defmodule Core.Person do
     birth_settlement
     gender
     secret
-    addresses
     authentication_methods
     emergency_contact
     patient_signed

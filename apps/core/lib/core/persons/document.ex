@@ -18,8 +18,10 @@ defmodule Core.PersonDocument do
     timestamps(type: :utc_datetime)
   end
 
-  @fields [:type, :number, :issued_at, :expiration_date, :issued_by]
+  @fields ~w(type number issued_at expiration_date issued_by)a
   @fields_required [:type, :number]
+
+  def fields, do: @fields
 
   def changeset(%__MODULE__{} = person_document, params \\ %{}) do
     person_document

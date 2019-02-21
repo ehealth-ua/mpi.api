@@ -99,12 +99,12 @@ defmodule Deduplication.V2.CandidatesDistance do
   def levenshtein_weight(
         %Person{
           documents: person_documents,
-          person_addresses: person_addresses,
+          addresses: person_addresses,
           authentication_methods: person_phones
         } = person,
         %Person{
           documents: candidate_documents,
-          person_addresses: candidate_addresses,
+          addresses: candidate_addresses,
           authentication_methods: candidate_phones
         } = candidate
       ) do
