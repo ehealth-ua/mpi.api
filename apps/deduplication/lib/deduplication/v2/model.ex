@@ -204,20 +204,10 @@ defmodule Deduplication.V2.Model do
           (SELECT id FROM persons WHERE tax_id = ? and tax_id IS NOT NULL)
           UNION
           (SELECT id FROM persons WHERE authentication_methods @> ?)
-          UNION
-          (SELECT DISTINCT person_id id FROM person_addresses WHERE
-             person_first_name = ? and settlement_id = ANY(?))
-          UNION
-          (SELECT DISTINCT person_id id FROM person_addresses WHERE
-             person_last_name = ? and settlement_id = ANY(?))
           ",
           ^documents_numbers_only,
           ^person.tax_id,
-          ^[%{"phone_number" => auth_phone_number, "type" => "OTP"}],
-          ^person.first_name,
-          ^settlement_ids,
-          ^person.last_name,
-          ^settlement_ids
+          ^[%{"phone_number" => auth_phone_number, "type" => "OTP"}]
         ),
         ca.id == p.id
       )

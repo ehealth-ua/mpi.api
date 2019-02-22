@@ -16,7 +16,6 @@ defmodule Deduplication.V2.MatchTest do
   alias Core.DeduplicationRepo
   alias Deduplication.V2.Match
   alias Deduplication.V2.Model
-  alias Ecto.UUID
 
   setup :verify_on_exit!
   setup :set_mox_global
@@ -604,100 +603,6 @@ defmodule Deduplication.V2.MatchTest do
 
       assert "active" == active_person.status
       assert candidate_count(10) == Enum.count(candidates)
-    end
-  end
-
-  describe "settlement_id" do
-    setup do
-      stub(PyWeightMock, :weight, fn %{} -> 1 end)
-      Model.set_current_verified_ts(DateTime.utc_now())
-      :ok
-    end
-
-    test "settlement_id + first name with rest persons" do
-      settlement_id = UUID.generate()
-
-      Enum.each(1..3, fn i ->
-        insert(:mpi, :person,
-          tax_id: "#{i}",
-          first_name: "Iv",
-          documents: [build(:document, number: "999#{i}")],
-          addresses: [
-            build(:person_address,
-              settlement_id: settlement_id,
-              person_first_name: "Iv"
-            )
-          ]
-        )
-      end)
-
-      Enum.each(1..3, fn i ->
-        insert(:mpi, :person,
-          tax_id: "#{i / 100}",
-          documents: [
-            build(:document, number: "#{i}")
-          ],
-          authentication_methods: [build(:authentication_method, type: "OFFLINE")],
-          addresses: [build(:person_address, settlement_id: UUID.generate())]
-        )
-      end)
-
-      persons = Model.get_unverified_persons(10)
-      assert 6 = Match.deduplicate_persons(persons)
-      assert [] == Model.get_unverified_persons(1)
-
-      candidates =
-        MergeCandidate
-        |> preload([:master_person, :person])
-        |> Repo.all()
-
-      assert candidate_count(3) == Enum.count(candidates)
-    end
-
-    test "settlement_id + last_name with tax_id" do
-      settlement_id = UUID.generate()
-
-      Enum.each(1..5, fn i ->
-        insert(:mpi, :person,
-          tax_id: "#{i}",
-          last_name: "Kusto",
-          documents: [build(:document, number: "999#{i}")],
-          addresses: [
-            build(:person_address,
-              settlement_id: settlement_id,
-              person_last_name: "Kusto"
-            )
-          ]
-        )
-      end)
-
-      another_settlement_id = UUID.generate()
-
-      insert(:mpi, :person,
-        tax_id: "#{3}",
-        documents: [build(:document, number: "0000")],
-        addresses: [build(:person_address, settlement_id: another_settlement_id)]
-      )
-
-      Enum.each(1..3, fn i ->
-        insert(:mpi, :person,
-          tax_id: "00000#{i}",
-          documents: [build(:document, number: "#{i}")],
-          authentication_methods: [build(:authentication_method, type: "OFFLINE")],
-          addresses: [build(:person_address, settlement_id: UUID.generate())]
-        )
-      end)
-
-      persons = Model.get_unverified_persons(10)
-      assert 9 = Match.deduplicate_persons(persons)
-      assert [] == Model.get_unverified_persons(1)
-
-      candidates =
-        MergeCandidate
-        |> preload([:master_person, :person])
-        |> Repo.all()
-
-      assert candidate_count(5) + 1 == Enum.count(candidates)
     end
   end
 
