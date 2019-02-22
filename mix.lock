@@ -35,7 +35,7 @@
   "jason": {:hex, :jason, "1.1.2", "b03dedea67a99223a2eaf9f1264ce37154564de899fd3d8b9a21b1a6fd64afe7", [:mix], [{:decimal, "~> 1.0", [hex: :decimal, repo: "hexpm", optional: true]}], "hexpm"},
   "kaffe": {:git, "https://github.com/AlexKovalevych/kaffe.git", "1af1524d8a31ef154de2c1311a35d77ab6082d14", [branch: "string_endpoints_sasl"]},
   "kafka_protocol": {:hex, :kafka_protocol, "1.1.2", "96d09c4287377795ae2c488aceae2dc6872b94edba8309a27ace933d9ae32333", [:rebar, :rebar3], [{:snappyer, "1.2.1", [hex: :snappyer, repo: "hexpm", optional: false]}], "hexpm"},
-  "kube_rpc": {:git, "https://github.com/edenlabllc/kube_rpc.git", "11d7a0574d95d6e68e9dbaae4c044caecf4bad25", []},
+  "kube_rpc": {:git, "https://github.com/edenlabllc/kube_rpc.git", "77adce1dc1836a546142c04463697f5a61b3889b", []},
   "libring": {:hex, :libring, "1.4.0", "41246ba2f3fbc76b3971f6bce83119dfec1eee17e977a48d8a9cfaaf58c2a8d6", [:mix], [], "hexpm"},
   "makeup": {:hex, :makeup, "0.5.6", "da47b331b1fe0a5f0380cc3a6967200eac5e1daaa9c6bff4b0310b3fcc12b98f", [:mix], [{:nimble_parsec, "~> 0.4.0", [hex: :nimble_parsec, repo: "hexpm", optional: false]}], "hexpm"},
   "makeup_elixir": {:hex, :makeup_elixir, "0.10.0", "0f09c2ddf352887a956d84f8f7e702111122ca32fbbc84c2f0569b8b65cbf7fa", [:mix], [{:makeup, "~> 0.5.5", [hex: :makeup, repo: "hexpm", optional: false]}], "hexpm"},
