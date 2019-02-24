@@ -91,10 +91,17 @@ defmodule CandidatesMergerTest do
           merge_candidate_id: candidate.id
         )
 
-      related_candidate =
+      related_candidate_1 =
         insert(:deduplication, :manual_merge_candidate,
-          person_id: manual_candidate.master_person_id,
+          person_id: insert(:mpi, :person).id,
           master_person_id: manual_candidate.person_id,
+          assignee_id: actor_id
+        )
+
+      related_candidate_2 =
+        insert(:deduplication, :manual_merge_candidate,
+          person_id: manual_candidate.person_id,
+          master_person_id: insert(:mpi, :person).id,
           assignee_id: actor_id
         )
 
@@ -108,13 +115,29 @@ defmodule CandidatesMergerTest do
       assert %{decision: @merge, status: @processed, assignee_id: nil} =
                ManualMerge.get_by_id(ManualMergeCandidate, manual_candidate.id)
 
-      related_candidate = ManualMerge.get_by_id(ManualMergeCandidate, related_candidate.id)
+      # Related candidate by :master_person_id
+      related_candidate = ManualMerge.get_by_id(ManualMergeCandidate, related_candidate_1.id)
       assert %ManualMergeCandidate{} = related_candidate
       assert @merge == related_candidate.decision
       assert @processed == related_candidate.status
       assert @auto_merge == related_candidate.status_reason
       refute related_candidate.assignee_id
 
+      # Related candidate by :person_id
+      related_candidate = ManualMerge.get_by_id(ManualMergeCandidate, related_candidate_2.id)
+      assert %ManualMergeCandidate{} = related_candidate
+      assert @merge == related_candidate.decision
+      assert @processed == related_candidate.status
+      assert @auto_merge == related_candidate.status_reason
+      refute related_candidate.assignee_id
+
+      manual_candidate = ManualMerge.get_by_id(ManualMergeCandidate, manual_candidate.id)
+      refute manual_candidate.status_reason
+
+      # 4 entries in Audit log for:
+      # - mark Manual Merge Request as MERGE
+      # - mark Manual Merge Candidate as MERGE
+      # - mark 2 related Manual Merge Candidates as AUTO-MERGE
       assert 4 == length(DeduplicationRepo.all(AuditLog))
     end
 

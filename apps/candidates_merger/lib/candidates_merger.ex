@@ -73,6 +73,7 @@ defmodule CandidatesMerger do
 
   defp process_related_merge_candidates(%ManualMergeRequest{status: @status_merge} = request, actor_id) do
     person_id = request.manual_merge_candidate.person_id
+    candidate_id = request.manual_merge_candidate.id
 
     update_data = [
       decision: @status_merge,
@@ -83,8 +84,8 @@ defmodule CandidatesMerger do
     ]
 
     ManualMergeCandidate
-    |> where([c], c.person_id == ^person_id)
-    |> or_where([c], c.master_person_id == ^person_id)
+    |> where([c], c.id != ^candidate_id)
+    |> where([c], c.person_id == ^person_id or c.master_person_id == ^person_id)
     |> DeduplicationRepo.update_all_and_log([set: update_data], actor_id)
 
     :ok
