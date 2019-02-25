@@ -60,13 +60,13 @@ defmodule CandidatesMerger do
   defp process_merge_candidates(%ManualMergeRequest{} = request, actor_id) do
     if quorum_obtained?(request) do
       with update_data <- %{status: @status_processed, decision: request.status, assignee_id: nil},
-           {:ok, manual_merge_candidate} <- update_and_log(request.manual_merge_candidate, update_data, actor_id),
+           {:ok, candidate} <- update_and_log(request.manual_merge_candidate, update_data, actor_id),
            :ok <- process_related_merge_candidates(request, actor_id) do
-        {:ok, manual_merge_candidate}
+        {:ok, candidate}
       end
     else
-      with {:ok, _} <- update_and_log(request.manual_merge_candidate, %{assignee_id: nil}, actor_id) do
-        {:ok, nil}
+      with {:ok, candidate} <- update_and_log(request.manual_merge_candidate, %{assignee_id: nil}, actor_id) do
+        {:ok, candidate}
       end
     end
   end

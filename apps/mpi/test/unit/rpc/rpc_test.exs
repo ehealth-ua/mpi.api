@@ -17,6 +17,7 @@ defmodule MPI.RpcTest do
 
   @status_new ManualMergeRequest.status(:new)
   @status_merge ManualMergeRequest.status(:merge)
+  @status_split ManualMergeRequest.status(:split)
   @status_postpone ManualMergeRequest.status(:postpone)
 
   setup :verify_on_exit!
@@ -421,21 +422,23 @@ defmodule MPI.RpcTest do
       master_person = insert(:mpi, :person)
       merge_candidate = insert(:mpi, :merge_candidate, person: person, master_person: master_person)
 
-      %{merge_candidate: merge_candidate}
-    end
-
-    test "successful merge request", %{merge_candidate: merge_candidate} do
-      expect(CandidatesMergerKafkaMock, :publish_person_deactivation_event, fn candidates, _system_user_id ->
-        assert [%{id: merge_candidate.id, person_id: merge_candidate.person_id}] == candidates
-        :ok
-      end)
-
       manual_merge_candidate =
         insert(:deduplication, :manual_merge_candidate,
           person_id: merge_candidate.person_id,
           master_person_id: merge_candidate.master_person_id,
           merge_candidate_id: merge_candidate.id
         )
+
+      %{merge_candidate: merge_candidate, manual_merge_candidate: manual_merge_candidate}
+    end
+
+    test "successful merge request", context do
+      %{merge_candidate: merge_candidate, manual_merge_candidate: manual_merge_candidate} = context
+
+      expect(CandidatesMergerKafkaMock, :publish_person_deactivation_event, fn candidates, _system_user_id ->
+        assert [%{id: merge_candidate.id, person_id: merge_candidate.person_id}] == candidates
+        :ok
+      end)
 
       merge_request = insert(:deduplication, :manual_merge_request, manual_merge_candidate: manual_merge_candidate)
 
@@ -449,6 +452,13 @@ defmodule MPI.RpcTest do
 
       manual_merge_candidate = DeduplicationRepo.get(ManualMergeCandidate, manual_merge_candidate.id)
       assert ManualMergeCandidate.status(:processed) == manual_merge_candidate.status
+    end
+
+    test "successful split request", %{manual_merge_candidate: manual_merge_candidate} do
+      merge_request = insert(:deduplication, :manual_merge_request, manual_merge_candidate: manual_merge_candidate)
+
+      assert {:ok, %{status: @status_split}} =
+               Rpc.process_manual_merge_request(merge_request.id, @status_split, merge_request.assignee_id)
     end
 
     test "invalid comment type" do
