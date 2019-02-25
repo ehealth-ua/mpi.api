@@ -141,6 +141,29 @@ defmodule CandidatesMergerTest do
       assert 4 == length(DeduplicationRepo.all(AuditLog))
     end
 
+    test "set POSTPONE status, quorum obtained, candidate NOT processed", %{actor_id: actor_id} do
+      candidate = insert(:mpi, :merge_candidate)
+
+      manual_candidate =
+        insert(:deduplication, :manual_merge_candidate,
+          person_id: candidate.master_person_id,
+          master_person_id: candidate.person_id,
+          assignee_id: actor_id,
+          merge_candidate_id: candidate.id
+        )
+
+      insert_list(5, :deduplication, :manual_merge_request, status: @postpone, manual_merge_candidate: manual_candidate)
+
+      %{id: id} =
+        insert(:deduplication, :manual_merge_request, manual_merge_candidate: manual_candidate, assignee_id: actor_id)
+
+      assert {:ok, %ManualMergeRequest{}} = CandidatesMerger.process_merge_request(id, @postpone, actor_id)
+      manual_merge = ManualMerge.get_by_id(ManualMergeCandidate, manual_candidate.id)
+      refute manual_merge.decision
+      refute manual_merge.assignee_id
+      assert @new == manual_merge.status
+    end
+
     test "rollback transaction when failed create message in Kafka for person deactivation", %{actor_id: actor_id} do
       expect(CandidatesMergerKafkaMock, :publish_person_deactivation_event, fn _candidates, _system_user_id ->
         "something wrong"
