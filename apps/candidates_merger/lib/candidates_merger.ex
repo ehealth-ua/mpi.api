@@ -58,8 +58,8 @@ defmodule CandidatesMerger do
   defp validate_status_transition(_, _), do: {:error, {:conflict, "Incorrect transition status"}}
 
   defp process_merge_candidates(%ManualMergeRequest{status: @status_postpone} = request, actor_id) do
-    with {:ok, _} <- update_and_log(request.manual_merge_candidate, %{assignee_id: nil}, actor_id) do
-      {:ok, nil}
+    with {:ok, candidate} <- update_and_log(request.manual_merge_candidate, %{assignee_id: nil}, actor_id) do
+      {:ok, candidate}
     end
   end
 

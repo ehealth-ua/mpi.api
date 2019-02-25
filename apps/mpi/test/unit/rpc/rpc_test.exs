@@ -461,6 +461,13 @@ defmodule MPI.RpcTest do
                Rpc.process_manual_merge_request(merge_request.id, @status_split, merge_request.assignee_id)
     end
 
+    test "request successfully postponed", %{manual_merge_candidate: manual_merge_candidate} do
+      merge_request = insert(:deduplication, :manual_merge_request, manual_merge_candidate: manual_merge_candidate)
+
+      assert {:ok, %{status: @status_postpone}} =
+               Rpc.process_manual_merge_request(merge_request.id, @status_postpone, merge_request.assignee_id)
+    end
+
     test "invalid comment type" do
       %{id: id, assignee_id: assignee_id} = insert(:deduplication, :manual_merge_request)
 
