@@ -8,7 +8,7 @@ config :core, Core.Repo,
   hostname: "localhost",
   port: 5432,
   pool_size: 10,
-  loggers: [{Ecto.LoggerJSON, :log, [:info]}]
+  loggers: [{EhealthLogger.Ecto, :log, [:info]}]
 
 config :core, Core.DeduplicationRepo,
   adapter: Ecto.Adapters.Postgres,
@@ -18,4 +18,4 @@ config :core, Core.DeduplicationRepo,
   hostname: "localhost",
   port: 5432,
   pool_size: 10,
-  loggers: [{Ecto.LoggerJSON, :log, [:info]}]
+  loggers: [{EhealthLogger.Ecto, :log, [:info]}]
