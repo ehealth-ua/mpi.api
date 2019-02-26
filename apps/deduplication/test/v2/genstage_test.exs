@@ -13,12 +13,15 @@ defmodule Deduplication.V2.GenStageTest do
   alias Deduplication.Consumer
   alias Deduplication.Producer
   alias Deduplication.V2.Model
+  alias Deduplication.Worker
 
   setup :verify_on_exit!
   setup :set_mox_global
 
   setup do
     GenStage.start_link(Producer, %{offset: 0}, name: Producer)
+    :ok = Supervisor.terminate_child(DeduplicationGenStageSupervisor, Worker)
+    {:ok, _} = Supervisor.restart_child(DeduplicationGenStageSupervisor, Worker)
     Model.set_current_verified_ts(DateTime.utc_now())
     :ok
   end
@@ -140,7 +143,7 @@ defmodule Deduplication.V2.GenStageTest do
       assert 110 == Enum.count(Model.get_locked_unverified_persons(111, 0))
       start_genstage(5000)
       assert 0 == Enum.count(Model.get_unverified_persons(110))
-      assert 0 == Enum.count(Model.get_locked_unverified_persons(1, 0))
+      assert 0 == Enum.count(Model.get_locked_unverified_persons(100, 0))
     end
   end
 
@@ -156,7 +159,7 @@ defmodule Deduplication.V2.GenStageTest do
       assert 51 == Enum.count(Model.get_locked_unverified_persons(100, 0))
       start_genstage(5000)
       assert 0 == Enum.count(Model.get_unverified_persons(300))
-      assert 0 == Enum.count(Model.get_locked_unverified_persons(1, 0))
+      assert 0 == Enum.count(Model.get_locked_unverified_persons(100, 0))
     end
   end
 end

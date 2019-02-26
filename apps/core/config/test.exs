@@ -8,8 +8,22 @@ config :ex_unit, capture_log: true
 # Print only warnings and errors during test
 config :logger, level: :warn
 
+config :core, repos: [read_only_repo: Core.Repo]
+
 # Configure your database
 config :core, Core.Repo,
+  adapter: Ecto.Adapters.Postgres,
+  username: "postgres",
+  password: "postgres",
+  database: "mpi_test",
+  hostname: "localhost",
+  port: 5432,
+  pool_size: 10,
+  pool: Ecto.Adapters.SQL.Sandbox,
+  ownership_timeout: 120_000_000,
+  loggers: [{EhealthLogger.Ecto, :log, [:info]}]
+
+config :core, Core.ReadRepo,
   adapter: Ecto.Adapters.Postgres,
   username: "postgres",
   password: "postgres",

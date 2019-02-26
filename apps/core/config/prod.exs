@@ -11,6 +11,17 @@ config :core, Core.Repo,
   timeout: :infinity,
   loggers: [{EhealthLogger.Ecto, :log, [:info]}]
 
+config :core, Core.ReadRepo,
+  adapter: Ecto.Adapters.Postgres,
+  username: {:system, :string, "DB_READ_USER"},
+  password: {:system, :string, "DB_READ_PASSWORD"},
+  database: {:system, :string, "DB_READ_NAME"},
+  hostname: {:system, :string, "DB_READ_HOST"},
+  port: {:system, :integer, "DB_READ_PORT"},
+  pool_size: {:system, :integer, "READ_POOL_SIZE", 40},
+  timeout: :infinity,
+  loggers: [{EhealthLogger.Ecto, :log, [:info]}]
+
 config :core, Core.DeduplicationRepo,
   adapter: Ecto.Adapters.Postgres,
   username: {:system, :string, "DB_DEDUPLICATION_USER"},

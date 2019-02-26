@@ -17,6 +17,7 @@ defmodule Core.DataCase do
   using do
     quote do
       alias Core.Repo
+      alias Core.ReadRepo
 
       import Ecto
       import Ecto.Changeset
@@ -27,9 +28,11 @@ defmodule Core.DataCase do
 
   setup tags do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Core.Repo)
+    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Core.ReadRepo)
 
     unless tags[:async] do
       Ecto.Adapters.SQL.Sandbox.mode(Core.Repo, {:shared, self()})
+      Ecto.Adapters.SQL.Sandbox.mode(Core.ReadRepo, {:shared, self()})
     end
 
     :ok

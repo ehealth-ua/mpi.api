@@ -7,6 +7,7 @@ defmodule Deduplication.Application do
   alias Deduplication.Consumer
   alias Deduplication.Producer
   alias Deduplication.V2.PythonWorker
+  alias Deduplication.Worker
 
   def start(_type, _args) do
     poolboy_supervisor =
@@ -15,21 +16,17 @@ defmodule Deduplication.Application do
         name: Deduplication.Supervisor
       )
 
-    producer_id = String.to_atom("Producer#{0}")
+    producer_id = GenStageProducer
     parallel_consumers = config(:parallel_consumers)
+    is_test? = config(:env) == :test
 
     worker_children =
-      if config(:env) == :test,
+      if is_test?,
         do: [],
         else: [
-          worker(
-            Producer,
-            [%{id: producer_id}],
-            id: producer_id,
-            name: producer_id
-          )
+          worker(Producer, [%{id: producer_id}], id: producer_id, name: producer_id)
           | Enum.map(0..max(parallel_consumers - 1, 0), fn i ->
-              consumer_id = String.to_atom("Consumer#{0}_#{i}")
+              consumer_id = String.to_atom("Consumer_#{i}")
 
               worker(Consumer, [%{producer_id: producer_id, id: consumer_id}],
                 id: consumer_id,
@@ -39,9 +36,9 @@ defmodule Deduplication.Application do
         ]
 
     {:ok, _} =
-      Supervisor.start_link(worker_children,
+      Supervisor.start_link([{Worker, !is_test?} | worker_children],
         strategy: :one_for_all,
-        name: String.to_atom("Deduplication.Consumers#{0}Supervisor")
+        name: DeduplicationGenStageSupervisor
       )
 
     poolboy_supervisor

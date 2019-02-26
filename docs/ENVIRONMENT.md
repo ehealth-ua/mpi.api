@@ -27,7 +27,18 @@ Also sample `.env` can be used as payload for `docker run` cli.
 | DB_PASSWORD | `postgres` | Database user password |
 | DB_HOST | `travis` | Database host |
 | DB_PORT | `5432` | Database port |
-| DB_POOL_SIZE | `40` | Database pool size |
+| POOL_SIZE | `40` | Database pool size |
+
+## Database variables
+
+| VAR_NAME      | Default Value | Description |
+| ------------- | ------------- | ----------- |
+| DB_READ_NAME | `mpi_dev` | Database name |
+| DB_READ_USER | `postgres` | Database user name |
+| DB_READ_PASSWORD | `postgres` | Database user password |
+| DB_READ_HOST | `travis` | Database host |
+| DB_READ_PORT | `5432` | Database port |
+| READ_POOL_SIZE | `40` | Database pool size |
 
 ## Database variables
 
@@ -38,12 +49,12 @@ Also sample `.env` can be used as payload for `docker run` cli.
 | DB_DEDUPLICATION_PASSWORD | `postgres` | Database user password |
 | DB_DEDUPLICATION_HOST | `travis` | Database host |
 | DB_DEDUPLICATION_PORT | `5432` | Database port |
-| DB_DEDUPLICATION_POOL_SIZE | `40` | Database pool size |
+| DEDUPLICATION_POOL_SIZE | `40` | Database pool size |
 
 ## Application variables
 | VAR_NAME                       | Default Value | Description |
 | ------------------------------ | ------------- | ----------- |
-| MAX_PERSONS_RESULT             | `15`          | Count of results for pagination when using person search | 
+| MAX_PERSONS_RESULT             | `15`          | Count of results for pagination when using person search |
 | DEDUPLICATION_MANUAL_SCORE_MIN | `0.7`         | Minimal deduplication score range for creating Manual Merge Candidate. Between 0 and 1.
 | DEDUPLICATION_MANUAL_SCORE_MAX | `0.9`         | Maximum deduplication score range for creating Manual Merge Candidate. Between 0 and 1.
 
@@ -51,5 +62,5 @@ Also sample `.env` can be used as payload for `docker run` cli.
 | VAR_NAME                            | Default Value | Description |
 | ----------------------------------- | ------------- | ----------- |
 | PERSON_AUTO_DEACTIVATION_SCHEDULE   | `0 0 * * *`   | Cron expression for Person auto deactivation |
-| PERSON_AUTO_DEACTIVATION_SCORE      | `0.9`         | Minimal deduplication score for creating Merge Candidate. Between 0 and 1. 
+| PERSON_AUTO_DEACTIVATION_SCORE      | `0.9`         | Minimal deduplication score for creating Merge Candidate. Between 0 and 1.
 | PERSON_AUTO_DEACTIVATION_BATCH_SIZE | `500`         | Batch size of Merge Candidates, that will fetched from DB for Person Deactivation job |

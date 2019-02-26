@@ -12,6 +12,8 @@ defmodule Deduplication.V2.Model do
   alias Core.VerifiedTs
   alias Core.VerifyingIds
 
+  @read_only_repo Application.get_env(:core, :repos)[:read_only_repo]
+
   def async_stream_filter(streamlist) do
     Enum.reduce(streamlist, [], fn
       {:ok, :skip}, acc -> acc
@@ -87,42 +89,33 @@ defmodule Deduplication.V2.Model do
     persons
   end
 
-  def unlock_person_after_verify(person_id) do
-    {_, nil} = Repo.delete_all(from(p in VerifyingIds, where: p.id == ^person_id))
-  end
-
-  def no_locked_pesons? do
-    VerifyingIds
-    |> limit(^1)
-    |> Repo.all()
-    |> Enum.empty?()
-  end
+  def unlock_person_after_verify(person_id), do: Repo.delete_all(from(p in VerifyingIds, where: p.id == ^person_id))
 
   def get_locked_unverified_persons(limit, offset) do
+    verifying_person_ids =
+      VerifyingIds
+      |> select([:id])
+      |> Repo.all()
+      |> Enum.map(& &1.id)
+
     Person
     |> preload([:documents, :addresses])
-    |> join(:inner, [p], v in VerifyingIds, v.id == p.id)
-    |> order_by([p, v], p.id)
+    |> where([p], p.id in ^verifying_person_ids)
+    |> order_by([p], p.id)
     |> limit(^limit)
     |> offset(^offset)
-    |> Repo.all()
+    |> @read_only_repo.all()
   end
 
   def get_unverified_persons(limit) do
+    verified_ts = Repo.one(VerifiedTs)
+
     Person
     |> preload([:documents, :addresses])
-    |> join(:left, [p], v in VerifyingIds, v.id == p.id)
-    |> where(
-      [p, v],
-      is_nil(v.id) and
-        fragment(
-          "? > (select updated_at from verified_ts)",
-          p.updated_at
-        )
-    )
+    |> where([p], p.updated_at > ^verified_ts.updated_at)
     |> order_by([p], p.updated_at)
     |> limit(^limit)
-    |> Repo.all()
+    |> @read_only_repo.all()
     |> lock_persons_on_verify()
   end
 
@@ -144,41 +137,13 @@ defmodule Deduplication.V2.Model do
       |> Enum.uniq()
 
     auth_phone_number = person_auth_phone(person.authentication_methods)
-
-    settlement_ids =
-      person.addresses
-      |> Enum.map(fn address ->
-        {:ok, id} = Ecto.UUID.dump(address.settlement_id)
-        id
-      end)
-      |> Enum.uniq()
-
-    retrieve_candidates(person, documents_numbers, auth_phone_number, settlement_ids)
+    retrieve_candidates(person, documents_numbers, auth_phone_number)
   end
 
-  def retrieve_candidates(person, documents_numbers, auth_phone_number, settlement_ids) do
-    limit = config()[:candidates_batch_size]
+  def retrieve_candidates(person, documents_numbers, auth_phone_number),
+    do: retrieve_candidates([], config()[:candidates_batch_size], 0, person, documents_numbers, auth_phone_number)
 
-    retrieve_candidates(
-      [],
-      limit,
-      0,
-      person,
-      documents_numbers,
-      auth_phone_number,
-      settlement_ids
-    )
-  end
-
-  def retrieve_candidates(
-        accum,
-        limit,
-        offset,
-        person,
-        documents_numbers,
-        auth_phone_number,
-        settlement_ids
-      ) do
+  def retrieve_candidates(accum, limit, offset, person, documents_numbers, auth_phone_number) do
     documents_numbers_only =
       documents_numbers
       |> Enum.filter(fn
@@ -219,28 +184,14 @@ defmodule Deduplication.V2.Model do
       |> order_by([p, ca], p.updated_at)
       |> limit(^limit)
       |> offset(^offset)
-      |> Repo.all()
+      |> @read_only_repo.all()
 
     candidates = current_candidates ++ accum
 
-    case current_candidates do
-      [] ->
-        candidates
-
-      _ ->
-        retrieve_candidates(
-          candidates,
-          limit,
-          offset + limit,
-          person,
-          documents_numbers,
-          auth_phone_number,
-          settlement_ids
-        )
-    end
+    if Enum.empty?(current_candidates),
+      do: candidates,
+      else: retrieve_candidates(candidates, limit, offset + limit, person, documents_numbers, auth_phone_number)
   end
-
-  def get_candidates(_, _), do: []
 
   def person_auth_phone(authentication_methods) do
     Enum.reduce_while(authentication_methods, nil, fn
