@@ -14,10 +14,12 @@ config :core,
 
 config :core, Core.ManualMerge, max_postponed_requests: {:system, :integer, "MAX_POSTPONED_MANUAL_MERGE_REQUESTS", 5}
 
-# Configures Elixir's Logger
-config :logger, :console,
-  format: "$message\n",
-  handle_otp_reports: true,
+config :logger_json, :backend,
+  formatter: EhealthLogger.Formatter,
+  metadata: :all
+
+config :logger,
+  backends: [LoggerJSON],
   level: :info
 
 # It is also possible to import configuration files, relative to this

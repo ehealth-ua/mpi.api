@@ -3,6 +3,8 @@ use Mix.Config
 # Configuration for test environment
 System.put_env("MAX_PERSONS_RESULT", "2")
 
+config :ex_unit, capture_log: true
+
 # Print only warnings and errors during test
 config :logger, level: :warn
 
@@ -17,7 +19,7 @@ config :core, Core.Repo,
   pool_size: 10,
   pool: Ecto.Adapters.SQL.Sandbox,
   ownership_timeout: 120_000_000,
-  loggers: [{Ecto.LoggerJSON, :log, [:info]}]
+  loggers: [{EhealthLogger.Ecto, :log, [:info]}]
 
 config :core, Core.DeduplicationRepo,
   adapter: Ecto.Adapters.Postgres,
@@ -29,4 +31,4 @@ config :core, Core.DeduplicationRepo,
   pool_size: 10,
   pool: Ecto.Adapters.SQL.Sandbox,
   ownership_timeout: 120_000_000,
-  loggers: [{Ecto.LoggerJSON, :log, [:info]}]
+  loggers: [{EhealthLogger.Ecto, :log, [:info]}]

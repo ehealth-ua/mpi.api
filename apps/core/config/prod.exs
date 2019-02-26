@@ -9,7 +9,7 @@ config :core, Core.Repo,
   port: {:system, :integer, "DB_PORT"},
   pool_size: {:system, :integer, "POOL_SIZE", 40},
   timeout: :infinity,
-  loggers: [{Ecto.LoggerJSON, :log, [:info]}]
+  loggers: [{EhealthLogger.Ecto, :log, [:info]}]
 
 config :core, Core.DeduplicationRepo,
   adapter: Ecto.Adapters.Postgres,
@@ -20,4 +20,4 @@ config :core, Core.DeduplicationRepo,
   port: {:system, :integer, "DB_DEDUPLICATION_PORT"},
   pool_size: {:system, :integer, "DEDUPLICATION_POOL_SIZE", 40},
   timeout: :infinity,
-  loggers: [{Ecto.LoggerJSON, :log, [:info]}]
+  loggers: [{EhealthLogger.Ecto, :log, [:info]}]
