@@ -32,7 +32,7 @@ defmodule PersonDeactivator.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:kaffe, git: "https://github.com/AlexKovalevych/kaffe.git", branch: "string_endpoints_sasl"},
+      {:kaffe, "~> 1.11"},
       {:core, in_umbrella: true}
     ]
   end

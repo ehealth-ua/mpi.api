@@ -11,7 +11,7 @@ defmodule PersonUpdatesProducer.Kafka.Producer do
   def publish_person_event(id, status, updated_by) do
     event = %{"id" => id, "status" => String.downcase(status), "updated_by" => updated_by}
 
-    with :ok <- Producer.produce_sync(@person_events_topic, get_partition(id), nil, :erlang.term_to_binary(event)) do
+    with :ok <- Producer.produce_sync(@person_events_topic, get_partition(id), "", :erlang.term_to_binary(event)) do
       Logger.info("Published event #{inspect(event)} to kafka", application: :kaffe)
       :ok
     end

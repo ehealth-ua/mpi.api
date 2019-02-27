@@ -39,7 +39,7 @@ defmodule PersonUpdatesProducer.Mixfile do
     [
       {:quantum, "~> 2.3"},
       {:timex, "~> 3.0"},
-      {:kaffe, git: "https://github.com/AlexKovalevych/kaffe.git", branch: "string_endpoints_sasl"},
+      {:kaffe, "~> 1.11"},
       {:core, in_umbrella: true}
     ]
   end

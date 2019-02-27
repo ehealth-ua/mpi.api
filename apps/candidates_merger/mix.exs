@@ -30,7 +30,7 @@ defmodule CandidatesMerger.MixProject do
   defp deps do
     [
       {:confex, "~> 3.4"},
-      {:kaffe, git: "https://github.com/AlexKovalevych/kaffe.git", branch: "string_endpoints_sasl"},
+      {:kaffe, "~> 1.11"},
       {:core, in_umbrella: true}
     ]
   end

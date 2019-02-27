@@ -33,7 +33,7 @@
   "httpoison": {:hex, :httpoison, "1.5.0", "71ae9f304bdf7f00e9cd1823f275c955bdfc68282bc5eb5c85c3a9ade865d68e", [:mix], [{:hackney, "~> 1.8", [hex: :hackney, repo: "hexpm", optional: false]}], "hexpm"},
   "idna": {:hex, :idna, "6.0.0", "689c46cbcdf3524c44d5f3dde8001f364cd7608a99556d8fbd8239a5798d4c10", [:rebar3], [{:unicode_util_compat, "0.4.1", [hex: :unicode_util_compat, repo: "hexpm", optional: false]}], "hexpm"},
   "jason": {:hex, :jason, "1.1.2", "b03dedea67a99223a2eaf9f1264ce37154564de899fd3d8b9a21b1a6fd64afe7", [:mix], [{:decimal, "~> 1.0", [hex: :decimal, repo: "hexpm", optional: true]}], "hexpm"},
-  "kaffe": {:git, "https://github.com/AlexKovalevych/kaffe.git", "1af1524d8a31ef154de2c1311a35d77ab6082d14", [branch: "string_endpoints_sasl"]},
+  "kaffe": {:hex, :kaffe, "1.11.0", "7bac255d1a1d242237a3d1e489a7bef52ef1e593bf1eedfb1a4b938c38d80777", [:mix], [{:brod, ">= 3.0.0 and < 3.5.0", [hex: :brod, repo: "hexpm", optional: false]}], "hexpm"},
   "kafka_protocol": {:hex, :kafka_protocol, "1.1.2", "96d09c4287377795ae2c488aceae2dc6872b94edba8309a27ace933d9ae32333", [:rebar, :rebar3], [{:snappyer, "1.2.1", [hex: :snappyer, repo: "hexpm", optional: false]}], "hexpm"},
   "kube_rpc": {:git, "https://github.com/edenlabllc/kube_rpc.git", "f6ae2a9cb6399ea11232e3aa95d5a2f606e211df", []},
   "libring": {:hex, :libring, "1.4.0", "41246ba2f3fbc76b3971f6bce83119dfec1eee17e977a48d8a9cfaaf58c2a8d6", [:mix], [], "hexpm"},
