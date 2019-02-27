@@ -2,6 +2,7 @@ defmodule Core.Person do
   @moduledoc false
 
   use Ecto.Schema
+  alias Core.MergedPair
   alias Core.PersonAddress
   alias Core.PersonDocument
   alias Core.PersonPhone
@@ -36,12 +37,13 @@ defmodule Core.Person do
     field(:inserted_by, :string)
     field(:updated_by, :string)
     field(:authentication_methods, {:array, :map})
-    field(:merged_ids, {:array, :string})
     field(:no_tax_id, :boolean, default: false)
 
     has_many(:documents, PersonDocument, on_delete: :delete_all, on_replace: :delete)
     has_many(:phones, PersonPhone, on_delete: :delete_all, on_replace: :delete)
     has_many(:addresses, PersonAddress, on_delete: :delete_all, on_replace: :delete)
+    has_many(:merged_persons, MergedPair, foreign_key: :master_person_id, on_delete: :delete_all, on_replace: :delete)
+    has_many(:master_persons, MergedPair, foreign_key: :merge_person_id, on_delete: :delete_all, on_replace: :delete)
     timestamps(type: :utc_datetime)
   end
 
@@ -73,7 +75,6 @@ defmodule Core.Person do
     inserted_by
     updated_by
     authentication_methods
-    merged_ids
     no_tax_id
   )a
 

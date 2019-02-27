@@ -21,7 +21,6 @@ defmodule Core.MergeCandidate do
 
     belongs_to(:person, Person, foreign_key: :person_id, type: UUID)
     belongs_to(:master_person, Person, foreign_key: :master_person_id, type: UUID)
-
     timestamps(type: :utc_datetime)
   end
 end

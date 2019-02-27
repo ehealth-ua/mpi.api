@@ -18,8 +18,6 @@ defmodule Core.Repo.Migrations.MigrateAdresses do
       %{
         id: id,
         addresses: addresses,
-        last_name: last_name,
-        first_name: first_name,
         updated_at: updated_at,
         inserted_at: inserted_at
       } ->
@@ -32,8 +30,6 @@ defmodule Core.Repo.Migrations.MigrateAdresses do
           |> Map.merge(%{
             id: UUID.generate(),
             person_id: id,
-            person_last_name: last_name,
-            person_first_name: first_name,
             updated_at: updated_at,
             inserted_at: inserted_at
           })
@@ -52,7 +48,7 @@ defmodule Core.Repo.Migrations.MigrateAdresses do
   def chunk_persons_process(:cont, limit) do
     persons =
       Person
-      |> select([p, a], [:id, :addresses, :first_name, :last_name, :updated_at, :inserted_at])
+      |> select([p, a], [:id, :addresses, :updated_at, :inserted_at])
       |> join(:left, [p], a in PersonAddress, a.person_id == p.id)
       |> where(
         [p, a],

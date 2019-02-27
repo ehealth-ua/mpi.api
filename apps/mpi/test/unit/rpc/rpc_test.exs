@@ -256,13 +256,22 @@ defmodule MPI.RpcTest do
   end
 
   describe "search_persons/2 with fields" do
+    test "search_persons/2 by ids without fields" do
+      %{id: id} = insert(:mpi, :person)
+      insert(:mpi, :person)
+      assert %Scrivener.Page{entries: [person]} = Rpc.search_persons(%{"ids" => Enum.join([id], ",")})
+
+      assert %{documents: _, phones: _, addresses: _, merged_persons: _, master_persons: _} =
+               Map.take(person, ~w(documents phones addresses merged_persons master_persons)a)
+    end
+
     test "search_persons/2 by ids" do
       fields = ~w(id first_name last_name second_name birth_date)a
       %{id: id1} = insert(:mpi, :person)
       %{id: id2} = insert(:mpi, :person)
       insert(:mpi, :person)
 
-      Rpc.search_persons(%{"ids" => Enum.join([id1, id2], ",")}, fields)
+      assert {:ok, [_, _]} = Rpc.search_persons(%{"ids" => Enum.join([id1, id2], ",")}, fields)
     end
 
     test "search_persons/2 with fields by ids not found" do
@@ -435,9 +444,15 @@ defmodule MPI.RpcTest do
     test "successful merge request", context do
       %{merge_candidate: merge_candidate, manual_merge_candidate: manual_merge_candidate} = context
 
-      expect(CandidatesMergerKafkaMock, :publish_person_deactivation_event, fn candidates, _, reason ->
-        assert "MANUAL_MERGE" == reason
-        assert [%{id: merge_candidate.id, person_id: merge_candidate.person_id}] == candidates
+      expect(CandidatesMergerKafkaMock, :publish_person_deactivation_event, fn candidates, _, "MANUAL_MERGE" ->
+        assert [
+                 %{
+                   id: merge_candidate.id,
+                   master_person_id: merge_candidate.master_person_id,
+                   merge_person_id: merge_candidate.person_id
+                 }
+               ] == candidates
+
         :ok
       end)
 

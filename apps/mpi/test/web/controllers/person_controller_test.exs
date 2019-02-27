@@ -3,7 +3,6 @@ defmodule MPI.Web.PersonControllerTest do
 
   use MPI.Web.ConnCase
   import Core.Factory
-  alias Core.Repo
   alias Core.Person
   alias Core.PersonAddress
   alias Core.PersonDocument
@@ -354,16 +353,7 @@ defmodule MPI.Web.PersonControllerTest do
                |> json_response(200)
 
       assert [%{"settlement" => "Коростень"}] = resp["data"]["addresses"]
-
-      assert %Person{
-               addresses: [
-                 %Core.PersonAddress{
-                   person_first_name: "Ольга",
-                   person_last_name: "Ігорівна",
-                   settlement: "Коростень"
-                 }
-               ]
-             } = PersonsAPI.get_by_id(person.id)
+      assert %Person{addresses: [%Core.PersonAddress{settlement: "Коростень"}]} = PersonsAPI.get_by_id(person.id)
     end
   end
 
@@ -410,6 +400,22 @@ defmodule MPI.Web.PersonControllerTest do
     assert resp["data"]
     json_person_attributes?(resp["data"])
     assert_person(resp["data"])
+  end
+
+  test "update person does not change merged links", %{conn: conn} do
+    person =
+      insert(:mpi, :person, merged_persons: build_list(3, :merged_pairs), master_persons: build_list(5, :merged_pairs))
+
+    resp =
+      conn
+      |> put(person_path(conn, :update, person.id), %{tax_id: "1234567890"})
+      |> json_response(200)
+
+    assert resp["data"]
+    json_person_attributes?(resp["data"])
+    assert_person(resp["data"])
+    assert 3 == Enum.count(resp["data"]["merged_persons"])
+    assert 5 == Enum.count(resp["data"]["master_persons"])
   end
 
   test "spaces are trimmed when person is updated", %{conn: conn} do
@@ -468,20 +474,6 @@ defmodule MPI.Web.PersonControllerTest do
     conn
     |> put(person_path(conn, :update, UUID.generate()), %{})
     |> assert_not_found()
-  end
-
-  test "successful update person with merged_ids", %{conn: conn} do
-    merged_id1 = UUID.generate()
-    merged_id2 = UUID.generate()
-    person = insert(:mpi, :person, merged_ids: [merged_id1])
-
-    patch(
-      conn,
-      person_path(conn, :update, person.id),
-      Poison.encode!(%{merged_ids: [merged_id2]})
-    )
-
-    assert [^merged_id1, ^merged_id2] = Repo.get(Person, person.id).merged_ids
   end
 
   test "successful persons search by last_name", %{conn: conn} do
@@ -688,6 +680,32 @@ defmodule MPI.Web.PersonControllerTest do
     assert [] == json_response(conn, 200)["data"]
   end
 
+  test "search persons by search params returns all preloaded fields", %{conn: conn} do
+    person =
+      insert(:mpi, :person, merged_persons: build_list(3, :merged_pairs), master_persons: build_list(5, :merged_pairs))
+
+    search_params = %{
+      "first_name" => person.first_name,
+      "last_name" => person.last_name,
+      "birth_date" => to_string(person.birth_date)
+    }
+
+    data =
+      conn
+      |> get(person_path(conn, :index), search_params)
+      |> json_response(200)
+      |> Map.get("data")
+      |> assert_person_search()
+
+    preloaded_data = data |> hd |> Map.take(~w(documents phones addresses merged_persons master_persons))
+
+    assert 3 == Enum.count(preloaded_data["merged_persons"])
+    assert 5 == Enum.count(preloaded_data["master_persons"])
+    assert 2 == Enum.count(preloaded_data["documents"])
+    assert 1 == Enum.count(preloaded_data["phones"])
+    assert 2 == Enum.count(preloaded_data["addresses"])
+  end
+
   test "successful person search", %{conn: conn} do
     person =
       insert(
@@ -835,13 +853,15 @@ defmodule MPI.Web.PersonControllerTest do
              "patient_signed" => _,
              "process_disclosure_data_consent" => _,
              "authentication_methods" => _,
-             "merged_ids" => _,
+             "merged_persons" => _,
+             "master_persons" => _,
              "addresses" => _,
              "documents" => _,
              "phones" => _
            } = data
 
-    assert is_list(data["merged_ids"])
+    assert is_list(data["merged_persons"])
+    assert is_list(data["master_persons"])
     assert is_list(data["documents"])
 
     Enum.each(data["documents"], fn document -> assert_document(document) end)

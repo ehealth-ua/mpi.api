@@ -20,7 +20,7 @@ defmodule MPIScheduler.Jobs.AutoMergePersonsDeactivator do
 
   def get_merge_candidates(score, batch_size) do
     MergeCandidate
-    |> select([m], %{id: m.id, person_id: m.person_id})
+    |> select([m], %{id: m.id, master_person_id: m.master_person_id, merge_person_id: m.person_id})
     |> where([m], m.status == ^MergeCandidate.status(:new) and m.score >= ^score)
     |> limit(^batch_size)
     |> Repo.all()

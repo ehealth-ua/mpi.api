@@ -26,7 +26,7 @@ defmodule MPIScheduler.Jobs.ContractRequestsTerminatorTest do
       Enum.map(1..3, fn _ ->
         score = 1.0
         m = insert(:mpi, :merge_candidate, score: score)
-        %{person_id: m.person_id, id: m.id}
+        %{master_person_id: m.master_person_id, merge_person_id: m.person_id, id: m.id}
       end)
 
     insert_list(3, :mpi, :merge_candidate, score: 0.0)

@@ -7,6 +7,7 @@ defmodule Core.Factories.MPI do
     quote do
       alias Ecto.UUID
       alias Core.MergeCandidate
+      alias Core.MergedPair
       alias Core.Person
       alias Core.PersonAddress
       alias Core.PersonDocument
@@ -28,13 +29,11 @@ defmodule Core.Factories.MPI do
 
       def person_factory do
         birthday = ~D[1996-12-12]
-        first_name = first_name()
-        last_name = last_name()
 
         %Person{
           version: "0.1",
-          first_name: first_name,
-          last_name: last_name,
+          first_name: first_name(),
+          last_name: last_name(),
           second_name: second_name(),
           birth_date: birthday,
           birth_country: sequence(:birth_country, &"birth_country-#{&1}"),
@@ -56,10 +55,18 @@ defmodule Core.Factories.MPI do
           inserted_by: UUID.generate(),
           updated_by: UUID.generate(),
           authentication_methods: build_list(2, :authentication_method),
-          merged_ids: [],
+          merged_persons: [],
+          master_persons: [],
           phones: build_list(1, :person_phone),
           documents: build_list(2, :person_document),
-          addresses: build_list(2, :person_address, person_first_name: first_name, person_last_name: last_name)
+          addresses: build_list(2, :person_address)
+        }
+      end
+
+      def merged_pairs_factory do
+        %MergedPair{
+          merge_person_id: UUID.generate(),
+          master_person_id: UUID.generate()
         }
       end
 
@@ -73,8 +80,6 @@ defmodule Core.Factories.MPI do
 
       def person_address_factory do
         %PersonAddress{
-          person_first_name: first_name(),
-          person_last_name: last_name(),
           type: "RESIDENCE",
           country: "UA",
           area: region(),

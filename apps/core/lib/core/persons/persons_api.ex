@@ -8,7 +8,6 @@ defmodule Core.Persons.PersonsAPI do
   alias Core.Filters.Base, as: BaseFilter
   alias Core.Maybe
   alias Core.Person
-  alias Core.PersonAddress
   alias Core.PersonDocument
   alias Core.PersonPhone
   alias Core.Repo
@@ -28,13 +27,10 @@ defmodule Core.Persons.PersonsAPI do
   end
 
   def changeset(%Person{} = person, params) do
-    person_changes =
-      person
-      |> Repo.preload([:phones, :documents, :addresses])
-      |> cast(trim_name_spaces(params), Person.fields())
-
-    person_changes
-    |> cast_assoc(:addresses, with: &PersonAddress.cast_addresses(&1, &2, person_changes, person), required: true)
+    person
+    |> Repo.preload([:phones, :documents, :addresses])
+    |> cast(trim_name_spaces(params), Person.fields())
+    |> cast_assoc(:addresses)
     |> cast_assoc(:phones)
     |> cast_assoc(:documents, required: true)
     |> validate_required(Person.fields_required())
@@ -44,7 +40,7 @@ defmodule Core.Persons.PersonsAPI do
   def get_by_id(id) do
     Person
     |> where([p], p.id == ^id)
-    |> preload([:phones, :documents, :addresses])
+    |> preload(^~w(phones documents addresses merged_persons master_persons)a)
     |> Repo.one()
   end
 
@@ -74,10 +70,7 @@ defmodule Core.Persons.PersonsAPI do
   def update(id, params, consumer_id) do
     with %Person{} = person <- get_by_id(id),
          :ok <- person_is_active(person),
-         params =
-           person
-           |> preprocess_params(params)
-           |> Map.put("updated_by", consumer_id),
+         params = Map.put(params, "updated_by", consumer_id),
          %Changeset{valid?: true} = changeset <- changeset(person, params),
          {:ok, person} <- Repo.update_and_log(changeset, consumer_id) do
       {:ok, person}
@@ -102,7 +95,7 @@ defmodule Core.Persons.PersonsAPI do
   """
   def search(filter, order_by, cursor) do
     Person
-    |> preload([:documents, :phones, :addresses])
+    |> preload(^~w(documents phones addresses merged_persons master_persons)a)
     |> BaseFilter.filter(filter)
     |> apply_cursor(cursor)
     |> order_by(^order_by)
@@ -128,8 +121,10 @@ defmodule Core.Persons.PersonsAPI do
       {:query_error, "invalid search characters"}
   end
 
-  defp person_preload_query(Person = query, fields) when is_list(fields), do: select(query, ^fields)
-  defp person_preload_query(Person = query, _), do: preload(query, [:documents, :phones, :addresses])
+  defp person_preload_query(query, fields) when is_list(fields), do: select(query, ^fields)
+
+  defp person_preload_query(query, _),
+    do: preload(query, ^~w(documents phones addresses merged_persons master_persons)a)
 
   defp person_search_query(%{"unzr" => unzr}) do
     Person
@@ -258,13 +253,6 @@ defmodule Core.Persons.PersonsAPI do
   end
 
   defp with_ids(query, _), do: query
-
-  defp preprocess_params(person, params) do
-    existing_merged_ids = person.merged_ids || []
-    new_merged_ids = Map.get(params, "merged_ids", [])
-
-    Map.merge(params, %{"merged_ids" => existing_merged_ids ++ new_merged_ids})
-  end
 
   defp person_is_active(%Person{is_active: true}), do: :ok
   defp person_is_active(_), do: {:error, {:"422", "Person is not active"}}

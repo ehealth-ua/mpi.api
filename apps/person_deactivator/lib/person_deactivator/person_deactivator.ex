@@ -7,9 +7,9 @@ defmodule PersonDeactivator do
   import Ecto.Query
 
   alias Core.MergeCandidate
+  alias Core.MergedPair
   alias Core.Person
   alias Core.Repo
-  alias Ecto.Multi
 
   @status_inactive Person.status(:inactive)
   @kafka_producer Application.get_env(:person_deactivator, :producer)
@@ -21,7 +21,7 @@ defmodule PersonDeactivator do
   end
 
   defp deactivate_candidates_declarations(merge_candidates, actor_id, reason) do
-    Enum.each(merge_candidates, fn %{person_id: person_id} ->
+    Enum.each(merge_candidates, fn %{merge_person_id: person_id} ->
       @kafka_producer.publish_declaration_deactivation_event(person_id, actor_id, reason)
     end)
 
@@ -29,16 +29,22 @@ defmodule PersonDeactivator do
   end
 
   defp deactivate_candidates(candidates, actor_id) do
-    person_ids = Enum.map(candidates, &Map.get(&1, :person_id))
-    merge_candidates_ids = Enum.map(candidates, &Map.get(&1, :id))
-    deactivate_persons_query = from(p in Person, where: p.id in ^MapSet.to_list(MapSet.new(person_ids)))
-    merge_candidates_query = from(m in MergeCandidate, where: m.id in ^merge_candidates_ids)
+    merge_person_ids = Enum.map(candidates, & &1[:merge_person_id])
+    merge_candidate_ids = Enum.map(candidates, & &1[:id])
 
-    Multi.new()
-    |> Multi.update_all(:deactivate_persons, deactivate_persons_query,
-      set: [status: @status_inactive, updated_by: actor_id]
-    )
-    |> Multi.update_all(:merge_candates, merge_candidates_query, set: [status: MergeCandidate.status(:merged)])
-    |> Repo.transaction()
+    Repo.transaction(fn ->
+      Repo.insert_all(
+        MergedPair,
+        Enum.map(candidates, &Map.merge(&1, %{inserted_at: DateTime.utc_now(), updated_at: DateTime.utc_now()}))
+      )
+
+      Person
+      |> where([p], p.id in ^merge_person_ids)
+      |> Repo.update_all(set: [status: @status_inactive, updated_by: actor_id])
+
+      MergeCandidate
+      |> where([m], m.id in ^merge_candidate_ids)
+      |> Repo.update_all(set: [status: MergeCandidate.status(:merged)])
+    end)
   end
 end

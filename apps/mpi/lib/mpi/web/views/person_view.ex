@@ -21,12 +21,33 @@ defmodule MPI.Web.PersonView do
     person
     |> Map.take(extended_field(Person.fields()))
     |> Map.merge(%{
-      merged_ids: Map.get(person, :merged_ids, []),
+      merged_persons: render("merged_persons.json", person),
+      master_persons: render("master_persons.json", person),
       documents: render("person_documents.json", person),
       phones: render("person_phones.json", person),
       addresses: render("person_address.json", person)
     })
   end
+
+  def render("master_persons.json", %{id: person_id, master_persons: [_ | _] = master_persons}) do
+    Enum.map(master_persons, fn master_person ->
+      master_person
+      |> Map.take(extended_field([:master_person_id]))
+      |> Map.put(:person_id, person_id)
+    end)
+  end
+
+  def render("master_persons.json", _), do: []
+
+  def render("merged_persons.json", %{id: person_id, merged_persons: [_ | _] = merged_persons}) do
+    Enum.map(merged_persons, fn merged_person ->
+      merged_person
+      |> Map.take(extended_field([:merge_person_id]))
+      |> Map.put(:person_id, person_id)
+    end)
+  end
+
+  def render("merged_persons.json", _), do: []
 
   def render("person_documents.json", %{id: person_id, documents: [_ | _] = documents}) do
     Enum.map(documents, fn document ->

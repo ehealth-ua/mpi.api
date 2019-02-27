@@ -105,7 +105,8 @@ defmodule CandidatesMerger do
     data = [
       %{
         id: candidate.merge_candidate_id,
-        person_id: candidate.person_id
+        master_person_id: candidate.master_person_id,
+        merge_person_id: candidate.person_id
       }
     ]
 

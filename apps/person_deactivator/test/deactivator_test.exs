@@ -7,6 +7,7 @@ defmodule PersonDeactivatorTest do
   import Mox
 
   alias Core.MergeCandidate
+  alias Core.MergedPair
   alias Core.Person
   alias Core.Repo
   alias Ecto.UUID
@@ -35,12 +36,16 @@ defmodule PersonDeactivatorTest do
       Enum.each(merged_candidates, fn %MergeCandidate{person: %Person{status: status}} ->
         assert status == Person.status(:inactive)
       end)
+
+      assert 10 = MergedPair |> Repo.all() |> Enum.count()
     end
   end
 
   defp prepare_candidates(amount) do
     amount
     |> insert_list(:mpi, :merge_candidate, score: 0.9)
-    |> Enum.map(fn candidate -> %{id: candidate.id, person_id: candidate.person_id} end)
+    |> Enum.map(fn candidate ->
+      %{id: candidate.id, master_person_id: candidate.master_person_id, merge_person_id: candidate.person_id}
+    end)
   end
 end

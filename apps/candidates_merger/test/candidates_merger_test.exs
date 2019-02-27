@@ -79,9 +79,9 @@ defmodule CandidatesMergerTest do
     end
 
     test "set MERGE status, quorum obtained, candidate processed, related candidates auto merged", %{actor_id: actor_id} do
-      expect(CandidatesMergerKafkaMock, :publish_person_deactivation_event, fn _candidates, _system_user_id, reason ->
-        assert "MANUAL_MERGE" == reason
-        :ok
+      expect(CandidatesMergerKafkaMock, :publish_person_deactivation_event, fn
+        _candidates, _system_user_id, "MANUAL_MERGE" ->
+          :ok
       end)
 
       candidate = insert(:mpi, :merge_candidate)
