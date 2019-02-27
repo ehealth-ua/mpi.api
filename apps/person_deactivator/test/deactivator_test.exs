@@ -15,11 +15,14 @@ defmodule PersonDeactivatorTest do
 
   describe "deactivate_persons/2" do
     test "deactivate_persons success" do
-      expect(PersonDeactivatorKafkaMock, :publish_declaration_deactivation_event, 10, fn _, _ -> :ok end)
+      expect(PersonDeactivatorKafkaMock, :publish_declaration_deactivation_event, 10, fn _, _, reason ->
+        assert "AUTO_MERGE" == reason
+        :ok
+      end)
 
       actor_id = UUID.generate()
       candidates = prepare_candidates(10)
-      PersonDeactivator.deactivate_persons(candidates, actor_id)
+      PersonDeactivator.deactivate_persons(candidates, actor_id, "AUTO_MERGE")
 
       merged_candidates =
         MergeCandidate

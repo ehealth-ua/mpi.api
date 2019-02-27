@@ -14,15 +14,15 @@ defmodule PersonDeactivator do
   @status_inactive Person.status(:inactive)
   @kafka_producer Application.get_env(:person_deactivator, :producer)
 
-  def deactivate_persons(candidates, actor_id) do
+  def deactivate_persons(candidates, actor_id, reason) do
     candidates
-    |> deactivate_candidates_declarations(actor_id)
+    |> deactivate_candidates_declarations(actor_id, reason)
     |> deactivate_candidates(actor_id)
   end
 
-  defp deactivate_candidates_declarations(merge_candidates, actor_id) do
+  defp deactivate_candidates_declarations(merge_candidates, actor_id, reason) do
     Enum.each(merge_candidates, fn %{person_id: person_id} ->
-      @kafka_producer.publish_declaration_deactivation_event(person_id, actor_id)
+      @kafka_producer.publish_declaration_deactivation_event(person_id, actor_id, reason)
     end)
 
     merge_candidates

@@ -435,7 +435,8 @@ defmodule MPI.RpcTest do
     test "successful merge request", context do
       %{merge_candidate: merge_candidate, manual_merge_candidate: manual_merge_candidate} = context
 
-      expect(CandidatesMergerKafkaMock, :publish_person_deactivation_event, fn candidates, _system_user_id ->
+      expect(CandidatesMergerKafkaMock, :publish_person_deactivation_event, fn candidates, _, reason ->
+        assert "MANUAL_MERGE" == reason
         assert [%{id: merge_candidate.id, person_id: merge_candidate.person_id}] == candidates
         :ok
       end)

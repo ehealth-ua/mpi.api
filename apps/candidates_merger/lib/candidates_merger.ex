@@ -23,6 +23,8 @@ defmodule CandidatesMerger do
   @status_processed ManualMergeCandidate.status(:processed)
   @status_reason_auto_merge ManualMergeCandidate.status_reason(:auto_merge)
 
+  @reason "MANUAL_MERGE"
+
   @kafka_producer Application.get_env(:candidates_merger, :producer)
 
   def process_merge_request(id, status, actor_id, comment \\ nil) when is_binary(actor_id) do
@@ -107,7 +109,7 @@ defmodule CandidatesMerger do
       }
     ]
 
-    case @kafka_producer.publish_person_deactivation_event(data, actor_id) do
+    case @kafka_producer.publish_person_deactivation_event(data, actor_id, @reason) do
       :ok -> :ok
       err -> {:error, "Cannot publish message for person deactivation in Kafka with #{inspect(err)}}"}
     end

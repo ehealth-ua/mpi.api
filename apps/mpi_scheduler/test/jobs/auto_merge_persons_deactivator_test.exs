@@ -12,7 +12,8 @@ defmodule MPIScheduler.Jobs.ContractRequestsTerminatorTest do
     insert_list(2, :mpi, :merge_candidate, score: 0.90001)
     insert_list(5, :mpi, :merge_candidate, score: 0.92)
 
-    expect(CandidatesMergerKafkaMock, :publish_person_deactivation_event, fn candidates, _system_user_id ->
+    expect(CandidatesMergerKafkaMock, :publish_person_deactivation_event, fn candidates, _system_user_id, reason ->
+      assert "AUTO_MERGE" == reason
       assert 7 == length(candidates)
       :ok
     end)
