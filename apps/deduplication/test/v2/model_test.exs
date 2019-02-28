@@ -115,6 +115,16 @@ defmodule Deduplication.V2.ModelTest do
       assert person.id == unverified_person.id
     end
 
+    test "get unverified do not return inactive person" do
+      insert(:mpi, :person, tax_id: "123456789", status: Person.status(:inactive))
+      assert [] == Model.get_unverified_persons(1)
+      person1 = insert(:mpi, :person)
+      person2 = insert(:mpi, :person)
+      assert [%Person{id: person1_id}, %Person{id: person2_id}] = Model.get_unverified_persons(100)
+      assert person1_id == person1.id
+      assert person2_id == person2.id
+    end
+
     test "normalize unverified person works" do
       person = insert(:mpi, :person, tax_id: "123456789")
       [unverified_person] = Model.get_unverified_persons(10)
@@ -145,6 +155,8 @@ defmodule Deduplication.V2.ModelTest do
       p00 = insert(:mpi, :person, tax_id: "000000000").id
       insert(:mpi, :person, tax_id: "999999999")
       p10 = insert(:mpi, :person, tax_id: "123456789").id
+      # inactive candidate ignored
+      insert(:mpi, :person, tax_id: "123456789", status: Person.status(:inactive))
 
       Model.set_current_verified_ts(DateTime.utc_now())
 

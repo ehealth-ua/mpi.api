@@ -19,10 +19,19 @@ defmodule MPIScheduler.Jobs.AutoMergePersonsDeactivator do
   end
 
   def get_merge_candidates(score, batch_size) do
-    MergeCandidate
-    |> select([m], %{id: m.id, master_person_id: m.master_person_id, merge_person_id: m.person_id})
-    |> where([m], m.status == ^MergeCandidate.status(:new) and m.score >= ^score)
-    |> limit(^batch_size)
-    |> Repo.all()
+    query =
+      MergeCandidate
+      |> select([m], %{id: m.id})
+      |> where([m], m.status == ^MergeCandidate.status(:new) and m.score >= ^score)
+      |> limit(^batch_size)
+
+    {_, candidates} =
+      Repo.update_all(
+        join(MergeCandidate, :inner, [d], dr in subquery(query), dr.id == d.id),
+        [set: [status: MergeCandidate.status(:in_process), updated_at: DateTime.utc_now()]],
+        returning: [:id, :master_person_id, :person_id]
+      )
+
+    Enum.map(candidates, &%{id: &1.id, master_person_id: &1.master_person_id, merge_person_id: &1.person_id})
   end
 end

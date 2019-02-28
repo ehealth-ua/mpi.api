@@ -112,7 +112,7 @@ defmodule Deduplication.V2.Model do
 
     Person
     |> preload([:documents, :addresses])
-    |> where([p], p.updated_at > ^verified_ts.updated_at)
+    |> where([p], p.updated_at > ^verified_ts.updated_at and p.status == ^Person.status(:active))
     |> order_by([p], p.updated_at)
     |> limit(^limit)
     |> @read_only_repo.all()
@@ -179,7 +179,8 @@ defmodule Deduplication.V2.Model do
       # recheck id is not null after right join
       |> where(
         [p, ca],
-        p.id != ^person.id and p.updated_at < ^person.updated_at and not is_nil(p.id)
+        p.id != ^person.id and p.updated_at < ^person.updated_at and p.status == ^Person.status(:active) and
+          not is_nil(p.id)
       )
       |> order_by([p, ca], p.updated_at)
       |> limit(^limit)

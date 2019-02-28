@@ -40,11 +40,11 @@ defmodule PersonDeactivator do
 
       Person
       |> where([p], p.id in ^merge_person_ids)
-      |> Repo.update_all(set: [status: @status_inactive, updated_by: actor_id])
+      |> Repo.update_all(set: [status: @status_inactive, updated_by: actor_id, updated_at: DateTime.utc_now()])
 
       MergeCandidate
       |> where([m], m.id in ^merge_candidate_ids)
-      |> Repo.update_all(set: [status: MergeCandidate.status(:merged)])
+      |> Repo.update_all(set: [status: MergeCandidate.status(:merged), updated_at: DateTime.utc_now()])
     end)
   end
 end

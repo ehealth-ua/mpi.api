@@ -6,9 +6,11 @@ defmodule Core.MergeCandidate do
   alias Ecto.UUID
 
   @new "NEW"
+  @in_process "IN_PROCESS"
   @merged "MERGED"
 
   def status(:new), do: @new
+  def status(:in_process), do: @in_process
   def status(:merged), do: @merged
 
   @primary_key {:id, Ecto.UUID, autogenerate: true}

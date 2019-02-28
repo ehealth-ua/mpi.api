@@ -5,6 +5,7 @@ defmodule MPIScheduler.Jobs.ContractRequestsTerminatorTest do
   import Core.Factory
 
   alias Core.MergeCandidate
+  alias Core.Repo
   alias MPIScheduler.Jobs.AutoMergePersonsDeactivator
 
   test "run/0" do
@@ -32,6 +33,14 @@ defmodule MPIScheduler.Jobs.ContractRequestsTerminatorTest do
     insert_list(3, :mpi, :merge_candidate, score: 0.0)
 
     dm = AutoMergePersonsDeactivator.get_merge_candidates(1, 100)
+
+    mc_ids = Enum.map(mc, & &1.id)
+
+    MergeCandidate
+    |> Repo.all()
+    |> Enum.filter(&(&1.id in mc_ids))
+    |> Enum.all?(&(MergeCandidate.status(:in_process) == &1.status))
+
     assert MapSet.new(mc) == MapSet.new(dm)
   end
 
