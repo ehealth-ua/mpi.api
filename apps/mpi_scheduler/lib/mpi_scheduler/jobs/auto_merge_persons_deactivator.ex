@@ -15,7 +15,8 @@ defmodule MPIScheduler.Jobs.AutoMergePersonsDeactivator do
     system_user_id = Confex.fetch_env!(:core, :system_user)
     candidates = get_merge_candidates(config[:score], config[:batch_size])
 
-    @kafka_producer.publish_person_deactivation_event(candidates, system_user_id, @reason)
+    if not Enum.empty?(candidates),
+      do: @kafka_producer.publish_person_deactivation_event(candidates, system_user_id, @reason)
   end
 
   def get_merge_candidates(score, batch_size) do
