@@ -1,6 +1,6 @@
 defmodule Deduplication.V2.PyWeight do
   @moduledoc """
-  defines a weight of merge candidate accoring to merge koeficients
+  defines a weight of merge candidate according to merge coefficients
   """
 
   @behaviour Deduplication.Behaviours.PyWeightBehaviour

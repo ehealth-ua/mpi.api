@@ -1,6 +1,6 @@
 defmodule Deduplication.V2.Model do
   @moduledoc """
-  Quering persons and prepare data
+  Querying persons and prepare data
   """
   use Confex, otp_app: :deduplication
   import Ecto.Query
@@ -135,7 +135,7 @@ defmodule Deduplication.V2.Model do
       |> MapSet.new()
       |> MapSet.to_list()
 
-    # add false if null - subquery parametrs can not be removed
+    # add false if null - subquery parameters can not be removed
     current_candidates =
       Person
       |> preload([p, ca], [:documents, :addresses])

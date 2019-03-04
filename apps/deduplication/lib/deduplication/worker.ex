@@ -29,20 +29,20 @@ defmodule Deduplication.Worker do
 
   @impl true
   def handle_call({:produce, demand}, _from, %{mode: :new} = state), do: {:reply, get_persons(demand), state}
-  def handle_call({:produce, demand}, _from, %{mode: mode, offset: offset}), do: procude_and_state(demand, offset, mode)
+  def handle_call({:produce, demand}, _from, %{mode: mode, offset: offset}), do: produce_and_state(demand, offset, mode)
   def handle_call(_what, _, state), do: {:reply, :not_implemented, state}
 
-  defp procude_and_state(demand, offset, mode) do
+  defp produce_and_state(demand, offset, mode) do
     demand
     |> get_locked_persons(offset)
-    |> procude_and_state(demand, offset, mode)
+    |> produce_and_state(demand, offset, mode)
   end
 
-  # The order of patterns is nessesary, first check does locked_persons is not empty
-  defp procude_and_state([], _demand, 0, :locked), do: {:reply, [], %{}}
-  defp procude_and_state([], demand, 0, :mixed), do: {:reply, get_persons(demand), %{mode: :new}}
-  defp procude_and_state([], demand, _offset, mode), do: procude_and_state(demand, 0, mode)
-  defp procude_and_state(persons, demand, offset, mode), do: {:reply, persons, %{mode: mode, offset: offset + demand}}
+  # The order of patterns is necessary, first check does locked_persons is not empty
+  defp produce_and_state([], _demand, 0, :locked), do: {:reply, [], %{}}
+  defp produce_and_state([], demand, 0, :mixed), do: {:reply, get_persons(demand), %{mode: :new}}
+  defp produce_and_state([], demand, _offset, mode), do: produce_and_state(demand, 0, mode)
+  defp produce_and_state(persons, demand, offset, mode), do: {:reply, persons, %{mode: mode, offset: offset + demand}}
 
   defp get_persons(demand), do: Model.get_unverified_persons(demand)
   defp get_locked_persons(demand, offset), do: Model.get_locked_unverified_persons(demand, offset)
