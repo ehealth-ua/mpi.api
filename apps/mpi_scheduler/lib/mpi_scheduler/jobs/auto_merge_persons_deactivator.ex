@@ -15,24 +15,25 @@ defmodule MPIScheduler.Jobs.AutoMergePersonsDeactivator do
     system_user_id = Confex.fetch_env!(:core, :system_user)
     candidates = get_merge_candidates(config[:score], config[:batch_size])
 
-    if not Enum.empty?(candidates),
-      do: @kafka_producer.publish_person_deactivation_event(candidates, system_user_id, @reason)
+    unless Enum.empty?(candidates), do: push_merge_candidates(candidates, system_user_id)
   end
 
   def get_merge_candidates(score, batch_size) do
-    query =
-      MergeCandidate
-      |> select([m], %{id: m.id})
-      |> where([m], m.status == ^MergeCandidate.status(:new) and m.score >= ^score)
-      |> limit(^batch_size)
+    MergeCandidate
+    |> where([m], m.status == ^MergeCandidate.status(:new) and m.score >= ^score)
+    |> limit(^batch_size)
+    |> Repo.all()
+  end
 
-    {_, candidates} =
-      Repo.update_all(
-        join(MergeCandidate, :inner, [d], dr in subquery(query), dr.id == d.id),
-        [set: [status: MergeCandidate.status(:in_process), updated_at: DateTime.utc_now()]],
-        returning: [:id, :master_person_id, :person_id]
-      )
+  defp push_merge_candidates(candidates, system_user_id) do
+    Enum.map(candidates, fn candidate ->
+      event = %{id: candidate.id, master_person_id: candidate.master_person_id, merge_person_id: candidate.person_id}
 
-    Enum.map(candidates, &%{id: &1.id, master_person_id: &1.master_person_id, merge_person_id: &1.person_id})
+      with :ok <- @kafka_producer.publish_person_deactivation_event(event, system_user_id, @reason) do
+        candidate
+        |> MergeCandidate.changeset(%{status: MergeCandidate.status(:in_process)})
+        |> Repo.update!()
+      end
+    end)
   end
 end

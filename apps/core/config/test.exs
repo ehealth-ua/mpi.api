@@ -23,18 +23,6 @@ config :core, Core.Repo,
   ownership_timeout: 120_000_000,
   loggers: [{EhealthLogger.Ecto, :log, [:info]}]
 
-config :core, Core.ReadRepo,
-  adapter: Ecto.Adapters.Postgres,
-  username: "postgres",
-  password: "postgres",
-  database: "mpi_test",
-  hostname: "localhost",
-  port: 5432,
-  pool_size: 10,
-  pool: Ecto.Adapters.SQL.Sandbox,
-  ownership_timeout: 120_000_000,
-  loggers: [{EhealthLogger.Ecto, :log, [:info]}]
-
 config :core, Core.DeduplicationRepo,
   adapter: Ecto.Adapters.Postgres,
   username: "postgres",

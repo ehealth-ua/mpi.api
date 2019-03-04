@@ -9,7 +9,7 @@ defmodule Deduplication.V2.GenStageTest do
 
   alias Core.MergeCandidate
   alias Core.Repo
-  alias Core.VerifyingIds
+  alias Core.VerifyingId
   alias Deduplication.Consumer
   alias Deduplication.Producer
   alias Deduplication.V2.Model
@@ -81,7 +81,7 @@ defmodule Deduplication.V2.GenStageTest do
 
     @tag :pending
     test "for existing unverified persons works" do
-      Repo.delete_all(VerifyingIds)
+      Repo.delete_all(VerifyingId)
       n1 = 29
       n2 = 23
 
@@ -155,7 +155,7 @@ defmodule Deduplication.V2.GenStageTest do
       end)
 
       Model.set_current_verified_ts(DateTime.utc_now())
-      Enum.map(1..103, fn _ -> insert(:mpi, :person) end)
+      Enum.map(1..53, fn _ -> insert(:mpi, :person) end)
       assert 51 == Enum.count(Model.get_locked_unverified_persons(100, 0))
       start_genstage(5000)
       assert 0 == Enum.count(Model.get_unverified_persons(300))

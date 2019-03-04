@@ -444,14 +444,12 @@ defmodule MPI.RpcTest do
     test "successful merge request", context do
       %{merge_candidate: merge_candidate, manual_merge_candidate: manual_merge_candidate} = context
 
-      expect(CandidatesMergerKafkaMock, :publish_person_deactivation_event, fn candidates, _, "MANUAL_MERGE" ->
-        assert [
-                 %{
-                   id: merge_candidate.id,
-                   master_person_id: merge_candidate.master_person_id,
-                   merge_person_id: merge_candidate.person_id
-                 }
-               ] == candidates
+      expect(CandidatesMergerKafkaMock, :publish_person_deactivation_event, fn candidate, _, "MANUAL_MERGE" ->
+        assert %{
+                 id: merge_candidate.id,
+                 master_person_id: merge_candidate.master_person_id,
+                 merge_person_id: merge_candidate.person_id
+               } == candidate
 
         :ok
       end)

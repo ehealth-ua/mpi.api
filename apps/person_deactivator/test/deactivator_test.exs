@@ -14,8 +14,8 @@ defmodule PersonDeactivatorTest do
 
   setup :verify_on_exit!
 
-  describe "deactivate_persons/2" do
-    test "deactivate_persons success" do
+  describe "deactivate_person/2" do
+    test "deactivate_person success" do
       expect(PersonDeactivatorKafkaMock, :publish_declaration_deactivation_event, 10, fn _, _, reason ->
         assert "AUTO_MERGE" == reason
         :ok
@@ -23,7 +23,7 @@ defmodule PersonDeactivatorTest do
 
       actor_id = UUID.generate()
       candidates = prepare_candidates(10)
-      PersonDeactivator.deactivate_persons(candidates, actor_id, "AUTO_MERGE")
+      Enum.map(candidates, &PersonDeactivator.deactivate_person(&1, actor_id, "AUTO_MERGE"))
 
       merged_candidates =
         MergeCandidate

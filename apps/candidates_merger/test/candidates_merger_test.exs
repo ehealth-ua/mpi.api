@@ -80,7 +80,7 @@ defmodule CandidatesMergerTest do
 
     test "set MERGE status, quorum obtained, candidate processed, related candidates auto merged", %{actor_id: actor_id} do
       expect(CandidatesMergerKafkaMock, :publish_person_deactivation_event, fn
-        _candidates, _system_user_id, "MANUAL_MERGE" ->
+        _candidate, _system_user_id, "MANUAL_MERGE" ->
           :ok
       end)
 
@@ -168,7 +168,7 @@ defmodule CandidatesMergerTest do
     end
 
     test "rollback transaction when failed create message in Kafka for person deactivation", %{actor_id: actor_id} do
-      expect(CandidatesMergerKafkaMock, :publish_person_deactivation_event, fn _candidates, _system_user_id, _ ->
+      expect(CandidatesMergerKafkaMock, :publish_person_deactivation_event, fn _candidate, _system_user_id, _ ->
         "something wrong"
       end)
 

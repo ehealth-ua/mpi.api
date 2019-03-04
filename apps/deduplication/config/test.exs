@@ -18,4 +18,6 @@ config :deduplication, Deduplication.Consumer,
 config :deduplication, Deduplication.V2.GenStageTest,
   parallel_consumers: {:system, :integer, "DEDUPLICATION_PARALLEL_TASKS", 4}
 
-config :deduplication, Deduplication.Worker, mode: :mixed
+config :deduplication, Deduplication.Worker,
+  vacuum_refresh: false,
+  mode: :mixed

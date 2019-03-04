@@ -1,7 +1,7 @@
 defmodule CandidatesMerger.Kafka.Behaviour do
   @moduledoc false
 
-  @callback publish_person_deactivation_event(candidates :: list, updated_by :: binary, reason :: binary) ::
+  @callback publish_person_deactivation_event(candidate :: map, updated_by :: binary, reason :: binary) ::
               :ok
               | {:ok, integer}
               | {:error, :closed}

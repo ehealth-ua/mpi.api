@@ -10,9 +10,8 @@ defmodule Deduplication.V2.Model do
   alias Core.PersonDocument
   alias Core.Repo
   alias Core.VerifiedTs
-  alias Core.VerifyingIds
-
-  @read_only_repo Application.get_env(:core, :repos)[:read_only_repo]
+  alias Core.VerifyingId
+  alias Ecto.Adapters.SQL
 
   def async_stream_filter(streamlist) do
     Enum.reduce(streamlist, [], fn
@@ -58,85 +57,68 @@ defmodule Deduplication.V2.Model do
   end
 
   def set_current_verified_ts(updated_at) do
-    query =
-      from(p in VerifiedTs,
-        where: p.id == ^0,
-        update: [set: [inserted_at: ^DateTime.utc_now(), updated_at: ^updated_at]]
-      )
-
-    {row_updated, _} = Repo.update_all(query, [])
-    true = row_updated in [0, 1]
+    with {_rows, nil} <- Repo.update_all(VerifiedTs, set: [inserted_at: DateTime.utc_now(), updated_at: updated_at]) do
+      :ok
+    else
+      _ -> raise("Can't lock current update for VerifiedTs ")
+    end
   end
 
-  def lock_persons_on_verify([]), do: []
-
-  def lock_persons_on_verify(persons) do
-    person_ids = Enum.map(persons, &%{id: &1.id})
-
-    max_updated_at =
-      persons
-      |> Enum.map(& &1.updated_at)
-      |> Enum.sort(fn x, y ->
-        case DateTime.compare(x, y) do
-          :gt -> true
-          _ -> false
-        end
-      end)
-      |> hd
-
-    {_, nil} = Repo.insert_all(VerifyingIds, person_ids)
-    set_current_verified_ts(max_updated_at)
-    persons
+  def cleanup_locked_persons do
+    Repo.delete_all(where(VerifyingId, [v], v.is_complete == true))
+    SQL.query!(Repo, "VACUUM verifying_ids (id, is_complete)")
   end
 
-  def unlock_person_after_verify(person_id), do: Repo.delete_all(from(p in VerifyingIds, where: p.id == ^person_id))
+  def unlock_person_after_verify(person_id) do
+    %VerifyingId{id: person_id}
+    |> VerifyingId.changeset(%{is_complete: true})
+    |> Repo.update!()
+  end
 
   def get_locked_unverified_persons(limit, offset) do
-    verifying_person_ids =
-      VerifyingIds
-      |> select([:id])
-      |> Repo.all()
-      |> Enum.map(& &1.id)
-
     Person
     |> preload([:documents, :addresses])
-    |> where([p], p.id in ^verifying_person_ids)
-    |> order_by([p], p.id)
+    |> join(:inner, [p], v in VerifyingId, v.id == p.id and is_nil(v.is_complete))
+    |> order_by([p, v], p.id)
     |> limit(^limit)
     |> offset(^offset)
-    |> @read_only_repo.all()
+    |> Repo.all()
   end
 
   def get_unverified_persons(limit) do
-    verified_ts = Repo.one(VerifiedTs)
+    with {:ok, persons} <-
+           Repo.transaction(fn ->
+             %VerifiedTs{updated_at: last_update} = Repo.one(VerifiedTs)
 
-    Person
-    |> preload([:documents, :addresses])
-    |> where([p], p.updated_at > ^verified_ts.updated_at and p.status == ^Person.status(:active))
-    |> order_by([p], p.updated_at)
-    |> limit(^limit)
-    |> @read_only_repo.all()
-    |> lock_persons_on_verify()
-  end
+             persons =
+               Person
+               |> preload([:documents, :addresses])
+               |> join(:left, [p], v in VerifyingId, v.id == p.id)
+               |> where(
+                 [p, v],
+                 p.updated_at >= ^last_update and p.status == ^Person.status(:active) and is_nil(v.id)
+               )
+               |> order_by([p, v], p.updated_at)
+               |> limit(^limit)
+               |> Repo.all()
 
-  def settlement_name_query(query, :first_name, first_name) do
-    where(query, [p, a], p.first_name == ^first_name)
-  end
+             unless Enum.empty?(persons) do
+               Repo.insert_all(VerifyingId, Enum.map(persons, &%{id: &1.id}))
+               set_current_verified_ts(List.last(persons).updated_at)
+             end
 
-  def settlement_name_query(query, :last_name, last_name) do
-    where(query, [p, a], p.last_name == ^last_name)
+             persons
+           end) do
+      persons
+    end
   end
 
   @doc """
-  Makes union subqueries because plan is not optimal for one query
+  Makes union subqueries because few 'where' plan is not optimal for one query
   """
   def get_candidates(%Person{} = person) do
-    documents_numbers =
-      person.documents
-      |> Enum.map(&document_number(&1.number))
-      |> Enum.uniq()
-
     auth_phone_number = person_auth_phone(person.authentication_methods)
+    documents_numbers = person_uniq_documents(person.documents)
     retrieve_candidates(person, documents_numbers, auth_phone_number)
   end
 
@@ -185,7 +167,7 @@ defmodule Deduplication.V2.Model do
       |> order_by([p, ca], p.updated_at)
       |> limit(^limit)
       |> offset(^offset)
-      |> @read_only_repo.all()
+      |> Repo.all()
 
     candidates = current_candidates ++ accum
 
@@ -194,7 +176,7 @@ defmodule Deduplication.V2.Model do
       else: retrieve_candidates(candidates, limit, offset + limit, person, documents_numbers, auth_phone_number)
   end
 
-  def person_auth_phone(authentication_methods) do
+  defp person_auth_phone(authentication_methods) do
     Enum.reduce_while(authentication_methods, nil, fn
       %{"type" => "OTP", "phone_number" => phone_number}, _acc ->
         {:halt, phone_number}
@@ -202,6 +184,12 @@ defmodule Deduplication.V2.Model do
       _, acc ->
         {:cont, acc}
     end)
+  end
+
+  defp person_uniq_documents(documents) do
+    documents
+    |> Enum.map(&document_number(&1.number))
+    |> Enum.uniq()
   end
 
   def normalize_person(

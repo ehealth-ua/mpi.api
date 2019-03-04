@@ -13,7 +13,8 @@ config :logger, :console,
 # :locked - get only locked persons
 config :deduplication, Deduplication.Worker,
   mode: {:system, :atom, "DEDUPLICATION_MODE", :mixed},
-  refresh_timeout: {:system, :integer, "DEDUPLICATION_VACUUM_REFRESH_TIMEOUT", 3_600_000}
+  vacuum_refresh: true,
+  vacuum_refresh_timeout: {:system, :integer, "DEDUPLICATION_VACUUM_REFRESH_TIMEOUT", 5000}
 
 config :deduplication,
   producer: Deduplication.Producer,

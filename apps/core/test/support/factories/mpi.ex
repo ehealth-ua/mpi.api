@@ -13,7 +13,7 @@ defmodule Core.Factories.MPI do
       alias Core.PersonDocument
       alias Core.PersonPhone
       alias Core.PersonUpdate
-      alias Core.VerifyingIds
+      alias Core.VerifyingId
 
       @person_status_active Person.status(:active)
 
@@ -156,7 +156,7 @@ defmodule Core.Factories.MPI do
       end
 
       def verifying_ids_factory do
-        %VerifyingIds{id: UUID.generate()}
+        %VerifyingId{id: UUID.generate()}
       end
 
       defp make_document("NATIONAL_ID") do

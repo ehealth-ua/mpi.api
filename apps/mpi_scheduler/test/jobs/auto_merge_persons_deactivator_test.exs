@@ -13,9 +13,8 @@ defmodule MPIScheduler.Jobs.ContractRequestsTerminatorTest do
     insert_list(2, :mpi, :merge_candidate, score: 0.90001)
     insert_list(5, :mpi, :merge_candidate, score: 0.92)
 
-    expect(CandidatesMergerKafkaMock, :publish_person_deactivation_event, fn candidates, _system_user_id, reason ->
+    expect(CandidatesMergerKafkaMock, :publish_person_deactivation_event, 7, fn _candidate, _system_user_id, reason ->
       assert "AUTO_MERGE" == reason
-      assert 7 == length(candidates)
       :ok
     end)
 
@@ -23,25 +22,27 @@ defmodule MPIScheduler.Jobs.ContractRequestsTerminatorTest do
   end
 
   test "get_new_merge_candidates/2 new merge candidates" do
+    in_process = MergeCandidate.status(:in_process)
+
     mc =
       Enum.map(1..3, fn _ ->
         score = 1.0
-        m = insert(:mpi, :merge_candidate, score: score)
-        %{master_person_id: m.master_person_id, merge_person_id: m.person_id, id: m.id}
+        insert(:mpi, :merge_candidate, score: score)
       end)
 
     insert_list(3, :mpi, :merge_candidate, score: 0.0)
+    insert_list(3, :mpi, :merge_candidate, status: in_process)
 
     dm = AutoMergePersonsDeactivator.get_merge_candidates(1, 100)
-
     mc_ids = Enum.map(mc, & &1.id)
+    dm_ids = Enum.map(dm, & &1.id)
 
     MergeCandidate
     |> Repo.all()
     |> Enum.filter(&(&1.id in mc_ids))
-    |> Enum.all?(&(MergeCandidate.status(:in_process) == &1.status))
+    |> Enum.all?(&(in_process == &1.status))
 
-    assert MapSet.new(mc) == MapSet.new(dm)
+    assert MapSet.new(dm_ids) == MapSet.new(mc_ids)
   end
 
   test "get_new_merge_candidates/2 no merge candidates" do

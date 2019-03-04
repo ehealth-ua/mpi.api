@@ -4,13 +4,11 @@ defmodule Core.Application do
   use Application
   import Supervisor.Spec, warn: false
   alias Core.DeduplicationRepo
-  alias Core.ReadRepo
   alias Core.Repo
 
   def start(_type, _args) do
     children = [
       Repo,
-      ReadRepo,
       DeduplicationRepo
     ]
 

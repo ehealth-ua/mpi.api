@@ -102,15 +102,13 @@ defmodule CandidatesMerger do
   defp process_related_merge_candidates(_, _), do: :ok
 
   defp deactivate_person(%ManualMergeCandidate{decision: @status_merge} = candidate, actor_id) do
-    data = [
-      %{
-        id: candidate.merge_candidate_id,
-        master_person_id: candidate.master_person_id,
-        merge_person_id: candidate.person_id
-      }
-    ]
+    event = %{
+      id: candidate.merge_candidate_id,
+      master_person_id: candidate.master_person_id,
+      merge_person_id: candidate.person_id
+    }
 
-    case @kafka_producer.publish_person_deactivation_event(data, actor_id, @reason) do
+    case @kafka_producer.publish_person_deactivation_event(event, actor_id, @reason) do
       :ok -> :ok
       err -> {:error, "Cannot publish message for person deactivation in Kafka with #{inspect(err)}}"}
     end

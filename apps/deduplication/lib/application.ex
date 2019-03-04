@@ -18,10 +18,9 @@ defmodule Deduplication.Application do
 
     producer_id = GenStageProducer
     parallel_consumers = config(:parallel_consumers)
-    is_test? = config(:env) == :test
 
     worker_children =
-      if is_test?,
+      if config(:env) == :test,
         do: [],
         else: [
           worker(Producer, [%{id: producer_id}], id: producer_id, name: producer_id)
@@ -36,7 +35,7 @@ defmodule Deduplication.Application do
         ]
 
     {:ok, _} =
-      Supervisor.start_link([{Worker, !is_test?} | worker_children],
+      Supervisor.start_link([{Worker, []} | worker_children],
         strategy: :one_for_all,
         name: DeduplicationGenStageSupervisor
       )

@@ -11,13 +11,21 @@ defmodule Core.VerifiedTs do
   end
 end
 
-defmodule Core.VerifyingIds do
+defmodule Core.VerifyingId do
   @moduledoc """
   Table verifying_ids store ids of checking persons, to be sure after deduplication were no fail one of process
   in parallel execution while processes with latest persons were success. Implementation of more safe execution makes process of deduplication too slow
   """
+
+  import Ecto.Changeset
   use Ecto.Schema
+
   @primary_key {:id, Ecto.UUID, autogenerate: false}
   schema "verifying_ids" do
+    field(:is_complete, :boolean)
+  end
+
+  def changeset(%__MODULE__{} = verifying_id, params) do
+    cast(verifying_id, params, [:is_complete])
   end
 end

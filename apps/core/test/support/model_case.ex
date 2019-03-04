@@ -14,7 +14,6 @@ defmodule Core.ModelCase do
   alias Ecto.Adapters.SQL.Sandbox
   alias Core.DeduplicationRepo
   alias Core.Repo
-  alias Core.ReadRepo
 
   using do
     quote do
@@ -30,12 +29,10 @@ defmodule Core.ModelCase do
 
   setup tags do
     :ok = Sandbox.checkout(Repo)
-    :ok = Sandbox.checkout(ReadRepo)
     :ok = Sandbox.checkout(DeduplicationRepo)
 
     unless tags[:async] do
       Sandbox.mode(Repo, {:shared, self()})
-      Sandbox.mode(ReadRepo, {:shared, self()})
       Sandbox.mode(DeduplicationRepo, {:shared, self()})
     end
 
