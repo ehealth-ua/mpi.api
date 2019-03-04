@@ -66,7 +66,7 @@ defmodule Deduplication.V2.Model do
 
   def cleanup_locked_persons do
     Repo.delete_all(where(VerifyingId, [v], v.is_complete == true))
-    SQL.query!(Repo, "VACUUM verifying_ids (id, is_complete)")
+    SQL.query!(Repo, "VACUUM ANALYZE verifying_ids;")
   end
 
   def unlock_person_after_verify(person_id) do
