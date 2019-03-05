@@ -1,11 +1,11 @@
 defmodule Core.Persons.PersonsAPI do
   @moduledoc false
 
+  import Core.Persons.Filter, only: [filter: 2]
+  import Core.Query, only: [apply_cursor: 2]
   import Ecto.Changeset
   import Ecto.Query
-  import Core.Query, only: [apply_cursor: 2]
 
-  alias Core.Filters.Base, as: BaseFilter
   alias Core.Maybe
   alias Core.Person
   alias Core.PersonDocument
@@ -90,13 +90,11 @@ defmodule Core.Persons.PersonsAPI do
     end
   end
 
-  @doc """
-  used only for graphql
-  """
+  # Used only for graphql
   def search(filter, order_by, cursor) do
     Person
     |> preload(^~w(documents phones addresses merged_persons master_persons)a)
-    |> BaseFilter.filter(filter)
+    |> filter(filter)
     |> apply_cursor(cursor)
     |> order_by(^order_by)
     |> Repo.all()

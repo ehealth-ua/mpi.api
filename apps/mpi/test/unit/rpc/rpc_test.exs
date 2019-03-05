@@ -206,7 +206,8 @@ defmodule MPI.RpcTest do
       phone_number = "+3809900011122"
       document_number = "АА444009"
 
-      insert_list(10, :mpi, :person)
+      insert_list(4, :mpi, :person)
+      insert_list(8, :mpi, :person, status: Person.status(:inactive))
 
       insert_list(
         2,
@@ -233,6 +234,7 @@ defmodule MPI.RpcTest do
       filter = [
         {:authentication_methods, :contains, [%{"phone_number" => phone_number}]},
         {:tax_id, :equal, tax_id},
+        {:status, :equal, "ACTIVE"},
         {:birth_date, :equal, birth_date},
         {:documents, nil, [{:number, :equal, document_number}, {:type, :equal, "PASSPORT"}]}
       ]
