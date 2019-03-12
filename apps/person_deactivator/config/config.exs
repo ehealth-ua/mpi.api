@@ -2,7 +2,8 @@ use Mix.Config
 
 config :person_deactivator,
   producer: PersonDeactivator.Kafka.Producer,
-  worker: PersonDeactivator.Worker
+  worker: PersonDeactivator.Worker,
+  rpc_worker: PersonDeactivator.Rpc.Worker
 
 config :person_deactivator, PersonDeactivator.Application, env: Mix.env()
 

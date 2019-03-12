@@ -33,6 +33,7 @@ defmodule PersonDeactivator.MixProject do
   defp deps do
     [
       {:kaffe, "~> 1.11"},
+      {:kube_rpc, git: "https://github.com/edenlabllc/kube_rpc.git"},
       {:core, in_umbrella: true}
     ]
   end

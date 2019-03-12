@@ -20,17 +20,16 @@ defmodule MPIScheduler.Jobs.AutoMergePersonsDeactivator do
 
   def get_merge_candidates(score, batch_size) do
     MergeCandidate
+    |> select([m], %{id: m.id, master_person_id: m.master_person_id, merge_person_id: m.person_id})
     |> where([m], m.status == ^MergeCandidate.status(:new) and m.score >= ^score)
     |> limit(^batch_size)
     |> Repo.all()
   end
 
   defp push_merge_candidates(candidates, system_user_id) do
-    Enum.map(candidates, fn candidate ->
-      event = %{id: candidate.id, master_person_id: candidate.master_person_id, merge_person_id: candidate.person_id}
-
-      with :ok <- @kafka_producer.publish_person_deactivation_event(event, system_user_id, @reason) do
-        candidate
+    Enum.map(candidates, fn %{id: id} = candidate ->
+      with :ok <- @kafka_producer.publish_person_deactivation_event(candidate, system_user_id, @reason) do
+        %MergeCandidate{id: id}
         |> MergeCandidate.changeset(%{status: MergeCandidate.status(:in_process)})
         |> Repo.update!()
       end

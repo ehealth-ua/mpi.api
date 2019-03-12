@@ -8,10 +8,14 @@ defmodule Core.MergeCandidate do
 
   @new "NEW"
   @in_process "IN_PROCESS"
+  @stale "STALE"
+  @declined "DECLINED"
   @merged "MERGED"
 
   def status(:new), do: @new
   def status(:in_process), do: @in_process
+  def status(:stale), do: @stale
+  def status(:declined), do: @declined
   def status(:merged), do: @merged
 
   @primary_key {:id, Ecto.UUID, autogenerate: true}
