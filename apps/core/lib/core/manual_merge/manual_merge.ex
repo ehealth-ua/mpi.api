@@ -4,6 +4,7 @@ defmodule Core.ManualMerge do
   """
   use Confex, otp_app: :core
 
+  import Core.AuditLogs, only: [create_audit_logs: 2]
   import Core.Query, only: [apply_cursor: 2]
   import Ecto.Query
 
@@ -11,6 +12,8 @@ defmodule Core.ManualMerge do
   alias Core.{DeduplicationRepo, Repo}
   alias Core.{ManualMergeCandidate, ManualMergeRequest}
   alias Ecto.{Changeset, UUID}
+
+  require Logger
 
   @status_new ManualMergeRequest.status(:new)
   @status_postpone ManualMergeRequest.status(:postpone)
@@ -26,6 +29,44 @@ defmodule Core.ManualMerge do
       updated_at: DateTime.utc_now()
     }
   end
+
+  def create_manual_merge_candidates([], _batch_size, _system_user_id) do
+    :ok
+  end
+
+  def create_manual_merge_candidates(merge_candidates, batch_size, system_user_id) do
+    Logger.info(fn -> "Trying to create `#{length(merge_candidates)}}` Manual Merge Candidates" end)
+
+    merge_candidates
+    |> Stream.map(&new_candidate/1)
+    |> Stream.chunk_every(batch_size)
+    |> Enum.each(fn manual_merge_candidates ->
+      ManualMergeCandidate
+      |> DeduplicationRepo.insert_all(manual_merge_candidates, on_conflict: :nothing)
+      |> log_insert(manual_merge_candidates, system_user_id)
+    end)
+  end
+
+  defp log_insert({inserted, _}, manual_merge_candidates, system_user_id) when inserted > 0 do
+    changes =
+      manual_merge_candidates
+      |> Task.async_stream(fn candidate ->
+        %{
+          actor_id: system_user_id,
+          resource: "manual_merge_candidates",
+          resource_id: candidate[:id],
+          changeset: candidate
+        }
+      end)
+      |> Enum.reduce([], fn
+        {:ok, v}, acc -> [v | acc]
+        _, acc -> acc
+      end)
+
+    create_audit_logs(:deduplication, changes)
+  end
+
+  defp log_insert(_, _, _), do: :ok
 
   def search_manual_merge_requests([_ | _] = filter, order_by \\ [], cursor \\ nil) do
     manual_merge_requests =

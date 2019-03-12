@@ -7,7 +7,6 @@ defmodule Deduplication.V2.Match do
 
   alias Core.DeduplicationRepo
   alias Core.ManualMerge
-  alias Core.ManualMergeCandidate
   alias Core.MergeCandidate
   alias Core.Person
   alias Core.Repo
@@ -37,10 +36,7 @@ defmodule Deduplication.V2.Match do
     system_user_id = Confex.fetch_env!(:core, :system_user)
 
     Repo.transaction(fn ->
-      person.id
-      |> merge_candidates(candidates, system_user_id)
-      |> manual_merge_candidates(system_user_id)
-
+      merge_candidates(person.id, candidates, system_user_id)
       Model.unlock_person_after_verify(person.id)
     end)
   end
@@ -91,32 +87,11 @@ defmodule Deduplication.V2.Match do
       |> Model.async_stream_filter()
 
     Repo.insert_all(MergeCandidate, merge_candidates, on_conflict: :nothing)
-    log_insert(:mpi, merge_candidates, system_user_id)
+    log_insert(merge_candidates, system_user_id)
     merge_candidates
   end
 
-  def manual_merge_candidates(merge_candidates, system_user_id) do
-    manual_merge_candidates =
-      merge_candidates
-      |> Task.async_stream(&filter_manual_merge_candidate/1)
-      |> Model.async_stream_filter()
-
-    DeduplicationRepo.insert_all(ManualMergeCandidate, manual_merge_candidates, on_conflict: :nothing)
-
-    log_insert(:deduplication, manual_merge_candidates, system_user_id)
-  end
-
-  defp filter_manual_merge_candidate(%{score: score} = merge_candidate) do
-    config = config()
-
-    if score >= config[:manual_score_min] and score <= config[:manual_score_max] do
-      ManualMerge.new_candidate(merge_candidate)
-    else
-      :skip
-    end
-  end
-
-  def log_insert(db, merge_candidates, system_user_id) do
+  defp log_insert(merge_candidates, system_user_id) do
     changes =
       merge_candidates
       |> Task.async_stream(fn mc ->
@@ -129,6 +104,6 @@ defmodule Deduplication.V2.Match do
       end)
       |> Model.async_stream_filter()
 
-    create_audit_logs(db, changes)
+    create_audit_logs(:mpi, changes)
   end
 end

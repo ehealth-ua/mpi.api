@@ -7,13 +7,11 @@ defmodule Deduplication.V2.MatchTest do
   import Core.Factory
   import Mox
 
-  alias Core.ManualMergeCandidate
   alias Core.MergeCandidate
   alias Core.Person
   alias Core.PersonAddress
   alias Core.PersonDocument
   alias Core.Repo
-  alias Core.DeduplicationRepo
   alias Deduplication.V2.Match
   alias Deduplication.V2.Model
 
@@ -156,32 +154,22 @@ defmodule Deduplication.V2.MatchTest do
       expect(PyWeightMock, :weight, 3, fn %{} -> 0.85 end)
       stub(PyWeightMock, :weight, fn %{} -> 0.95 end)
 
-      person_ids =
-        5
-        |> insert_list(:mpi, :person,
-          tax_id: "123456789",
-          documents: [build(:document, number: "000123")],
-          authentication_methods: [
-            build(:authentication_method,
-              type: "OTP",
-              phone_number: "+380630000000"
-            )
-          ]
-        )
-        |> Enum.map(& &1.id)
+      5
+      |> insert_list(:mpi, :person,
+        tax_id: "123456789",
+        documents: [build(:document, number: "000123")],
+        authentication_methods: [
+          build(:authentication_method,
+            type: "OTP",
+            phone_number: "+380630000000"
+          )
+        ]
+      )
+      |> Enum.map(& &1.id)
 
       persons = Model.get_unverified_persons(5)
       assert 5 = Match.deduplicate_persons(persons)
       assert [] == Model.get_unverified_persons(13)
-
-      candidates = DeduplicationRepo.all(ManualMergeCandidate)
-
-      assert 3 == Enum.count(candidates)
-
-      Enum.each(candidates, fn candidate ->
-        assert candidate.person_id in person_ids
-        assert candidate.master_person_id in person_ids
-      end)
     end
   end
 

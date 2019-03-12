@@ -1,4 +1,4 @@
-defmodule MPIScheduler.Jobs.ContractRequestsTerminatorTest do
+defmodule MPIScheduler.Jobs.AutoMergePersonsDeactivatorTest do
   @moduledoc false
   use Core.ModelCase, async: false
 

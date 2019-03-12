@@ -55,12 +55,16 @@ Also sample `.env` can be used as payload for `docker run` cli.
 | VAR_NAME                       | Default Value | Description |
 | ------------------------------ | ------------- | ----------- |
 | MAX_PERSONS_RESULT             | `15`          | Count of results for pagination when using person search |
-| DEDUPLICATION_MANUAL_SCORE_MIN | `0.7`         | Minimal deduplication score range for creating Manual Merge Candidate. Between 0 and 1.
-| DEDUPLICATION_MANUAL_SCORE_MAX | `0.9`         | Maximum deduplication score range for creating Manual Merge Candidate. Between 0 and 1.
 
 ## MPI Scheduler variables
-| VAR_NAME                            | Default Value | Description |
-| ----------------------------------- | ------------- | ----------- |
-| PERSON_AUTO_DEACTIVATION_SCHEDULE   | `0 0 * * *`   | Cron expression for Person auto deactivation |
-| PERSON_AUTO_DEACTIVATION_SCORE      | `0.9`         | Minimal deduplication score for creating Merge Candidate. Between 0 and 1.
-| PERSON_AUTO_DEACTIVATION_BATCH_SIZE | `500`         | Batch size of Merge Candidates, that will fetched from DB for Person Deactivation job |
+| VAR_NAME                                                | Default Value | Description |
+| ------------------------------------------------------- | ------------- | ----------- |
+| PERSON_AUTO_DEACTIVATION_SCHEDULE                       | `0 0 * * *`   | Cron expression for Person auto deactivation job |
+| MANUAL_MERGE_CANDIDATES_CREATOR_SCHEDULE                | `0 0 * * *`   | Cron expression for Manual Merge Candidates creator job |
+| PERSON_AUTO_DEACTIVATION_SCORE                          | `0.9`         | Minimal deduplication score for creating Merge Candidate. Between 0 and 1. |
+| PERSON_AUTO_DEACTIVATION_BATCH_SIZE                     | `500`         | Batch size of Merge Candidates, that will fetched from MPI DB for Person Deactivation job |
+| DEDUPLICATION_MERGE_CANDIDATES_SELECT_BATCH_SIZE        | `500`         | Batch size of Merge Candidates in grey zone, that will fetched from MPI DB for Manual Merge Creator job |
+| DEDUPLICATION_MERGE_CANDIDATES_SELECT_MAX_AMOUNT        | `10_000`      | Maximum amount of Merge Candidates that will processed during Manual Merge Creator job |
+| DEDUPLICATION_MANUAL_MERGE_CANDIDATES_INSERT_BATCH_SIZE | `100`         | Amount of Manual Merge Candidates for bulk insert into Deduplication DB |
+| DEDUPLICATION_MANUAL_SCORE_MIN                          | `0.7`         | Minimal deduplication score range for creating Manual Merge Candidate. Between 0 and 1. |
+| DEDUPLICATION_MANUAL_SCORE_MAX                          | `0.9`         | Maximum deduplication score range for creating Manual Merge Candidate. Between 0 and 1. |

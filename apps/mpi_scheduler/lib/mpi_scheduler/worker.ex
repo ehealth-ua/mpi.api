@@ -5,11 +5,13 @@ defmodule MPIScheduler.Worker do
 
   alias Crontab.CronExpression.Parser
   alias MPIScheduler.Jobs.AutoMergePersonsDeactivator
+  alias MPIScheduler.Jobs.ManualMergeCandidatesCreator
   alias Quantum.Job
   alias Quantum.RunStrategy.Local
 
   def create_jobs do
     create_job(&AutoMergePersonsDeactivator.run/0, :auto_merge_persons_deactivator_schedule)
+    create_job(&ManualMergeCandidatesCreator.run/0, :manual_merge_candidates_creator_schedule)
   end
 
   defp create_job(fun, config_name) do

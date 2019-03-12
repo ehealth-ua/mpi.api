@@ -8,6 +8,7 @@ config :deduplication,
 
 # Print only warnings and errors during test
 config :logger, level: :info
+config :ex_unit, capture_log: true
 
 config :deduplication, Deduplication.V2.Model,
   candidates_batch_size: {:system, :integer, "DEDUPLICATION_CANDIDATES_BATCH_SIZE", 2}
