@@ -13,6 +13,7 @@ defmodule Deduplication.V2.MatchTest do
   alias Core.PersonDocument
   alias Core.Repo
   alias Deduplication.V2.Match
+  alias Deduplication.MixProject
   alias Deduplication.V2.Model
 
   setup :verify_on_exit!
@@ -46,13 +47,14 @@ defmodule Deduplication.V2.MatchTest do
       persons = Model.get_unverified_persons(n)
       assert n == Match.deduplicate_persons(persons)
       assert [] == Model.get_unverified_persons(1)
+      merge_candidates = Repo.all(MergeCandidate)
 
-      merge_candidates_number =
-        MergeCandidate
-        |> Repo.all()
-        |> Enum.count()
+      Enum.map(merge_candidates, fn mc ->
+        assert MixProject.project()[:version] == mc.details["version"]
+        assert mc.details["start_date"]
+      end)
 
-      assert candidate_count(n) == merge_candidates_number
+      assert candidate_count(n) == Enum.count(merge_candidates)
     end
   end
 

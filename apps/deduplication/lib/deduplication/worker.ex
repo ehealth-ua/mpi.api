@@ -11,6 +11,7 @@ defmodule Deduplication.Worker do
   def start_link(_) do
     vacuum? = config()[:vacuum_refresh]
     mode = config()[:mode]
+    Model.store_deduplication_details()
 
     {:ok, pid} = GenServer.start_link(__MODULE__, %{mode: mode, offset: 0}, name: __MODULE__)
     if vacuum?, do: send(pid, :vacuum)

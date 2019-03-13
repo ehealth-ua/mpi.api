@@ -11,7 +11,11 @@ defmodule Deduplication.V2.Model do
   alias Core.Repo
   alias Core.VerifiedTs
   alias Core.VerifyingId
+  alias Deduplication.PersistentTerm
   alias Ecto.Adapters.SQL
+
+  def store_deduplication_details, do: PersistentTerm.store_details()
+  def get_deduplication_details, do: PersistentTerm.details()
 
   def async_stream_filter(streamlist) do
     Enum.reduce(streamlist, [], fn

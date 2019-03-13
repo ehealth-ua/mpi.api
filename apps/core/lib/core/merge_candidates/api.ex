@@ -5,6 +5,7 @@ defmodule Core.MergeCandidates.API do
   import Ecto.Changeset
 
   alias Core.MergeCandidate
+  alias Core.Person
   alias Core.Repo
 
   require Logger
@@ -41,10 +42,39 @@ defmodule Core.MergeCandidates.API do
     end
   end
 
+  def update_status_by_id(id, status, consumer_id) do
+    with %MergeCandidate{} = merge_candidate <- Repo.get(MergeCandidate, id),
+         {:ok, _} <- update_merge_candidate(merge_candidate, %{status: status}, consumer_id) do
+      :ok
+    end
+  end
+
   def update_merge_candidate(%MergeCandidate{} = merge_candidate, params, consumer_id) do
     merge_candidate
     |> changeset(params)
     |> Repo.update_and_log(consumer_id)
+  end
+
+  def get_new_merge_candidates(score, batch_size) do
+    MergeCandidate
+    |> select([m], %{id: m.id, master_person_id: m.master_person_id, merge_person_id: m.person_id})
+    |> where([m], m.status == ^MergeCandidate.status(:new) and m.score >= ^score)
+    |> limit(^batch_size)
+    |> Repo.all()
+  end
+
+  def get_status_by_master_and_merge(master_person_id, merge_person_id) do
+    MergeCandidate
+    |> select([m, mp, cp], %{
+      id: m.id,
+      master_person_id: mp.id,
+      merge_person_id: cp.id,
+      actual?: mp.updated_at < m.updated_at and cp.updated_at < m.updated_at
+    })
+    |> join(:inner, [m], mp in Person, m.master_person_id == mp.id)
+    |> join(:inner, [m, mp], cp in Person, m.person_id == cp.id)
+    |> where([m, mp, cp], m.master_person_id == ^master_person_id and m.person_id == ^merge_person_id)
+    |> Repo.one()
   end
 
   def changeset(struct, params \\ %{}) do

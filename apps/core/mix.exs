@@ -42,7 +42,7 @@ defmodule Core.MixProject do
   defp deps do
     [
       {:confex_config_provider, "~> 0.1.0"},
-      {:kube_rpc, git: "https://github.com/edenlabllc/kube_rpc.git"},
+      {:kube_rpc, "~> 0.1.0"},
       {:confex, "~> 3.4"},
       {:scrivener_ecto, "~> 1.2"},
       {:ecto_trail, "~> 0.3"},

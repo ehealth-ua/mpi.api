@@ -5,8 +5,6 @@ defmodule Deduplication.V2.Match do
 
   import Core.AuditLogs, only: [create_audit_logs: 2]
 
-  alias Core.DeduplicationRepo
-  alias Core.ManualMerge
   alias Core.MergeCandidate
   alias Core.Person
   alias Core.Repo
@@ -81,7 +79,8 @@ defmodule Deduplication.V2.Match do
           config: weight_map,
           inserted_at: DateTime.utc_now(),
           updated_at: DateTime.utc_now(),
-          score: score
+          score: score,
+          details: Model.get_deduplication_details()
         }
       end)
       |> Model.async_stream_filter()

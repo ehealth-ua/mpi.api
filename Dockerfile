@@ -8,15 +8,16 @@ WORKDIR /app
 
 ENV MIX_ENV=prod
 
-RUN apk add git build-base
-RUN mix do \
-  local.hex --force, \
-  local.rebar --force, \
-  deps.get, \
-  deps.compile, \
-  release --name=${APP_NAME}
-
-RUN git log --pretty=format:"%H %cd %s" > commits.txt
+RUN apk add git build-base && \
+    git log --pretty=format:"%H %cd %s" > commits.txt && \
+    APP_VSN=$(grep 'version:' apps/${APP_NAME}/mix.exs | cut -d '"' -f2) && \
+    mix do \
+    local.hex --force, \
+    local.rebar --force, \
+    deps.get, \
+    deps.compile, \
+    release --name=${APP_NAME} && \
+    mv _build/prod/rel/${APP_NAME}/releases/${APP_VSN}/${APP_NAME}.tar.gz ${APP_NAME}.tar.gz 
 
 FROM alpine:3.9
 
@@ -31,12 +32,12 @@ RUN apk add --no-cache \
 
 WORKDIR /app
 
-COPY --from=builder /app/_build/prod/rel/${APP_NAME}/releases/0.1.0/${APP_NAME}.tar.gz /app
-COPY --from=builder /app/commits.txt /app
-
-RUN tar -xzf ${APP_NAME}.tar.gz; rm ${APP_NAME}.tar.gz
-
 ENV REPLACE_OS_VARS=true \
   APP=${APP_NAME}
+
+COPY --from=builder /app/commits.txt /app
+COPY --from=builder /app/${APP_NAME}.tar.gz /app
+
+RUN tar -xzf ${APP_NAME}.tar.gz; rm ${APP_NAME}.tar.gz
 
 CMD ./bin/${APP} foreground
