@@ -50,6 +50,15 @@ defmodule Core.MergeCandidates.API do
   end
 
   def update_merge_candidate(%MergeCandidate{} = merge_candidate, params, consumer_id) do
+    fields = ~w(status score)
+
+    atom_params =
+      params
+      |> Map.take(fields)
+      |> Enum.into(%{}, fn {k, v} -> {String.to_atom(k), v} end)
+
+    params = if Enum.empty?(atom_params), do: Map.take(params, Enum.map(fields, &String.to_atom/1)), else: atom_params
+
     merge_candidate
     |> changeset(params)
     |> Repo.update_and_log(consumer_id)
@@ -71,13 +80,13 @@ defmodule Core.MergeCandidates.API do
       merge_person_id: cp.id,
       actual?: mp.updated_at < m.updated_at and cp.updated_at < m.updated_at
     })
-    |> join(:inner, [m], mp in Person, m.master_person_id == mp.id)
-    |> join(:inner, [m, mp], cp in Person, m.person_id == cp.id)
+    |> join(:inner, [m], mp in Person, on: m.master_person_id == mp.id)
+    |> join(:inner, [m, mp], cp in Person, on: m.person_id == cp.id)
     |> where([m, mp, cp], m.master_person_id == ^master_person_id and m.person_id == ^merge_person_id)
     |> Repo.one()
   end
 
   def changeset(struct, params \\ %{}) do
-    cast(struct, params, ~w(status score))
+    cast(struct, params, ~w(status score)a)
   end
 end

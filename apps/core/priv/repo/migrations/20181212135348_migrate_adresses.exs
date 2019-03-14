@@ -49,7 +49,7 @@ defmodule Core.Repo.Migrations.MigrateAdresses do
     persons =
       Person
       |> select([p, a], [:id, :addresses, :updated_at, :inserted_at])
-      |> join(:left, [p], a in PersonAddress, a.person_id == p.id)
+      |> join(:left, [p], a in PersonAddress, on: a.person_id == p.id)
       |> where(
         [p, a],
         fragment(

@@ -46,7 +46,7 @@ defmodule Core.Repo.Migrations.CopyDocumentsAndPhonesIntoRelatedTables do
   def chunk_persons_process(limit) do
     Person
     |> select([:id, :inserted_at, :updated_at, :documents, :phones])
-    |> join(:left, [p], d in PersonDocument, d.person_id == p.id)
+    |> join(:left, [p], d in PersonDocument, on: d.person_id == p.id)
     |> where([p, d], fragment("? IS NULL and ? <=
     (select COALESCE(min(updated_at), '01-01-3000 00:00:00') from person_documents)", d.person_id, p.updated_at))
     |> order_by(desc: :updated_at)

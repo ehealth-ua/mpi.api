@@ -109,7 +109,7 @@ defmodule Core.Persons.PersonsAPI do
     persons =
       Person
       |> person_preload_query(fields)
-      |> join(:inner, [p], s in subquery(person_search_query(params)), p.id == s.id)
+      |> join(:inner, [p], s in subquery(person_search_query(params)), on: p.id == s.id)
       |> order_by([p], desc: p.inserted_at)
       |> Repo.paginate(paging_params)
 
@@ -167,7 +167,7 @@ defmodule Core.Persons.PersonsAPI do
       :inner,
       [p],
       d in PersonDocument,
-      d.person_id == p.id and d.type == ^type and fragment("lower(?) = lower(?)", d.number, ^number)
+      on: d.person_id == p.id and d.type == ^type and fragment("lower(?) = lower(?)", d.number, ^number)
     )
   end
 
@@ -176,7 +176,7 @@ defmodule Core.Persons.PersonsAPI do
   defp with_documents(query, %{"documents" => []}), do: query
 
   defp with_documents(query, %{"documents" => [document | documents]}) do
-    query = join(query, :inner, [p], d in PersonDocument, d.person_id == p.id)
+    query = join(query, :inner, [p], d in PersonDocument, on: d.person_id == p.id)
     documents_query = document_search_query(document)
 
     documents_query =
@@ -210,7 +210,7 @@ defmodule Core.Persons.PersonsAPI do
       :inner,
       [p],
       ph in PersonPhone,
-      ph.person_id == p.id and ph.type == "MOBILE" and ph.number == ^phone_number
+      on: ph.person_id == p.id and ph.type == "MOBILE" and ph.number == ^phone_number
     )
   end
 
@@ -234,7 +234,7 @@ defmodule Core.Persons.PersonsAPI do
       :inner,
       [p],
       d in PersonDocument,
-      d.person_id == p.id and d.type == "BIRTH_CERTIFICATE" and d.number == ^birth_certificate
+      on: d.person_id == p.id and d.type == "BIRTH_CERTIFICATE" and d.number == ^birth_certificate
     )
   end
 

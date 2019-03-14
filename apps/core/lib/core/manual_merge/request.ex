@@ -25,7 +25,6 @@ defmodule Core.ManualMergeRequest do
   )a
 
   @primary_key {:id, Ecto.UUID, autogenerate: true}
-  @derive {Poison.Encoder, except: [:__meta__]}
   schema "manual_merge_requests" do
     field(:status, :string, default: @status_new)
     field(:comment, :string, default: nil)
@@ -33,7 +32,7 @@ defmodule Core.ManualMergeRequest do
 
     belongs_to(:manual_merge_candidate, ManualMergeCandidate, type: UUID)
 
-    timestamps(type: :utc_datetime)
+    timestamps(type: :utc_datetime_usec)
   end
 
   def changeset(%__MODULE__{} = merge_request, params) do

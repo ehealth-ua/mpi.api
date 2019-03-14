@@ -26,7 +26,7 @@ defmodule Core.Repo.Migrations.CleanupPassportNumbers do
         last_inserted_at
 
       [] ->
-        last_inserted_at = ~N[1970-01-01 00:00:00.000]
+        last_inserted_at = ~N[1970-01-01 00:00:00.000000]
         Repo.insert_all("cleanup_passport_numbers_temp", [[last_inserted_at: last_inserted_at]])
         last_inserted_at
     end
@@ -34,6 +34,7 @@ defmodule Core.Repo.Migrations.CleanupPassportNumbers do
 
   defp cleanup_number(limit, last_inserted_at) do
     from(pd in PersonDocument,
+    select: pd.inserted_at,
       where:
         fragment(
           "id in (select id from person_documents where type = 'PASSPORT' and inserted_at >= ? order by inserted_at limit ?)",
@@ -47,7 +48,7 @@ defmodule Core.Repo.Migrations.CleanupPassportNumbers do
         ]
       ]
     )
-    |> Repo.update_all([], returning: [:inserted_at])
+    |> Repo.update_all([])
   end
 
   defp chunk_update(limit, last_inserted_at) do

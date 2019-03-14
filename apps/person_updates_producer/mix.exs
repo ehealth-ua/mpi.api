@@ -38,7 +38,6 @@ defmodule PersonUpdatesProducer.Mixfile do
   defp deps do
     [
       {:quantum, "~> 2.3"},
-      {:timex, "~> 3.0"},
       {:kaffe, "~> 1.11"},
       {:core, in_umbrella: true}
     ]

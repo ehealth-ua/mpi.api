@@ -32,7 +32,7 @@ defmodule Core.Repo.Migrations.PersonAddresses do
     create(index(:person_addresses, [:settlement_id, :person_first_name, :person_id]))
     create(index(:person_addresses, [:settlement_id, :person_last_name, :person_id]))
 
-    {:ok, min_updated_at, 0} = DateTime.from_iso8601("1970-01-01T00:00:00+00")
+    {:ok, min_updated_at, 0} = DateTime.from_iso8601("1970-01-01T00:00:00.000000+00")
     Repo.insert!(%VerifiedTs{id: 0, updated_at: min_updated_at})
   end
 end

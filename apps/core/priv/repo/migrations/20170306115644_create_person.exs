@@ -23,7 +23,7 @@ defmodule Core.Repo.Migrations.CreateMPI.Person do
       add(:inserted_by, :string, null: false)
       add(:updated_by, :string, null: false)
 
-      timestamps(type: :utc_datetime)
+      timestamps(type: :utc_datetime_usec)
     end
   end
 end

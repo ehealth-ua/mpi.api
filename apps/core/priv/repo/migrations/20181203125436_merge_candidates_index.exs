@@ -11,7 +11,7 @@ defmodule Core.Repo.Migrations.MergeCandidatesIndex do
     create(index(:merge_candidates, [:person_id], concurrently: true))
 
     create table(:verified_ts) do
-      timestamps(type: :utc_datetime)
+      timestamps(type: :utc_datetime_usec)
     end
 
     create table(:verifying_ids, primary_key: false) do

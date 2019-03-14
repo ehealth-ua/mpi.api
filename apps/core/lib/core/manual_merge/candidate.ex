@@ -29,7 +29,6 @@ defmodule Core.ManualMergeCandidate do
   )a
 
   @primary_key {:id, Ecto.UUID, autogenerate: true}
-  @derive {Poison.Encoder, except: [:__meta__]}
   schema "manual_merge_candidates" do
     field(:status, :string, default: @status_new)
     field(:status_reason, :string, default: @status_new)
@@ -42,7 +41,7 @@ defmodule Core.ManualMergeCandidate do
     # Refers to MPI db
     belongs_to(:merge_candidate, MergeCandidate, type: UUID)
 
-    timestamps(type: :utc_datetime)
+    timestamps(type: :utc_datetime_usec)
   end
 
   def changeset(%__MODULE__{} = merge_request, params) do

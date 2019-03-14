@@ -7,7 +7,7 @@ defmodule Core.VerifiedTs do
   use Ecto.Schema
 
   schema "verified_ts" do
-    timestamps(type: :utc_datetime)
+    timestamps(type: :utc_datetime_usec)
   end
 end
 

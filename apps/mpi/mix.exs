@@ -39,13 +39,10 @@ defmodule MPI.Mixfile do
     [
       {:plug_cowboy, "~> 2.0"},
       {:phoenix, "~> 1.4"},
-      {:phoenix_ecto, "~> 3.2"},
+      {:phoenix_ecto, "~> 4.0"},
       {:confex, "~> 3.4"},
       {:httpoison, ">= 0.0.0"},
-      {:poison, "~> 3.1", override: true},
-      {:eview, ">= 0.0.0"},
-      {:postgrex, ">= 0.0.0"},
-      {:timex, "~> 3.3.0"},
+      {:eview, "~> 0.15.0"},
       {:candidates_merger, in_umbrella: true},
       {:core, in_umbrella: true}
     ]

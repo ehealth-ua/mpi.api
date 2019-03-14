@@ -12,7 +12,7 @@ defmodule Core.DeduplicationRepo.Migrations.CreateManualMergeCandidates do
       add(:master_person_id, :uuid, null: false)
       add(:merge_candidate_id, :uuid, null: false)
 
-      timestamps(type: :utc_datetime)
+      timestamps(type: :utc_datetime_usec)
     end
 
     create(unique_index(:manual_merge_candidates, ~w(master_person_id person_id)a))

@@ -3,9 +3,9 @@ defmodule Core.Factories.MPI do
   This module lists factories, a mean suitable
   for tests that involve preparation of DB data
   """
+
   defmacro __using__(_opts) do
     quote do
-      alias Ecto.UUID
       alias Core.MergeCandidate
       alias Core.MergedPair
       alias Core.Person
@@ -14,6 +14,7 @@ defmodule Core.Factories.MPI do
       alias Core.PersonPhone
       alias Core.PersonUpdate
       alias Core.VerifyingId
+      alias Ecto.UUID
 
       @person_status_active Person.status(:active)
 

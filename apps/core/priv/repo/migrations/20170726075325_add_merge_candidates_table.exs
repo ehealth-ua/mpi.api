@@ -8,7 +8,7 @@ defmodule Core.Repo.Migrations.AddMastersTable do
       add(:master_person_id, references(:persons, type: :uuid), null: false)
       add(:status, :string, null: false)
 
-      timestamps(type: :utc_datetime)
+      timestamps(type: :utc_datetime_usec)
     end
   end
 end

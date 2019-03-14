@@ -9,7 +9,7 @@ defmodule Core.DeduplicationRepo.Migrations.CreateAuditLog do
       add(:resource_id, :text, null: false)
       add(:changeset, :map, null: false)
 
-      timestamps(type: :utc_datetime, updated_at: false)
+      timestamps(type: :utc_datetime_usec, updated_at: false)
     end
   end
 end

@@ -70,7 +70,7 @@ defmodule Core.Unit.ManualMergeTest do
 
       assert {:error,
               %Changeset{
-                errors: [assignee_id: {"new request is already present", []}],
+                errors: [assignee_id: {"new request is already present", _}],
                 valid?: false
               }} = ManualMerge.assign_merge_candidate(actor_id)
     end
@@ -87,7 +87,7 @@ defmodule Core.Unit.ManualMergeTest do
 
       assert {:error,
               %Changeset{
-                errors: [assignee_id: {"postponed requests limit exceeded", []}],
+                errors: [assignee_id: {"postponed requests limit exceeded", _}],
                 valid?: false
               }} = ManualMerge.assign_merge_candidate(actor_id)
     end

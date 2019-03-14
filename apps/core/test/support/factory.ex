@@ -8,8 +8,8 @@ defmodule Core.Factory do
   use Core.Factories.MPI
   use Core.Factories.Deduplication
 
-  alias Core.Repo
   alias Core.DeduplicationRepo
+  alias Core.Repo
 
   def insert(type, factory, attrs \\ []) do
     factory

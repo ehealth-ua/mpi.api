@@ -82,7 +82,7 @@ defmodule Deduplication.V2.Model do
   def get_locked_unverified_persons(limit, offset) do
     Person
     |> preload([:documents, :addresses])
-    |> join(:inner, [p], v in VerifyingId, v.id == p.id and is_nil(v.is_complete))
+    |> join(:inner, [p], v in VerifyingId, on: v.id == p.id and is_nil(v.is_complete))
     |> order_by([p, v], p.id)
     |> limit(^limit)
     |> offset(^offset)
@@ -97,7 +97,7 @@ defmodule Deduplication.V2.Model do
              persons =
                Person
                |> preload([:documents, :addresses])
-               |> join(:left, [p], v in VerifyingId, v.id == p.id)
+               |> join(:left, [p], v in VerifyingId, on: v.id == p.id)
                |> where(
                  [p, v],
                  p.updated_at >= ^last_update and p.status == ^Person.status(:active) and is_nil(v.id)
@@ -149,18 +149,19 @@ defmodule Deduplication.V2.Model do
         [p],
         ca in fragment(
           "
-          (SELECT DISTINCT person_id id
-             FROM person_documents WHERE (regexp_replace(number, '[^[:digit:]]', '', 'g') = ANY(?)))
-          UNION
-          (SELECT id FROM persons WHERE tax_id = ? and tax_id IS NOT NULL)
-          UNION
-          (SELECT id FROM persons WHERE authentication_methods @> ?)
+          (
+            (SELECT DISTINCT person_id id FROM person_documents AS pd WHERE (regexp_replace(number, '[^[:digit:]]', '', 'g') = ANY(?)))
+            UNION
+            (SELECT id FROM persons AS p WHERE tax_id = ? and tax_id IS NOT NULL)
+            UNION
+            (SELECT id FROM persons AS p WHERE authentication_methods @> ?)
+          )
           ",
           ^documents_numbers_only,
           ^person.tax_id,
           ^[%{"phone_number" => auth_phone_number, "type" => "OTP"}]
         ),
-        ca.id == p.id
+        on: ca.id == p.id
       )
       # recheck id is not null after right join
       |> where(

@@ -12,7 +12,6 @@ config :core, repos: [read_only_repo: Core.Repo]
 
 # Configure your database
 config :core, Core.Repo,
-  adapter: Ecto.Adapters.Postgres,
   username: "postgres",
   password: "postgres",
   database: "mpi_test",
@@ -20,11 +19,9 @@ config :core, Core.Repo,
   port: 5432,
   pool_size: 10,
   pool: Ecto.Adapters.SQL.Sandbox,
-  ownership_timeout: 120_000_000,
-  loggers: [{EhealthLogger.Ecto, :log, [:info]}]
+  ownership_timeout: 120_000_000
 
 config :core, Core.DeduplicationRepo,
-  adapter: Ecto.Adapters.Postgres,
   username: "postgres",
   password: "postgres",
   database: "deduplication_test",
@@ -32,5 +29,4 @@ config :core, Core.DeduplicationRepo,
   port: 5432,
   pool_size: 10,
   pool: Ecto.Adapters.SQL.Sandbox,
-  ownership_timeout: 120_000_000,
-  loggers: [{EhealthLogger.Ecto, :log, [:info]}]
+  ownership_timeout: 120_000_000

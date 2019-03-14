@@ -1,9 +1,11 @@
 defmodule Core.DeduplicationRepo do
   @moduledoc false
 
-  use Ecto.Repo, otp_app: :core
-  use Scrivener, page_size: 50, max_page_size: 500
+  use Ecto.Repo, otp_app: :core, adapter: Ecto.Adapters.Postgres
+  use Scrivener, page_size: 50, max_page_size: 500, options: [allow_out_of_range_pages: true]
   use EctoTrail, schema: Core.ManualMerge.AuditLog
+
+  import Ecto.Query
 
   alias Core.ManualMerge.AuditLog
 
@@ -40,9 +42,8 @@ defmodule Core.DeduplicationRepo do
   """
   @spec update_all_and_log(Ecto.Queryable.t(), Keyword.t(), binary(), Keyword.t()) :: {integer(), nil | [term()]}
   def update_all_and_log(queryable, updates, actor_id, opts \\ []) do
-    opts = Keyword.put_new(opts, :returning, [:id])
-
     queryable
+    |> select([v], [:id])
     |> update_all(updates, opts)
     |> create_audit_logs(updates[:set], actor_id)
   end

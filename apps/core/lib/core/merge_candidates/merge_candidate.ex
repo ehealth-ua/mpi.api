@@ -19,7 +19,6 @@ defmodule Core.MergeCandidate do
   def status(:merged), do: @merged
 
   @primary_key {:id, Ecto.UUID, autogenerate: true}
-  @derive {Poison.Encoder, except: [:__meta__]}
   schema "merge_candidates" do
     field(:status, :string, default: "NEW")
     field(:config, :map)
@@ -28,7 +27,7 @@ defmodule Core.MergeCandidate do
 
     belongs_to(:person, Person, foreign_key: :person_id, type: UUID)
     belongs_to(:master_person, Person, foreign_key: :master_person_id, type: UUID)
-    timestamps(type: :utc_datetime)
+    timestamps(type: :utc_datetime_usec)
   end
 
   def changeset(%__MODULE__{} = merge_candidate, params) do

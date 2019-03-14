@@ -382,6 +382,6 @@ defmodule Deduplication.V1.MatchTest do
   end
 
   defp within_hours(number) do
-    Timex.shift(Timex.now(), hours: -number)
+    DateTime.add(DateTime.utc_now(), -number * 60 * 60, :second)
   end
 end

@@ -11,14 +11,15 @@ defmodule Core.ModelCase do
   """
 
   use ExUnit.CaseTemplate
-  alias Ecto.Adapters.SQL.Sandbox
   alias Core.DeduplicationRepo
   alias Core.Repo
+  alias Ecto.Adapters.SQL.Sandbox
 
   using do
     quote do
       alias Core.Repo
 
+      # import Core.Factory
       import Ecto
       import Ecto.Changeset
       import Ecto.Query

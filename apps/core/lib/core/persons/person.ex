@@ -44,7 +44,7 @@ defmodule Core.Person do
     has_many(:addresses, PersonAddress, on_delete: :delete_all, on_replace: :delete)
     has_many(:merged_persons, MergedPair, foreign_key: :master_person_id, on_delete: :delete_all, on_replace: :delete)
     has_many(:master_persons, MergedPair, foreign_key: :merge_person_id, on_delete: :delete_all, on_replace: :delete)
-    timestamps(type: :utc_datetime)
+    timestamps(type: :utc_datetime_usec)
   end
 
   def status(:active), do: @status_active

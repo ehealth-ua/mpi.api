@@ -44,17 +44,19 @@ defmodule Core.MixProject do
       {:confex_config_provider, "~> 0.1.0"},
       {:kube_rpc, "~> 0.1.0"},
       {:confex, "~> 3.4"},
-      {:scrivener_ecto, "~> 1.2"},
-      {:ecto_trail, "~> 0.3"},
-      {:httpoison, "~> 1.3"},
-      {:poison, "~> 3.1", override: true},
-      {:postgrex, ">= 0.0.0"},
-      {:timex, "~> 3.3.0"},
+      {:ecto, "~> 3.0"},
+      {:ecto_sql, "~> 3.0"},
+      {:scrivener_ecto, git: "https://github.com/AlexKovalevych/scrivener_ecto.git", branch: "fix_page_number"},
+      {:ecto_trail, "~> 0.4.1"},
+      {:httpoison, "~> 1.4"},
+      {:jason, "~> 1.1"},
+      {:poison, "~> 3.0"},
+      {:postgrex, "~> 0.14.1"},
       {:ehealth_logger, git: "https://github.com/edenlabllc/ehealth_logger.git"},
-      {:ecto_filter, git: "https://github.com/edenlabllc/ecto_filter"},
-      {:mox, "~> 0.3", only: [:test]},
+      {:ecto_filter, git: "https://github.com/edenlabllc/ecto_filter", branch: "ecto_3"},
+      {:mox, "~> 0.4.0", only: [:test]},
       {:ex_doc, "~> 0.19", only: :dev, runtime: false},
-      {:ex_machina, "~> 2.0", only: [:dev, :test]}
+      {:ex_machina, "~> 2.3", only: [:dev, :test]}
     ]
   end
 
