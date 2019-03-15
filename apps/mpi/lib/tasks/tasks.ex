@@ -25,7 +25,7 @@ defmodule MPI.ReleaseTasks do
   end
 
   defp load_app do
-    start_applications([:logger, :postgrex, :ecto])
+    start_applications([:logger, :postgrex, :ecto, :ecto_sql])
     Application.load(:mpi)
   end
 
