@@ -7,7 +7,7 @@ defmodule MPI.Web.Endpoint do
 
   plug(Plug.RequestId)
   plug(EView.Plugs.Idempotency)
-  plug(LoggerJSON.Plug, level: Logger.level())
+  plug(EhealthLogger.Plug, level: Logger.level())
 
   plug(EView)
 

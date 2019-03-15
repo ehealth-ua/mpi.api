@@ -18,13 +18,7 @@ defmodule Deduplication.V1.Match do
   @person_status_inactive Person.status(:inactive)
 
   def run do
-    Logger.info(fn ->
-      Poison.encode!(%{
-        "log_type" => "info",
-        "message" => "Starting to look for duplicates at #{DateTime.utc_now()}..."
-      })
-    end)
-
+    Logger.info("Starting to look for duplicates at #{DateTime.utc_now()}...")
     config = config()
 
     depth = -config[:depth]
@@ -69,13 +63,9 @@ defmodule Deduplication.V1.Match do
     if length(pairs) > 0 do
       short_pairs = Enum.map(pairs, &{elem(&1, 1).id, elem(&1, 2).id})
 
-      Logger.info(fn ->
-        Poison.encode!(%{
-          "log_type" => "info",
-          "message" =>
-            "Found duplicates. Will insert the following {master_person_id, person_id} pairs: #{inspect(short_pairs)}"
-        })
-      end)
+      Logger.info(
+        "Found duplicates. Will insert the following {master_person_id, person_id} pairs: #{inspect(short_pairs)}"
+      )
 
       merge_candidates =
         Enum.map(pairs, fn {{_, details}, master_person, person} ->
@@ -110,26 +100,14 @@ defmodule Deduplication.V1.Match do
         |> Multi.run(:log_inserts, &log_insert(&1, :mpi, &2.insert_candidates, system_user_id))
         |> Repo.transaction()
 
-      Logger.info(fn ->
-        Poison.encode!(%{
-          "log_type" => "info",
-          "message" => "Finished to look for duplicates at #{DateTime.utc_now()}"
-        })
-      end)
+      Logger.info("Finished to look for duplicates at #{DateTime.utc_now()}")
     else
       Enum.each(
         [
           "Found no duplicates.",
           "Finished to look for duplicates at #{DateTime.utc_now()}"
         ],
-        fn message ->
-          Logger.info(fn ->
-            Poison.encode!(%{
-              "log_type" => "info",
-              "message" => message
-            })
-          end)
-        end
+        &Logger.info/1
       )
     end
   end
