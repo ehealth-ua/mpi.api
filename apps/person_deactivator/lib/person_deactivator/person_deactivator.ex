@@ -2,7 +2,6 @@ defmodule PersonDeactivator do
   @moduledoc """
   Deactivate persons according to day limit
   """
-  require Logger
   use Confex, otp_app: :person_deactivator
 
   alias Core.MergeCandidate
@@ -11,6 +10,8 @@ defmodule PersonDeactivator do
   alias Core.Person
   alias Core.Persons.PersonsAPI
   alias Core.Repo
+
+  require Logger
 
   @kafka_producer Application.get_env(:person_deactivator, :producer)
   @rpc_worker Application.get_env(:person_deactivator, :rpc_worker)
@@ -31,7 +32,7 @@ defmodule PersonDeactivator do
     %{id: id, master_person_id: master_id, merge_person_id: candidate_id} = merge_candidate
 
     with {_, true} <- {:actual, merge_candidate[:actual?]},
-         {_, {:ok, _}} <- {:declaration, @rpc_worker.run("ops", OPS.Rpc, :get_declaration, [%{person_id: master_id}])},
+         {_, {:ok, _}} <- {:declaration, @rpc_worker.run("ops", OPS.Rpc, :get_declaration, [[person_id: master_id]])},
          :ok <- @kafka_producer.publish_declaration_deactivation_event(candidate_id, actor_id, reason),
          {:ok, _} <- Repo.insert(%MergedPair{id: id, master_person_id: master_id, merge_person_id: candidate_id}),
          {:ok, _} <- PersonsAPI.update(candidate_id, %{"status" => Person.status(:inactive)}, actor_id) do
@@ -42,6 +43,10 @@ defmodule PersonDeactivator do
 
       {:declaration, nil} ->
         update_merge_candidate_status(id, :declined, actor_id)
+
+      err ->
+        Logger.error("Cannot process merge candidates with id #{id}. Error: #{inspect(err)}")
+        err
     end
   end
 end

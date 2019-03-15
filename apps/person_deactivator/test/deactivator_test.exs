@@ -26,7 +26,7 @@ defmodule PersonDeactivatorTest do
       mc_empty = insert(:mpi, :merge_candidate)
       candidates = [mc_empty, mc_success]
 
-      expect(RPCWorkerMock, :run, 2, fn "ops", OPS.Rpc, :get_declaration, [%{person_id: id}] ->
+      expect(RPCWorkerMock, :run, 2, fn "ops", OPS.Rpc, :get_declaration, [[person_id: id]] ->
         cond do
           id == mc_success.master_person_id ->
             {:ok, %{}}
@@ -58,7 +58,7 @@ defmodule PersonDeactivatorTest do
         :ok
       end)
 
-      expect(RPCWorkerMock, :run, 3, fn "ops", OPS.Rpc, :get_declaration, [%{person_id: _}] -> {:ok, %{}} end)
+      expect(RPCWorkerMock, :run, 3, fn "ops", OPS.Rpc, :get_declaration, [[person_id: _]] -> {:ok, %{}} end)
 
       p_updated_at = DateTime.add(DateTime.utc_now(), 1000)
       stale = MergeCandidate.status(:stale)
@@ -92,7 +92,7 @@ defmodule PersonDeactivatorTest do
         :ok
       end)
 
-      expect(RPCWorkerMock, :run, 10, fn "ops", OPS.Rpc, :get_declaration, [%{person_id: _}] -> {:ok, %{}} end)
+      expect(RPCWorkerMock, :run, 10, fn "ops", OPS.Rpc, :get_declaration, [[person_id: _]] -> {:ok, %{}} end)
 
       actor_id = UUID.generate()
       candidates = prepare_candidates(10)
