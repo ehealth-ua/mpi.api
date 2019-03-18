@@ -14,6 +14,17 @@ defmodule PersonDeactivator.Application do
       }
     ]
 
+    children =
+      if Application.get_env(:person_deactivator, :env) == :prod do
+        children ++
+          [
+            {Cluster.Supervisor,
+             [Application.get_env(:person_deactivator, :topologies), [name: PersonDeactivator.ClusterSupervisor]]}
+          ]
+      else
+        children
+      end
+
     opts = [strategy: :one_for_one, name: PersonDeactivator.Supervisor]
     Supervisor.start_link(children, opts)
   end

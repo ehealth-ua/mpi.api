@@ -20,4 +20,18 @@ config :person_deactivator,
     message_handler: PersonDeactivator.Kafka.Consumer
   ]
 
+config :person_deactivator,
+  topologies: [
+    k8s_ops: [
+      strategy: Elixir.Cluster.Strategy.Kubernetes,
+      config: [
+        mode: :dns,
+        kubernetes_node_basename: "ops",
+        kubernetes_selector: "app=api",
+        kubernetes_namespace: "ops",
+        polling_interval: 10_000
+      ]
+    ]
+  ]
+
 import_config "#{Mix.env()}.exs"
