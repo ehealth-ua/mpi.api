@@ -43,8 +43,9 @@ defmodule Deduplication.V2.Match do
     normalized_person = Model.normalize_person(person)
 
     candidates
-    |> Task.async_stream(
-      fn candidate ->
+    |> Enum.reduce(
+      [],
+      fn candidate, acc ->
         normalized_candidate = Model.normalize_person(candidate)
 
         weight_map =
@@ -55,12 +56,10 @@ defmodule Deduplication.V2.Match do
         pair_weight = config()[:py_weight].weight(weight_map)
 
         if pair_weight >= score,
-          do: %{candidate: candidate, weight: pair_weight, matrix: weight_map},
-          else: :skip
-      end,
-      timeout: config[:weight_count_timeout]
+          do: [%{candidate: candidate, weight: pair_weight, matrix: weight_map} | acc],
+          else: acc
+      end
     )
-    |> Model.async_stream_filter()
   end
 
   def merge_candidates(person_id, candidates, system_user_id) do
