@@ -14,17 +14,15 @@ config :logger, :console,
 config :deduplication, Deduplication.Worker,
   mode: {:system, :atom, "DEDUPLICATION_MODE", :mixed},
   vacuum_refresh: true,
-  vacuum_refresh_timeout: {:system, :integer, "DEDUPLICATION_VACUUM_REFRESH_TIMEOUT", 5000}
+  vacuum_refresh_timeout: {:system, :integer, "DEDUPLICATION_VACUUM_REFRESH_TIMEOUT", 20_000}
 
-config :deduplication,
-  producer: Deduplication.Producer,
-  client: HTTPoison,
-  py_weight: Deduplication.V2.PyWeight,
+config :deduplication, Deduplication.PythonPool,
   python_workers_pool_size: {:system, :integer, "PYTHON_WORKERS_POOL_SIZE", 10}
 
-config :deduplication, Deduplication.Application,
+config :deduplication, Deduplication.DeduplicationPool,
   env: Mix.env(),
-  parallel_consumers: {:system, :integer, "DEDUPLICATION_PARALLEL_TASKS", 20}
+  parallel_consumers: {:system, :integer, "DEDUPLICATION_PARALLEL_TASKS", 20},
+  max_restarts: {:system, :integer, "MAX_RESTART_TRIES", 100_000_000}
 
 config :deduplication, Deduplication.Consumer,
   deduplication_persons_limit: {:system, :integer, "DEDUPLICATION_PERSON_LIMIT", 40}
@@ -33,6 +31,7 @@ config :deduplication, Deduplication.V2.Model,
   candidates_batch_size: {:system, :integer, "DEDUPLICATION_CANDIDATES_BATCH_SIZE", 50_000}
 
 config :deduplication, Deduplication.V2.Match,
+  py_weight: Deduplication.V2.PyWeight,
   score: {:system, :float, "DEDUPLICATION_SCORE", 0.7},
   weight_count_timeout: {:system, :integer, "WEIGHT_COUNT_TIMEOUT", 20000}
 

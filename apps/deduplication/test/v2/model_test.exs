@@ -4,6 +4,7 @@ defmodule Deduplication.V2.ModelTest do
 
   alias Core.Person
   alias Core.PersonDocument
+  alias Core.VerifyingId
   alias Deduplication.V2.Model
 
   describe "regexp" do
@@ -99,6 +100,25 @@ defmodule Deduplication.V2.ModelTest do
         ],
         &assert(Model.normalize_birth_settlement(&1) == "тернопіль")
       )
+    end
+  end
+
+  describe "cleanup works" do
+    test "clean completed works" do
+      ids = insert_list(10, :mpi, :verifying_ids, is_complete: true)
+      Enum.map(ids, &insert(:mpi, :person, id: &1.id))
+      Model.set_current_verified_ts(DateTime.utc_now())
+      Model.cleanup_locked_persons(false)
+      assert [] == Repo.all(VerifyingId)
+    end
+
+    test "clean completed but still verifying with samse updated_at" do
+      updated_at = DateTime.utc_now()
+      ids = insert_list(10, :mpi, :verifying_ids, is_complete: true)
+      Enum.map(ids, &insert(:mpi, :person, id: &1.id, updated_at: updated_at))
+      Model.set_current_verified_ts(updated_at)
+      Model.cleanup_locked_persons(false)
+      assert 10 == Enum.count(Repo.all(VerifyingId))
     end
   end
 

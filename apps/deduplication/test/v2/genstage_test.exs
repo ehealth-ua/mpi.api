@@ -20,8 +20,8 @@ defmodule Deduplication.V2.GenStageTest do
 
   setup do
     GenStage.start_link(Producer, %{offset: 0}, name: Producer)
-    :ok = Supervisor.terminate_child(DeduplicationGenStageSupervisor, Worker)
-    {:ok, _} = Supervisor.restart_child(DeduplicationGenStageSupervisor, Worker)
+    :ok = Supervisor.terminate_child(Deduplication.Supervisor.GenStage, Worker)
+    {:ok, _} = Supervisor.restart_child(Deduplication.Supervisor.GenStage, Worker)
     Model.set_current_verified_ts(DateTime.utc_now())
     :ok
   end

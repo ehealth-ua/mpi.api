@@ -1,10 +1,6 @@
 use Mix.Config
 
-config :deduplication,
-  worker: DeduplicationWorkerMock,
-  producer: DeduplicationKafkaMock,
-  client: ClientMock,
-  py_weight: PyWeightMock
+config :deduplication, Deduplication.V2.Match, py_weight: PyWeightMock
 
 # Print only warnings and errors during test
 config :logger, level: :info

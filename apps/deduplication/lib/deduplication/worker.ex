@@ -6,16 +6,16 @@ defmodule Deduplication.Worker do
   use GenServer
   alias Deduplication.V2.Model
 
+  require Logger
+
   def produce_persons(demand), do: GenServer.call(__MODULE__, {:produce, demand})
 
   def start_link(_) do
-    vacuum? = config()[:vacuum_refresh]
     mode = config()[:mode]
-    Model.store_deduplication_details()
 
-    {:ok, pid} = GenServer.start_link(__MODULE__, %{mode: mode, offset: 0}, name: __MODULE__)
-    if vacuum?, do: send(pid, :vacuum)
-    {:ok, pid}
+    __MODULE__
+    |> GenServer.start_link(%{mode: mode, offset: 0}, name: __MODULE__)
+    |> start()
   end
 
   @impl true
@@ -31,7 +31,11 @@ defmodule Deduplication.Worker do
   @impl true
   def handle_call({:produce, demand}, _from, %{mode: :new} = state), do: {:reply, get_persons(demand), state}
   def handle_call({:produce, demand}, _from, %{mode: mode, offset: offset}), do: produce_and_state(demand, offset, mode)
-  def handle_call(_what, _, state), do: {:reply, :not_implemented, state}
+
+  def handle_call(what, _from, state) do
+    unless Enum.empty?(state), do: Logger.error("Unhandled message #{what} were received, state: #{state}")
+    {:reply, [], state}
+  end
 
   defp produce_and_state(demand, offset, mode) do
     demand
@@ -47,6 +51,12 @@ defmodule Deduplication.Worker do
 
   defp get_persons(demand), do: Model.get_unverified_persons(demand)
   defp get_locked_persons(demand, offset), do: Model.get_locked_unverified_persons(demand, offset)
+
+  def start({:ok, pid} = worker) do
+    Model.store_deduplication_details()
+    if config()[:vacuum_refresh], do: send(pid, :vacuum)
+    worker
+  end
 
   defp refresh_stat, do: Model.cleanup_locked_persons()
 end

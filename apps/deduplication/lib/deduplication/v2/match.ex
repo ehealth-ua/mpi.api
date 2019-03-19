@@ -14,8 +14,6 @@ defmodule Deduplication.V2.Match do
 
   require Logger
 
-  @py_weight Application.get_env(:deduplication, :py_weight)
-
   def deduplicate_persons(persons) do
     persons
     |> Enum.reduce(0, fn %Person{} = person, count ->
@@ -54,7 +52,7 @@ defmodule Deduplication.V2.Match do
           |> CandidatesDistance.levenshtein_weight(normalized_candidate)
           |> CandidatesDistance.finalize_weight()
 
-        pair_weight = @py_weight.weight(weight_map)
+        pair_weight = config()[:py_weight].weight(weight_map)
 
         if pair_weight >= score,
           do: %{candidate: candidate, weight: pair_weight, matrix: weight_map},

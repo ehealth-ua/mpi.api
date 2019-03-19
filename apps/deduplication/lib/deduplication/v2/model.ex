@@ -68,9 +68,18 @@ defmodule Deduplication.V2.Model do
     end
   end
 
-  def cleanup_locked_persons do
-    Repo.delete_all(where(VerifyingId, [v], v.is_complete == true))
-    SQL.query!(Repo, "VACUUM ANALYZE verifying_ids;")
+  def cleanup_locked_persons(vacuum \\ true) do
+    Repo.transaction(fn ->
+      %VerifiedTs{updated_at: last_update} = Repo.one(VerifiedTs)
+
+      Repo.delete_all(
+        VerifyingId
+        |> join(:inner, [v], p in Person, on: p.id == v.id)
+        |> where([v, p], v.is_complete == true and p.updated_at < ^last_update)
+      )
+    end)
+
+    if vacuum, do: SQL.query!(Repo, "VACUUM ANALYZE verifying_ids;")
   end
 
   def unlock_person_after_verify(person_id) do
