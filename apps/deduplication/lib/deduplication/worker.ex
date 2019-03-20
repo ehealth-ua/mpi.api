@@ -29,25 +29,30 @@ defmodule Deduplication.Worker do
   end
 
   @impl true
-  def handle_call({:produce, demand}, _from, %{mode: :new} = state), do: {:reply, get_persons(demand), state}
-  def handle_call({:produce, demand}, _from, %{mode: mode, offset: offset}), do: produce_and_state(demand, offset, mode)
+  def handle_call({:produce, demand}, _, %{mode: :new} = state), do: {:reply, get_persons(demand), state}
+
+  def handle_call({:produce, demand}, _, %{mode: mode, offset: offset}) do
+    locked_persons = get_locked_persons(demand, offset)
+    locked_persons_number = Enum.count(locked_persons)
+
+    case mode do
+      :locked ->
+        {:reply, locked_persons, %{mode: mode, offset: offset + locked_persons_number}}
+
+      :mixed ->
+        if locked_persons_number < demand do
+          persons = get_persons(demand - locked_persons_number)
+          {:reply, persons ++ locked_persons, %{mode: :new}}
+        else
+          {:reply, locked_persons, %{mode: mode, offset: offset + demand}}
+        end
+    end
+  end
 
   def handle_call(what, _from, state) do
-    unless Enum.empty?(state), do: Logger.error("Unhandled message #{what} were received, state: #{state}")
+    Logger.error("Unhandled message #{what} were received, state: #{state}")
     {:reply, [], state}
   end
-
-  defp produce_and_state(demand, offset, mode) do
-    demand
-    |> get_locked_persons(offset)
-    |> produce_and_state(demand, offset, mode)
-  end
-
-  # The order of patterns is necessary, first check does locked_persons is not empty
-  defp produce_and_state([], _demand, 0, :locked), do: {:reply, [], %{}}
-  defp produce_and_state([], demand, 0, :mixed), do: {:reply, get_persons(demand), %{mode: :new}}
-  defp produce_and_state([], demand, _offset, mode), do: produce_and_state(demand, 0, mode)
-  defp produce_and_state(persons, demand, offset, mode), do: {:reply, persons, %{mode: mode, offset: offset + demand}}
 
   defp get_persons(demand), do: Model.get_unverified_persons(demand)
   defp get_locked_persons(demand, offset), do: Model.get_locked_unverified_persons(demand, offset)
