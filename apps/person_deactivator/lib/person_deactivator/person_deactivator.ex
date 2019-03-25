@@ -15,38 +15,56 @@ defmodule PersonDeactivator do
 
   @kafka_producer Application.get_env(:person_deactivator, :producer)
   @rpc_worker Application.get_env(:person_deactivator, :rpc_worker)
+  @declaration_active "active"
+  @declaration_deactivated MergeCandidate.status(:deactivate_ready)
 
-  def deactivate_person(merge_candidate, actor_id, reason) do
-    merge_candidate
-    |> get_merge_candidate_with_status()
-    |> process_merge_candidates(actor_id, reason)
+  def deactivate_person(%{master_person_id: master_id, merge_person_id: candidate_id}, actor_id, reason) do
+    with {:ok, %MergeCandidate{}} <-
+           master_id
+           |> MergeCandidatesAPI.get_by_master_and_candidate(candidate_id)
+           |> process_merge_candidate(actor_id, reason) do
+      :ok
+    end
   end
 
-  defp get_merge_candidate_with_status(%{master_person_id: master_person_id, merge_person_id: merge_person_id}),
-    do: MergeCandidatesAPI.get_status_by_master_and_merge(master_person_id, merge_person_id)
+  defp process_merge_candidate(nil, _, _), do: {:ok, %MergeCandidate{}}
 
-  defp update_merge_candidate_status(id, status, actor_id),
-    do: MergeCandidatesAPI.update_status_by_id(id, MergeCandidate.status(status), actor_id)
-
-  defp process_merge_candidates(merge_candidate, actor_id, reason) do
-    %{id: id, master_person_id: master_id, merge_person_id: candidate_id} = merge_candidate
-
-    with {_, true} <- {:actual, merge_candidate[:actual?]},
-         {_, {:ok, _}} <- {:declaration, @rpc_worker.run("ops", OPS.Rpc, :get_declaration, [[person_id: master_id]])},
-         :ok <- @kafka_producer.publish_declaration_deactivation_event(candidate_id, actor_id, reason),
-         {:ok, _} <- Repo.insert(%MergedPair{id: id, master_person_id: master_id, merge_person_id: candidate_id}),
-         {:ok, _} <- PersonsAPI.update(candidate_id, %{"status" => Person.status(:inactive)}, actor_id) do
-      update_merge_candidate_status(id, :merged, actor_id)
+  defp process_merge_candidate(%MergeCandidate{} = mc, actor_id, reason) do
+    with :gt <- DateTime.compare(mc.inserted_at, mc.master_person.updated_at),
+         :gt <- DateTime.compare(mc.inserted_at, mc.person.updated_at) do
+      deactivate_person_with_declaration(mc, actor_id, reason)
     else
-      {:actual, false} ->
-        update_merge_candidate_status(id, :stale, actor_id)
-
-      {:declaration, nil} ->
-        update_merge_candidate_status(id, :declined, actor_id)
-
-      err ->
-        Logger.error("Cannot process merge candidates with id #{id}. Error: #{inspect(err)}")
-        err
+      _ -> MergeCandidatesAPI.update_merge_candidate(mc, %{status: MergeCandidate.status(:stale)}, actor_id)
     end
+  end
+
+  defp deactivate_person_with_declaration(%MergeCandidate{status: @declaration_deactivated} = mc, actor_id, _),
+    do: deactivate_candidate(mc, actor_id)
+
+  defp deactivate_person_with_declaration(mc, actor_id, reason) do
+    with search_ops <- [person_id: mc.master_person.id, status: @declaration_active],
+         {:ok, _} <- @rpc_worker.run("ops", OPS.Rpc, :get_declaration, [search_ops]),
+         {:ok, _} <- deactivate_declaration(mc, actor_id, reason) do
+      deactivate_candidate(mc, actor_id)
+    else
+      _ -> MergeCandidatesAPI.update_merge_candidate(mc, %{status: MergeCandidate.status(:declined)}, actor_id)
+    end
+  end
+
+  defp deactivate_candidate(%MergeCandidate{id: id, master_person: master, person: candidate} = mc, actor_id) do
+    Repo.transaction(fn ->
+      with {:ok, _} <- Repo.insert(%MergedPair{id: id, master_person_id: master.id, merge_person_id: candidate.id}),
+           {:ok, _} <- PersonsAPI.update(candidate.id, %{"status" => Person.status(:inactive)}, actor_id),
+           {:ok, merge_candidate} <-
+             MergeCandidatesAPI.update_merge_candidate(mc, %{status: MergeCandidate.status(:merged)}, actor_id) do
+        merge_candidate
+      end
+    end)
+  end
+
+  defp deactivate_declaration(mc, actor_id, reason) do
+    # Crash if ops declaration termination event was not published to kafka
+    :ok = @kafka_producer.publish_declaration_deactivation_event(mc.person.id, actor_id, reason)
+    MergeCandidatesAPI.update_merge_candidate(mc, %{status: @declaration_deactivated}, actor_id)
   end
 end

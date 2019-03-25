@@ -8,6 +8,7 @@ defmodule Core.MergeCandidate do
 
   @new "NEW"
   @in_process "IN_PROCESS"
+  @deactivate_ready "DECLARATION_READY_DEACTIVATE"
   @stale "STALE"
   @declined "DECLINED"
   @merged "MERGED"
@@ -16,6 +17,7 @@ defmodule Core.MergeCandidate do
   def status(:in_process), do: @in_process
   def status(:stale), do: @stale
   def status(:declined), do: @declined
+  def status(:deactivate_ready), do: @deactivate_ready
   def status(:merged), do: @merged
 
   @primary_key {:id, Ecto.UUID, autogenerate: true}

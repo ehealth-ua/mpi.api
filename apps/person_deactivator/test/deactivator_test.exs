@@ -12,106 +12,125 @@ defmodule PersonDeactivatorTest do
   alias Core.Repo
   alias Ecto.UUID
 
+  @active "active"
   setup :verify_on_exit!
 
-  describe "deactivate_person marks stale merge_candidates" do
-    test "deactivate_person mark merge candidate declined if master has no declaration" do
-      expect(PersonDeactivatorKafkaMock, :publish_declaration_deactivation_event, 1, fn _, _, reason ->
-        assert "AUTO_MERGE" == reason
-        :ok
-      end)
+  test "deactivate_person mark merge candidate declined if master has no declaration" do
+    expect(PersonDeactivatorKafkaMock, :publish_declaration_deactivation_event, 1, fn _, _, reason ->
+      assert "AUTO_MERGE" == reason
+      :ok
+    end)
 
-      actor_id = UUID.generate()
-      mc_success = insert(:mpi, :merge_candidate)
-      mc_empty = insert(:mpi, :merge_candidate)
-      candidates = [mc_empty, mc_success]
+    actor_id = UUID.generate()
+    mc_success = insert(:mpi, :merge_candidate)
+    mc_empty = insert(:mpi, :merge_candidate)
+    candidates = [mc_empty, mc_success]
 
-      expect(RPCWorkerMock, :run, 2, fn "ops", OPS.Rpc, :get_declaration, [[person_id: id]] ->
-        cond do
-          id == mc_success.master_person_id ->
-            {:ok, %{}}
+    expect(RPCWorkerMock, :run, 2, fn "ops", OPS.Rpc, :get_declaration, [[person_id: id, status: @active]] ->
+      cond do
+        id == mc_success.master_person_id ->
+          {:ok, %{}}
 
-          id == mc_empty.master_person_id ->
-            nil
-        end
-      end)
+        id == mc_empty.master_person_id ->
+          nil
+      end
+    end)
 
-      Enum.map(candidates, fn candidate ->
-        PersonDeactivator.deactivate_person(
-          %{
-            master_person_id: candidate.master_person_id,
-            merge_person_id: candidate.person_id
-          },
-          actor_id,
-          "AUTO_MERGE"
-        )
-      end)
+    Enum.map(candidates, fn candidate ->
+      PersonDeactivator.deactivate_person(
+        %{
+          master_person_id: candidate.master_person_id,
+          merge_person_id: candidate.person_id
+        },
+        actor_id,
+        "AUTO_MERGE"
+      )
+    end)
 
-      assert 1 = MergedPair |> Repo.all() |> Enum.count()
-      declined = MergeCandidate.status(:declined)
-      assert %MergeCandidate{status: ^declined} = Repo.get(MergeCandidate, mc_empty.id)
-    end
+    assert 1 = MergedPair |> Repo.all() |> Enum.count()
+    declined = MergeCandidate.status(:declined)
+    assert %MergeCandidate{status: ^declined} = Repo.get(MergeCandidate, mc_empty.id)
+  end
 
-    test "deactivate_person mark stale candidate as stale and do not push them to kafka" do
-      expect(PersonDeactivatorKafkaMock, :publish_declaration_deactivation_event, 3, fn _, _, reason ->
-        assert "AUTO_MERGE" == reason
-        :ok
-      end)
+  test "deactivate_person that already was pushed to kafka but" do
+    candidate = insert(:mpi, :merge_candidate, status: MergeCandidate.status(:deactivate_ready))
+    actor_id = UUID.generate()
 
-      expect(RPCWorkerMock, :run, 3, fn "ops", OPS.Rpc, :get_declaration, [[person_id: _]] -> {:ok, %{}} end)
+    PersonDeactivator.deactivate_person(
+      %{
+        master_person_id: candidate.master_person.id,
+        merge_person_id: candidate.person.id
+      },
+      actor_id,
+      "AUTO_MERGE"
+    )
 
-      p_updated_at = DateTime.add(DateTime.utc_now(), 1000)
-      stale = MergeCandidate.status(:stale)
-      mc_actual_candidates = insert_list(3, :mpi, :merge_candidate)
-      mc_stale_candidate = insert(:mpi, :merge_candidate, person: build(:person, updated_at: p_updated_at))
-      mc_stale_master = insert(:mpi, :merge_candidate, master_person: build(:person, updated_at: p_updated_at))
+    assert %MergeCandidate{} = Repo.get_by!(MergeCandidate, id: candidate.id, status: MergeCandidate.status(:merged))
+  end
 
-      actor_id = UUID.generate()
-      candidates = [mc_stale_candidate, mc_stale_master | mc_actual_candidates]
+  test "deactivate_person mark stale candidate and do not push them to kafka" do
+    expect(PersonDeactivatorKafkaMock, :publish_declaration_deactivation_event, 3, fn _, _, reason ->
+      assert "AUTO_MERGE" == reason
+      :ok
+    end)
 
-      Enum.map(candidates, fn candidate ->
-        PersonDeactivator.deactivate_person(
-          %{
-            master_person_id: candidate.master_person_id,
-            merge_person_id: candidate.person_id
-          },
-          actor_id,
-          "AUTO_MERGE"
-        )
-      end)
+    expect(RPCWorkerMock, :run, 3, fn "ops", OPS.Rpc, :get_declaration, [[person_id: _, status: @active]] ->
+      {:ok, %{}}
+    end)
 
-      assert %MergeCandidate{status: ^stale} = Repo.get(MergeCandidate, mc_stale_candidate.id)
-      assert %MergeCandidate{status: ^stale} = Repo.get(MergeCandidate, mc_stale_master.id)
+    p_updated_at = DateTime.add(DateTime.utc_now(), 1000)
+    stale = MergeCandidate.status(:stale)
+    mc_actual_candidates = insert_list(3, :mpi, :merge_candidate)
+    mc_stale_candidate = insert(:mpi, :merge_candidate, person: build(:person, updated_at: p_updated_at))
+    mc_stale_master = insert(:mpi, :merge_candidate, master_person: build(:person, updated_at: p_updated_at))
 
-      assert 3 = MergedPair |> Repo.all() |> Enum.count()
-    end
+    actor_id = UUID.generate()
+    candidates = [mc_stale_candidate, mc_stale_master | mc_actual_candidates]
 
-    test "deactivate_person success" do
-      expect(PersonDeactivatorKafkaMock, :publish_declaration_deactivation_event, 10, fn _, _, reason ->
-        assert "AUTO_MERGE" == reason
-        :ok
-      end)
+    Enum.map(candidates, fn candidate ->
+      PersonDeactivator.deactivate_person(
+        %{
+          master_person_id: candidate.master_person_id,
+          merge_person_id: candidate.person_id
+        },
+        actor_id,
+        "AUTO_MERGE"
+      )
+    end)
 
-      expect(RPCWorkerMock, :run, 10, fn "ops", OPS.Rpc, :get_declaration, [[person_id: _]] -> {:ok, %{}} end)
+    assert %MergeCandidate{status: ^stale} = Repo.get(MergeCandidate, mc_stale_candidate.id)
+    assert %MergeCandidate{status: ^stale} = Repo.get(MergeCandidate, mc_stale_master.id)
 
-      actor_id = UUID.generate()
-      candidates = prepare_candidates(10)
-      Enum.map(candidates, &PersonDeactivator.deactivate_person(&1, actor_id, "AUTO_MERGE"))
+    assert 3 = MergedPair |> Repo.all() |> Enum.count()
+  end
 
-      merged_candidates =
-        MergeCandidate
-        |> preload([:master_person, :person])
-        |> where([m], m.status == ^MergeCandidate.status(:merged))
-        |> Repo.all()
+  test "deactivate_person success" do
+    expect(PersonDeactivatorKafkaMock, :publish_declaration_deactivation_event, 10, fn _, _, reason ->
+      assert "AUTO_MERGE" == reason
+      :ok
+    end)
 
-      assert 10 = length(merged_candidates)
+    expect(RPCWorkerMock, :run, 10, fn "ops", OPS.Rpc, :get_declaration, [[person_id: _, status: @active]] ->
+      {:ok, %{}}
+    end)
 
-      Enum.each(merged_candidates, fn %MergeCandidate{person: %Person{status: status}} ->
-        assert status == Person.status(:inactive)
-      end)
+    actor_id = UUID.generate()
+    candidates = prepare_candidates(10)
+    Enum.map(candidates, &PersonDeactivator.deactivate_person(&1, actor_id, "AUTO_MERGE"))
 
-      assert 10 = MergedPair |> Repo.all() |> Enum.count()
-    end
+    merged_candidates =
+      MergeCandidate
+      |> preload([:master_person, :person])
+      |> where([m], m.status == ^MergeCandidate.status(:merged))
+      |> Repo.all()
+
+    assert 10 = length(merged_candidates)
+
+    Enum.each(merged_candidates, fn %MergeCandidate{person: %Person{status: status}} ->
+      assert status == Person.status(:inactive)
+    end)
+
+    assert 10 = MergedPair |> Repo.all() |> Enum.count()
   end
 
   defp prepare_candidates(amount) do
