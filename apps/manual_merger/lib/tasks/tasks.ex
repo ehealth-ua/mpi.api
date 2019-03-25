@@ -1,16 +1,17 @@
-defmodule MPI.ReleaseTasks do
+defmodule ManualMerger.ReleaseTasks do
   @moduledoc """
   Nice way to apply migrations inside a released application.
 
   Example:
 
-      mpi/bin/mpi command mpi_tasks migrate!
+      unit/bin/unit command mpi_tasks migrate!
   """
 
   alias Core.Repo
+  alias Core.DeduplicationRepo
 
   def migrate do
-    migrations_dir = Application.app_dir(:core, "priv/repo/migrations")
+    migrations_dir = Application.app_dir(:core, "priv/deduplication_repo/migrations")
 
     load_app()
     run_migration(Repo, migrations_dir)

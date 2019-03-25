@@ -2,11 +2,6 @@ use Mix.Releases.Config,
   default_release: :default,
   default_environment: :default
 
-#
-# cookie = :sha256
-# |> :crypto.hash(System.get_env("ERLANG_COOKIE") || "f0HC3ImpJ93mYir8Fu3gveUxm0Tpe1jLBBpxb3YP4n+oHabt/CKGOs1a89UDfW0E")
-# |> Base.encode64
-
 environment :default do
   set(dev_mode: false)
   set(include_erts: true)
@@ -20,12 +15,25 @@ environment :default do
 end
 
 release :mpi do
-  set(pre_start_hooks: "bin/hooks/")
+  set(pre_start_hooks: "bin/hooks/mpi")
   set(version: current_version(:mpi))
 
   set(
     applications: [
       mpi: :permanent
+    ]
+  )
+
+  set(config_providers: [ConfexConfigProvider])
+end
+
+release :manual_merger do
+  set(pre_start_hooks: "bin/hooks/manual_merger")
+  set(version: current_version(:manual_merger))
+
+  set(
+    applications: [
+      manual_merger: :permanent
     ]
   )
 
