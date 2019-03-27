@@ -5,6 +5,35 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [2.4.0](https://github.com/edenlabllc/mpi.api/compare/2.3.0...2.4.0) (2019-3-27)
+
+
+
+
+### Features:
+
+* manual_merger: created ManualMerge application (#277)
+
+* person_deactivator: added libcluster lib with topology for OPS (#272)
+
+* Ecto 3 (#267)
+
+* add version and date of start application into details + app version in build (#266)
+
+* mpi_scheduler: created ManualMergeCreator job (#265)
+
+* deactivator: check updated_at and master declaration before
+
+* extract person filter (#261)
+
+### Bug Fixes:
+
+* person_deactivator: added env var in config (#273)
+
+* person_deactivator: log error in process_merge_candidates (#270)
+
+* phoenix errors logging (#262)
+
 ## [2.3.0](https://github.com/edenlabllc/mpi.api/compare/2.2.1...2.3.0) (2019-3-4)
 
 
