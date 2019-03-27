@@ -103,7 +103,6 @@ defmodule CandidatesMerger do
 
   defp deactivate_person(%ManualMergeCandidate{decision: @status_merge} = candidate, actor_id) do
     event = %{
-      id: candidate.merge_candidate_id,
       master_person_id: candidate.master_person_id,
       merge_person_id: candidate.person_id
     }

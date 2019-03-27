@@ -57,7 +57,7 @@ defmodule Core.Factories.MPI do
           updated_by: UUID.generate(),
           authentication_methods: build_list(2, :authentication_method),
           merged_persons: [],
-          master_persons: [],
+          master_person: nil,
           phones: build_list(1, :person_phone),
           documents: build_list(2, :person_document),
           addresses: build_list(2, :person_address)

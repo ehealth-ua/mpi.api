@@ -254,8 +254,8 @@ defmodule MPI.RpcTest do
       insert(:mpi, :person)
       assert %Scrivener.Page{entries: [person]} = Rpc.search_persons(%{"ids" => Enum.join([id], ",")})
 
-      assert %{documents: _, phones: _, addresses: _, merged_persons: _, master_persons: _} =
-               Map.take(person, ~w(documents phones addresses merged_persons master_persons)a)
+      assert %{documents: _, phones: _, addresses: _, merged_persons: _, master_person: _} =
+               Map.take(person, ~w(documents phones addresses merged_persons master_person)a)
     end
 
     test "search_persons/2 by ids" do

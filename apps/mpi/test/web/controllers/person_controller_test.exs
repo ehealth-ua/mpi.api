@@ -403,8 +403,7 @@ defmodule MPI.Web.PersonControllerTest do
   end
 
   test "update person does not change merged links", %{conn: conn} do
-    person =
-      insert(:mpi, :person, merged_persons: build_list(3, :merged_pairs), master_persons: build_list(5, :merged_pairs))
+    person = insert(:mpi, :person, merged_persons: build_list(3, :merged_pairs), master_person: build(:merged_pairs))
 
     resp =
       conn
@@ -415,7 +414,7 @@ defmodule MPI.Web.PersonControllerTest do
     json_person_attributes?(resp["data"])
     assert_person(resp["data"])
     assert 3 == Enum.count(resp["data"]["merged_persons"])
-    assert 5 == Enum.count(resp["data"]["master_persons"])
+    assert %{} = resp["data"]["master_person"]
   end
 
   test "spaces are trimmed when person is updated", %{conn: conn} do
@@ -681,8 +680,7 @@ defmodule MPI.Web.PersonControllerTest do
   end
 
   test "search persons by search params returns all preloaded fields", %{conn: conn} do
-    person =
-      insert(:mpi, :person, merged_persons: build_list(3, :merged_pairs), master_persons: build_list(5, :merged_pairs))
+    person = insert(:mpi, :person, merged_persons: build_list(3, :merged_pairs), master_person: build(:merged_pairs))
 
     search_params = %{
       "first_name" => person.first_name,
@@ -697,10 +695,9 @@ defmodule MPI.Web.PersonControllerTest do
       |> Map.get("data")
       |> assert_person_search()
 
-    preloaded_data = data |> hd |> Map.take(~w(documents phones addresses merged_persons master_persons))
-
+    preloaded_data = data |> hd |> Map.take(~w(documents phones addresses merged_persons master_person))
     assert 3 == Enum.count(preloaded_data["merged_persons"])
-    assert 5 == Enum.count(preloaded_data["master_persons"])
+    assert is_map(preloaded_data["master_person"])
     assert 2 == Enum.count(preloaded_data["documents"])
     assert 1 == Enum.count(preloaded_data["phones"])
     assert 2 == Enum.count(preloaded_data["addresses"])
@@ -854,14 +851,15 @@ defmodule MPI.Web.PersonControllerTest do
              "process_disclosure_data_consent" => _,
              "authentication_methods" => _,
              "merged_persons" => _,
-             "master_persons" => _,
+             "master_person" => _,
              "addresses" => _,
              "documents" => _,
              "phones" => _
            } = data
 
     assert is_list(data["merged_persons"])
-    assert is_list(data["master_persons"])
+    assert Map.has_key?(data, "master_person")
+    assert is_nil(data["master_person"]) or is_map(data["master_person"])
     assert is_list(data["documents"])
 
     Enum.each(data["documents"], fn document -> assert_document(document) end)

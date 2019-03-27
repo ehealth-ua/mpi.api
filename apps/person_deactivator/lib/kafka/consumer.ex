@@ -17,8 +17,12 @@ defmodule PersonDeactivator.Kafka.Consumer do
     end
   end
 
-  def consume(%{"candidate" => candidate, "actor_id" => system_user_id, "reason" => reason}) do
-    PersonDeactivator.deactivate_person(candidate, system_user_id, reason)
+  def consume(%{
+        "candidate" => %{master_person_id: master_id, merge_person_id: candidate_id},
+        "actor_id" => system_user_id,
+        "reason" => reason
+      }) do
+    PersonDeactivator.deactivate_person(master_id, candidate_id, system_user_id, reason)
   end
 
   def consume(value) do

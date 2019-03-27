@@ -56,11 +56,8 @@ defmodule Core.MergeCandidates.API do
 
   def get_by_master_and_candidate(master_person_id, merge_person_id) do
     MergeCandidate
-    |> preload([:master_person, :person])
-    |> where(
-      [m, mp, cp],
-      m.master_person_id == ^master_person_id and m.person_id == ^merge_person_id
-    )
+    |> preload([:master_person, person: :master_person])
+    |> where([m], m.master_person_id == ^master_person_id and m.person_id == ^merge_person_id)
     |> Repo.one()
   end
 

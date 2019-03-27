@@ -18,7 +18,7 @@ defmodule PersonDeactivator do
   @declaration_active "active"
   @declaration_deactivated MergeCandidate.status(:deactivate_ready)
 
-  def deactivate_person(%{master_person_id: master_id, merge_person_id: candidate_id}, actor_id, reason) do
+  def deactivate_person(master_id, candidate_id, actor_id, reason) do
     with {:ok, %MergeCandidate{}} <-
            master_id
            |> MergeCandidatesAPI.get_by_master_and_candidate(candidate_id)
@@ -42,7 +42,8 @@ defmodule PersonDeactivator do
     do: deactivate_candidate(mc, actor_id)
 
   defp deactivate_person_with_declaration(mc, actor_id, reason) do
-    with search_ops <- [person_id: mc.master_person.id, status: @declaration_active],
+    with nil <- mc.person.master_person,
+         search_ops <- [person_id: mc.master_person.id, status: @declaration_active],
          {:ok, _} <- @rpc_worker.run("ops", OPS.Rpc, :get_declaration, [search_ops]),
          {:ok, _} <- deactivate_declaration(mc, actor_id, reason) do
       deactivate_candidate(mc, actor_id)

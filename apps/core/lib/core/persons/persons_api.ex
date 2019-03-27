@@ -40,7 +40,7 @@ defmodule Core.Persons.PersonsAPI do
   def get_by_id(id) do
     Person
     |> where([p], p.id == ^id)
-    |> preload(^~w(phones documents addresses merged_persons master_persons)a)
+    |> preload(^~w(phones documents addresses merged_persons master_person)a)
     |> Repo.one()
   end
 
@@ -93,7 +93,7 @@ defmodule Core.Persons.PersonsAPI do
   # Used only for graphql
   def search(filter, order_by, cursor) do
     Person
-    |> preload(^~w(documents phones addresses merged_persons master_persons)a)
+    |> preload(^~w(documents phones addresses merged_persons master_person)a)
     |> filter(filter)
     |> apply_cursor(cursor)
     |> order_by(^order_by)
@@ -122,7 +122,7 @@ defmodule Core.Persons.PersonsAPI do
   defp person_preload_query(query, fields) when is_list(fields), do: select(query, ^fields)
 
   defp person_preload_query(query, _),
-    do: preload(query, ^~w(documents phones addresses merged_persons master_persons)a)
+    do: preload(query, ^~w(documents phones addresses merged_persons master_person)a)
 
   defp person_search_query(%{"unzr" => unzr}) do
     Person

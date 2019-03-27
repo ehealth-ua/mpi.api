@@ -43,7 +43,7 @@ defmodule Core.Person do
     has_many(:phones, PersonPhone, on_delete: :delete_all, on_replace: :delete)
     has_many(:addresses, PersonAddress, on_delete: :delete_all, on_replace: :delete)
     has_many(:merged_persons, MergedPair, foreign_key: :master_person_id, on_delete: :delete_all, on_replace: :delete)
-    has_many(:master_persons, MergedPair, foreign_key: :merge_person_id, on_delete: :delete_all, on_replace: :delete)
+    has_one(:master_person, MergedPair, foreign_key: :merge_person_id, on_delete: :delete_all, on_replace: :delete)
     timestamps(type: :utc_datetime_usec)
   end
 

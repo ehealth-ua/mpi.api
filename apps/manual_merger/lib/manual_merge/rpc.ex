@@ -66,7 +66,7 @@ defmodule ManualMerger.Rpc do
           status: binary,
           addresses: list(map),
           merged_persons: list(map),
-          master_persons: list(map),
+          master_person: %{},
           confidant_person: map,
           is_active: boolean,
           updated_by: binary,
