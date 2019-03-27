@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [2.4.1](https://github.com/edenlabllc/mpi.api/compare/2.4.0...2.4.1) (2019-3-27)
+
+
+
+
+### Bug Fixes:
+
+* multimerge (#279)
+
 ## [2.4.0](https://github.com/edenlabllc/mpi.api/compare/2.3.0...2.4.0) (2019-3-27)
 
 
