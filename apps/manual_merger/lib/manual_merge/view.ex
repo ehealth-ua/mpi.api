@@ -12,6 +12,8 @@ defmodule ManualMerger.View do
     Enum.reduce(~w(fields associations embeds)a, %{}, &render_schema(&1, &2, entity))
   end
 
+  def render(nil), do: nil
+
   defp render_schema(_type, rendered, %{__struct__: NotLoaded}), do: rendered
 
   defp render_schema(:fields, rendered, entity) do

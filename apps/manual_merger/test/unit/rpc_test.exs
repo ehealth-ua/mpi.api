@@ -55,6 +55,12 @@ defmodule ManualMerger.RpcTest do
       assert person.id == get_in(resp_entity, [:manual_merge_candidate, :merge_candidate, :person, :id])
     end
 
+    test "success with empty related entities" do
+      %{id: id} = insert(:deduplication, :manual_merge_request, status: @status_merge)
+      assert {:ok, [merge_request]} = Rpc.search_manual_merge_requests([{:status, :equal, @status_merge}], [], {0, 10})
+      assert id == merge_request.id
+    end
+
     test "success on empty response" do
       assert {:ok, []} == Rpc.search_manual_merge_requests([{:status, :equal, @status_new}], [], {0, 10})
     end
