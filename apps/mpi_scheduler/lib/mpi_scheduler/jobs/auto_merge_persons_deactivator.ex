@@ -22,7 +22,7 @@ defmodule MPIScheduler.Jobs.AutoMergePersonsDeactivator do
 
   defp push_merge_candidates(candidates, system_user_id) do
     Enum.map(candidates, fn %MergeCandidate{} = candidate ->
-      event = Map.take(candidate, ~w(master_person_id merge_person_id)a)
+      event = %{master_person_id: candidate.master_person_id, merge_person_id: candidate.person_id}
 
       with :ok <- @kafka_producer.publish_person_deactivation_event(event, system_user_id, @reason) do
         MergeCandidatesAPI.update_merge_candidate(candidate, %{status: @in_process}, system_user_id)

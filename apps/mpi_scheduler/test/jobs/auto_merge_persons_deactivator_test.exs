@@ -13,9 +13,12 @@ defmodule MPIScheduler.Jobs.AutoMergePersonsDeactivatorTest do
     insert_list(2, :mpi, :merge_candidate, score: 0.90001)
     insert_list(5, :mpi, :merge_candidate, score: 0.92)
 
-    expect(CandidatesMergerKafkaMock, :publish_person_deactivation_event, 7, fn _candidate, _system_user_id, reason ->
-      assert "AUTO_MERGE" == reason
-      :ok
+    expect(CandidatesMergerKafkaMock, :publish_person_deactivation_event, 7, fn
+      candidate, _system_user_id, reason ->
+        assert Map.has_key?(candidate, :master_person_id)
+        assert Map.has_key?(candidate, :merge_person_id)
+        assert "AUTO_MERGE" == reason
+        :ok
     end)
 
     AutoMergePersonsDeactivator.run()
