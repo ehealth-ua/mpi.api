@@ -1,8 +1,9 @@
 defmodule Core.MergeCandidate do
   @moduledoc false
 
-  import Ecto.Changeset
   use Ecto.Schema
+  import Ecto.Changeset
+
   alias Core.Person
   alias Ecto.UUID
 

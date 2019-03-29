@@ -3,7 +3,7 @@ defmodule CandidatesMergerTest do
 
   import Core.Factory
 
-  alias Core.{DeduplicationRepo, ManualMerge, ManualMergeCandidate, ManualMergeRequest}
+  alias Core.{DeduplicationRepo, ManualMerge, ManualMergeCandidate, ManualMergeRequest, MergeCandidate}
   alias Core.ManualMerge.AuditLog
   alias Core.MergeCandidates.API, as: MergeCandidates
   alias Ecto.UUID
@@ -13,9 +13,11 @@ defmodule CandidatesMergerTest do
   @merge ManualMergeRequest.status(:merge)
   @split ManualMergeRequest.status(:split)
   @trash ManualMergeRequest.status(:trash)
-  @processed ManualMergeCandidate.status(:processed)
+
   @processed ManualMergeCandidate.status(:processed)
   @auto_merge ManualMergeCandidate.status_reason(:auto_merge)
+
+  @declined MergeCandidate.status(:declined)
 
   setup :verify_on_exit!
 
@@ -196,7 +198,8 @@ defmodule CandidatesMergerTest do
     end
 
     test "set TRASH status, quorum obtained, candidate processed", %{actor_id: actor_id} do
-      candidate = insert(:deduplication, :manual_merge_candidate)
+      merge_candidate = insert(:mpi, :merge_candidate)
+      candidate = insert(:deduplication, :manual_merge_candidate, merge_candidate_id: merge_candidate.id)
       insert_list(2, :deduplication, :manual_merge_request, status: @merge, manual_merge_candidate: candidate)
       insert_list(2, :deduplication, :manual_merge_request, status: @trash, manual_merge_candidate: candidate)
       insert_list(2, :deduplication, :manual_merge_request, status: @split, manual_merge_candidate: candidate)
@@ -206,10 +209,12 @@ defmodule CandidatesMergerTest do
 
       assert {:ok, %ManualMergeRequest{}} = CandidatesMerger.process_merge_request(id, @trash, actor_id)
       assert %{decision: @trash, status: @processed} = ManualMerge.get_by_id(ManualMergeCandidate, candidate.id)
+      assert %{status: @declined} = MergeCandidates.get_by_id(merge_candidate.id)
     end
 
     test "set SPLIT status, quorum obtained, candidate processed", %{actor_id: actor_id} do
-      candidate = insert(:deduplication, :manual_merge_candidate)
+      merge_candidate = insert(:mpi, :merge_candidate)
+      candidate = insert(:deduplication, :manual_merge_candidate, merge_candidate_id: merge_candidate.id)
       insert_list(2, :deduplication, :manual_merge_request, status: @split, manual_merge_candidate: candidate)
 
       %{id: id} =
@@ -217,6 +222,7 @@ defmodule CandidatesMergerTest do
 
       assert {:ok, %ManualMergeRequest{}} = CandidatesMerger.process_merge_request(id, @split, actor_id)
       assert %{decision: @split, status: @processed} = ManualMerge.get_by_id(ManualMergeCandidate, candidate.id)
+      assert %{status: @declined} = MergeCandidates.get_by_id(merge_candidate.id)
     end
   end
 end

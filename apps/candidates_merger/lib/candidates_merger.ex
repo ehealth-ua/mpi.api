@@ -12,8 +12,8 @@ defmodule CandidatesMerger do
 
   import Ecto.Query
 
-  alias Core.DeduplicationRepo
-  alias Core.{ManualMergeCandidate, ManualMergeRequest}
+  alias Core.{DeduplicationRepo, Repo}
+  alias Core.{ManualMergeCandidate, ManualMergeRequest, MergeCandidate}
 
   @status_new ManualMergeRequest.status(:new)
   @status_split ManualMergeRequest.status(:split)
@@ -83,7 +83,7 @@ defmodule CandidatesMerger do
     person_id = request.manual_merge_candidate.person_id
     candidate_id = request.manual_merge_candidate.id
 
-    update_data = [
+    patch = [
       decision: @status_merge,
       status: @status_processed,
       status_reason: @status_reason_auto_merge,
@@ -94,7 +94,19 @@ defmodule CandidatesMerger do
     ManualMergeCandidate
     |> where([c], c.id != ^candidate_id)
     |> where([c], c.person_id == ^person_id or c.master_person_id == ^person_id)
-    |> DeduplicationRepo.update_all_and_log([set: update_data], actor_id)
+    |> DeduplicationRepo.update_all_and_log([set: patch], actor_id)
+
+    :ok
+  end
+
+  defp process_related_merge_candidates(%ManualMergeRequest{status: status} = request, _)
+       when status in [@status_split, @status_trash] do
+    entity_id = request.manual_merge_candidate.merge_candidate_id
+    patch = [status: MergeCandidate.status(:declined)]
+
+    MergeCandidate
+    |> where([mc], mc.id == ^entity_id)
+    |> Repo.update_all(set: patch)
 
     :ok
   end
