@@ -7,13 +7,13 @@ defmodule MPI.RpcTest do
   import Mox
 
   alias Core.Person
+  alias Ecto.UUID
   alias MPI.Rpc
   alias Scrivener.Page
-  alias Ecto.UUID
 
   setup :verify_on_exit!
 
-  describe "search_persons/1" do
+  describe "search_persons_paginated/1" do
     test "search person by documents list and status" do
       %{id: person1_id} =
         insert(
@@ -69,11 +69,11 @@ defmodule MPI.RpcTest do
         "status" => Person.status(:active)
       }
 
-      %Page{entries: persons} = Rpc.search_persons(search_params)
+      %Page{entries: persons} = Rpc.search_persons_paginated(search_params)
+      {:ok, ^persons} = Rpc.search_persons(search_params)
       person_ids = Enum.map(persons, fn person -> person.id end)
 
       assert 2 == length(person_ids)
-
       assert Enum.sort([person2_id, person3_id]) == Enum.sort(person_ids)
 
       search_params = %{
@@ -90,7 +90,8 @@ defmodule MPI.RpcTest do
         "status" => Person.status(:active)
       }
 
-      %Page{entries: persons} = Rpc.search_persons(search_params)
+      %Page{entries: persons} = Rpc.search_persons_paginated(search_params)
+      {:ok, ^persons} = Rpc.search_persons(search_params)
       person_ids = Enum.map(persons, fn person -> person.id end)
 
       assert 2 == length(person_ids)
@@ -111,7 +112,8 @@ defmodule MPI.RpcTest do
         "status" => Person.status(:active)
       }
 
-      %Page{entries: persons} = Rpc.search_persons(search_params)
+      %Page{entries: persons} = Rpc.search_persons_paginated(search_params)
+      {:ok, ^persons} = Rpc.search_persons(search_params)
       person_ids = Enum.map(persons, fn person -> person.id end)
 
       assert 1 == length(person_ids)
@@ -132,11 +134,11 @@ defmodule MPI.RpcTest do
         "status" => Person.status(:active)
       }
 
-      %Page{entries: persons} = Rpc.search_persons(search_params)
+      %Page{entries: persons} = Rpc.search_persons_paginated(search_params)
+      {:ok, ^persons} = Rpc.search_persons(search_params)
       person_ids = Enum.map(persons, fn person -> person.id end)
 
       assert 1 == length(person_ids)
-
       assert [person1_id] == person_ids
 
       search_params = %{
@@ -149,7 +151,8 @@ defmodule MPI.RpcTest do
         "status" => Person.status(:active)
       }
 
-      %Page{entries: persons} = Rpc.search_persons(search_params)
+      %Page{entries: persons} = Rpc.search_persons_paginated(search_params)
+      {:ok, ^persons} = Rpc.search_persons(search_params)
       person_ids = Enum.map(persons, fn person -> person.id end)
 
       assert 1 == length(person_ids)
@@ -166,7 +169,8 @@ defmodule MPI.RpcTest do
         "status" => Person.status(:active)
       }
 
-      %Page{entries: persons} = Rpc.search_persons(search_params)
+      %Page{entries: persons} = Rpc.search_persons_paginated(search_params)
+      {:ok, ^persons} = Rpc.search_persons(search_params)
       person_ids = Enum.map(persons, fn person -> person.id end)
 
       assert 1 == length(person_ids)
@@ -183,7 +187,8 @@ defmodule MPI.RpcTest do
         "status" => Person.status(:active)
       }
 
-      %Page{entries: persons} = Rpc.search_persons(search_params)
+      %Page{entries: persons} = Rpc.search_persons_paginated(search_params)
+      {:ok, ^persons} = Rpc.search_persons(search_params)
       person_ids = Enum.map(persons, fn person -> person.id end)
 
       assert 0 == length(person_ids)
@@ -252,7 +257,9 @@ defmodule MPI.RpcTest do
     test "search_persons/2 by ids without fields" do
       %{id: id} = insert(:mpi, :person)
       insert(:mpi, :person)
-      assert %Scrivener.Page{entries: [person]} = Rpc.search_persons(%{"ids" => Enum.join([id], ",")})
+      params = %{"ids" => Enum.join([id], ",")}
+      assert %Scrivener.Page{entries: [person]} = Rpc.search_persons_paginated(params)
+      assert {:ok, [^person]} = Rpc.search_persons(params)
 
       assert %{documents: _, phones: _, addresses: _, merged_persons: _, master_person: _} =
                Map.take(person, ~w(documents phones addresses merged_persons master_person)a)
@@ -281,11 +288,11 @@ defmodule MPI.RpcTest do
       {:error, "search params is not specified"} = Rpc.search_persons(%{}, fields)
     end
 
-    test "search_persons/2  with not-existing field return error" do
+    test "search_persons_paginated/2  with not-existing field return error" do
       %{id: id} = insert(:mpi, :person)
 
       assert {:error, "invalid search characters"} ==
-               Rpc.search_persons(%{"id" => id}, [:id, :not_existing_field])
+               Rpc.search_persons_paginated(%{"id" => id}, [:id, :not_existing_field])
     end
   end
 

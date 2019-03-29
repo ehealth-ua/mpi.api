@@ -119,6 +119,33 @@ defmodule Core.Persons.PersonsAPI do
       {:query_error, "invalid search characters"}
   end
 
+  def list(params, fields \\ nil) do
+    page_size =
+      case params |> Map.get("page_size", "") |> Integer.parse() do
+        :error -> Confex.get_env(:core, :max_persons_result)
+        {value, _} -> min(value, 500)
+      end
+
+    persons =
+      Person
+      |> person_preload_query(fields)
+      |> join(:inner, [p], s in subquery(person_search_query(params)), on: p.id == s.id)
+      |> order_by([p], desc: p.inserted_at)
+      |> limit(^page_size)
+      |> add_offset(page_size, params)
+      |> Repo.all()
+
+    if Enum.empty?(persons) and params["unzr"], do: search(Map.delete(params, "unzr")), else: persons
+  rescue
+    _ in Postgrex.Error ->
+      {:query_error, "invalid search characters"}
+  end
+
+  defp add_offset(query, page_size, params) do
+    page = Map.get(params, "page_number", 1)
+    offset(query, ^((page - 1) * page_size))
+  end
+
   defp person_preload_query(query, fields) when is_list(fields), do: select(query, ^fields)
 
   defp person_preload_query(query, _),

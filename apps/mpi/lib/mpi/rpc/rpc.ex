@@ -143,15 +143,33 @@ defmodule MPI.Rpc do
       }
   """
 
-  @spec search_persons(params :: map()) :: {:error, any()} | successfull_search_response
-  def search_persons(%{} = params), do: search_persons(params, nil)
+  @spec search_persons_paginated(params :: map()) :: {:error, any()} | successfull_search_response
+  def search_persons_paginated(%{} = params), do: search_persons_paginated(params, nil)
 
-  @spec search_persons(params :: map(), fields :: list()) :: {:error, any()} | successfull_search_response
-  def search_persons(%{} = params, fields) do
+  @spec search_persons_paginated(params :: map(), fields :: list() | nil) ::
+          {:error, any()} | successfull_search_response
+  def search_persons_paginated(%{} = params, fields) do
     with {:search_params, true} <- {:search_params, !Enum.empty?(params)},
          %Page{entries: persons} = page <- PersonsAPI.search(params, fields) do
       if is_nil(fields),
         do: %Page{page | entries: PersonView.render("index.json", %{persons: persons})},
+        else: {:ok, Enum.map(persons, &PersonView.render("person_short.json", %{person: &1, fields: fields}))}
+    else
+      {:search_params, false} -> {:error, "search params is not specified"}
+      {:query_error, reason} -> {:error, reason}
+      err -> err
+    end
+  end
+
+  @spec search_persons(params :: map()) :: {:error, any()} | {:ok, list(person)}
+  def search_persons(%{} = params), do: search_persons(params, nil)
+
+  @spec search_persons(params :: map(), fields :: list() | nil) :: {:error, any()} | {:ok, list(person)}
+  def search_persons(%{} = params, fields) do
+    with {:search_params, true} <- {:search_params, !Enum.empty?(params)},
+         persons <- PersonsAPI.list(params, fields) do
+      if is_nil(fields),
+        do: {:ok, PersonView.render("index.json", %{persons: persons})},
         else: {:ok, Enum.map(persons, &PersonView.render("person_short.json", %{person: &1, fields: fields}))}
     else
       {:search_params, false} -> {:error, "search params is not specified"}
