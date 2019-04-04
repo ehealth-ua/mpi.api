@@ -29,6 +29,11 @@ defmodule PersonDeactivatorTest do
       :ok
     end)
 
+    expect(PersonDeactivatorKafkaMock, :publish_to_event_manager, 1, fn event ->
+      assert_event(event)
+      :ok
+    end)
+
     actor_id = UUID.generate()
     mc_success = insert(:mpi, :merge_candidate)
     mc_empty = insert(:mpi, :merge_candidate)
@@ -53,7 +58,12 @@ defmodule PersonDeactivatorTest do
     assert %MergeCandidate{status: ^declined} = Repo.get(MergeCandidate, mc_empty.id)
   end
 
-  test "deactivate_person that already was pushed to kafka but" do
+  test "deactivate_person that already was pushed to kafka but not merged" do
+    expect(PersonDeactivatorKafkaMock, :publish_to_event_manager, 1, fn event ->
+      assert_event(event)
+      :ok
+    end)
+
     mc = insert(:mpi, :merge_candidate, status: MergeCandidate.status(:deactivate_ready))
     actor_id = UUID.generate()
     PersonDeactivator.deactivate_person(mc.master_person.id, mc.person.id, actor_id, "AUTO_MERGE")
@@ -63,6 +73,11 @@ defmodule PersonDeactivatorTest do
   test "deactivate_person mark stale candidate and do not push them to kafka" do
     expect(PersonDeactivatorKafkaMock, :publish_declaration_deactivation_event, 3, fn _, _, reason ->
       assert "AUTO_MERGE" == reason
+      :ok
+    end)
+
+    expect(PersonDeactivatorKafkaMock, :publish_to_event_manager, 3, fn event ->
+      assert_event(event)
       :ok
     end)
 
@@ -91,6 +106,11 @@ defmodule PersonDeactivatorTest do
   test "deactivate_person success" do
     expect(PersonDeactivatorKafkaMock, :publish_declaration_deactivation_event, 10, fn _, _, reason ->
       assert "AUTO_MERGE" == reason
+      :ok
+    end)
+
+    expect(PersonDeactivatorKafkaMock, :publish_to_event_manager, 10, fn event ->
+      assert_event(event)
       :ok
     end)
 
@@ -127,5 +147,16 @@ defmodule PersonDeactivatorTest do
     |> Enum.map(fn candidate ->
       %{id: candidate.id, master_person_id: candidate.master_person_id, merge_person_id: candidate.person_id}
     end)
+  end
+
+  defp assert_event(event) do
+    %{
+      changed_by: _,
+      entity_id: _,
+      entity_type: "MergeCandidate",
+      event_time: _,
+      event_type: "StatusChangeEvent",
+      properties: %{"status" => %{"new_value" => "inactive"}}
+    } = event
   end
 end
