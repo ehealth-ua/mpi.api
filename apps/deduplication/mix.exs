@@ -33,6 +33,7 @@ defmodule Deduplication.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
+      {:quantum, "~> 2.3"},
       {:simetric, "~> 0.2.0"},
       {:erlport, "~> 0.10.0"},
       {:poolboy, "~> 1.5"},

@@ -7,6 +7,11 @@ config :logger, :console,
   format: "$message\n",
   metadata: [:request_id]
 
+config :deduplication, Deduplication.Application, env: Mix.env()
+
+config :deduplication, Deduplication.Sheduler,
+  deduplication_schedule: {:system, :string, "DEDUPLICATION_SCHEDULE", "* * * * *"}
+
 # ENV DEDUPLICATION_MODE defines how producer will get persons
 # :mixed - first get locked persons, then rest
 # :new - get only unlocked unverified persons
@@ -20,7 +25,6 @@ config :deduplication, Deduplication.PythonPool,
   python_workers_pool_size: {:system, :integer, "PYTHON_WORKERS_POOL_SIZE", 10}
 
 config :deduplication, Deduplication.DeduplicationPool,
-  env: Mix.env(),
   parallel_consumers: {:system, :integer, "DEDUPLICATION_PARALLEL_TASKS", 20},
   max_restarts: {:system, :integer, "MAX_RESTART_TRIES", 100_000_000}
 
