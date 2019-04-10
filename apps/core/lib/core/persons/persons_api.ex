@@ -28,7 +28,6 @@ defmodule Core.Persons.PersonsAPI do
 
   def changeset(%Person{} = person, params) do
     person
-    |> Repo.preload([:phones, :documents, :addresses])
     |> cast(trim_name_spaces(params), Person.fields())
     |> cast_assoc(:addresses)
     |> cast_assoc(:phones)
@@ -62,7 +61,8 @@ defmodule Core.Persons.PersonsAPI do
     params = Map.merge(params, %{"inserted_by" => consumer_id, "updated_by" => consumer_id})
 
     with %Changeset{valid?: true} = changeset <- changeset(%Person{}, params),
-         {:ok, person} <- Repo.insert_and_log(changeset, consumer_id) do
+         {:ok, person} <- Repo.insert_and_log(changeset, consumer_id),
+         %Person{} = person <- get_by_id(person.id) do
       {:created, {:ok, person}}
     end
   end
