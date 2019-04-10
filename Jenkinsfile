@@ -37,9 +37,8 @@ pipeline {
             do
               sleep 2
             done
-          psql -U postgres -h localhost -c "create database prm_dev";
-          psql -U postgres -h localhost -c "create database fraud_dev";
-          psql -U postgres -h localhost -c "create database event_manager_dev";
+          psql -U postgres -h localhost -c "create database mpi_dev";
+          psql -U postgres -h localhost -c "create database deduplication_dev";          
         '''
         sh '''
           until sudo docker exec -i kafkazookeeper /opt/kafka_2.12-2.1.0/bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic medical_events;
