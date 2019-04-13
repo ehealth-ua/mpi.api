@@ -22,6 +22,8 @@ defmodule CandidatesMerger do
   @status_postpone ManualMergeRequest.status(:postpone)
   @status_processed ManualMergeCandidate.status(:processed)
   @status_reason_auto_merge ManualMergeCandidate.status_reason(:auto_merge)
+  @status_declined MergeCandidate.status(:declined)
+  @status_merged MergeCandidate.status(:merged)
 
   @reason "MANUAL_MERGE"
 
@@ -70,6 +72,13 @@ defmodule CandidatesMerger do
       with update_data <- %{status: @status_processed, decision: request.status, assignee_id: nil},
            {:ok, candidate} <- update_and_log(request.manual_merge_candidate, update_data, actor_id),
            :ok <- process_related_merge_candidates(request, actor_id) do
+        candidate_status =
+          case request.status do
+            @status_merge -> @status_merged
+            _ -> @status_declined
+          end
+
+        set_merge_candidates_status(candidate.merge_candidate_id, candidate_status)
         {:ok, candidate}
       end
     else
@@ -96,22 +105,26 @@ defmodule CandidatesMerger do
     |> where([c], c.person_id == ^person_id or c.master_person_id == ^person_id)
     |> DeduplicationRepo.update_all_and_log([set: patch], actor_id)
 
+    set_merge_candidates_status(request.manual_merge_candidate.merge_candidate_id, @status_merge)
+
     :ok
   end
 
   defp process_related_merge_candidates(%ManualMergeRequest{status: status} = request, _)
        when status in [@status_split, @status_trash] do
     entity_id = request.manual_merge_candidate.merge_candidate_id
-    patch = [status: MergeCandidate.status(:declined)]
-
-    MergeCandidate
-    |> where([mc], mc.id == ^entity_id)
-    |> Repo.update_all(set: patch)
+    set_merge_candidates_status(entity_id, @status_declined)
 
     :ok
   end
 
   defp process_related_merge_candidates(_, _), do: :ok
+
+  defp set_merge_candidates_status(merge_candidate_id, status) do
+    MergeCandidate
+    |> where([mc], mc.id == ^merge_candidate_id)
+    |> Repo.update_all(set: [status: status])
+  end
 
   defp deactivate_person(%ManualMergeCandidate{decision: @status_merge} = candidate, actor_id) do
     event = %{

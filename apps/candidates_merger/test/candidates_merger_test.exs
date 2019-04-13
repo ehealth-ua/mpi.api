@@ -139,6 +139,9 @@ defmodule CandidatesMergerTest do
       manual_candidate = ManualMerge.get_by_id(ManualMergeCandidate, manual_candidate.id)
       refute manual_candidate.status_reason
 
+      merge_candidate = MergeCandidates.get_by_id(candidate.id)
+      assert MergeCandidate.status(:merged) == merge_candidate.status
+
       # 4 entries in Audit log for:
       # - mark Manual Merge Request as MERGE
       # - mark Manual Merge Candidate as MERGE
