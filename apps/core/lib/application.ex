@@ -3,22 +3,26 @@ defmodule Core.Application do
 
   use Application
   alias Core.DeduplicationRepo
+  alias Core.ReadRepo
   alias Core.Repo
   alias Core.TelemetryHandler.DeduplicationRepoHandler
+  alias Core.TelemetryHandler.ReadRepoHandler
   alias Core.TelemetryHandler.RepoHandler
 
   def start(_type, _args) do
     :telemetry.attach("log-handler", [:core, :repo, :query], &RepoHandler.handle_event/4, nil)
+    :telemetry.attach("log-read-handler", [:core, :read_repo, :query], &ReadRepoHandler.handle_event/4, nil)
 
     :telemetry.attach(
       "log-deduplication-handler",
-      [:core, :read_repo, :query],
+      [:core, :deduplication_repo, :query],
       &DeduplicationRepoHandler.handle_event/4,
       nil
     )
 
     children = [
       {Repo, []},
+      {ReadRepo, []},
       {DeduplicationRepo, []}
     ]
 

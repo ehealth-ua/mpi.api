@@ -113,13 +113,9 @@ defmodule MPI.Web.PersonControllerTest do
     assert "last name" == resp["data"]["last_name"]
   end
 
-  test "successful create person with inserted_by, updayed_by by x-consumer-id", %{conn: conn} do
+  test "successful create person with inserted_by, updated_by by x-consumer-id without merge candidates", %{conn: conn} do
     user_id = UUID.generate()
-
-    person_data =
-      :person
-      |> string_params_for()
-      |> Map.delete("phones")
+    person_data = :person |> string_params_for() |> Map.drop(~w(phones merged_persons master_person))
 
     resp =
       conn
@@ -130,6 +126,8 @@ defmodule MPI.Web.PersonControllerTest do
     assert_person(resp["data"])
     assert resp["data"]["inserted_by"] == user_id
     assert resp["data"]["updated_by"] == user_id
+    refute resp["data"]["master_person"]
+    assert [] == resp["data"]["merged_persons"]
   end
 
   test "successful create person without phones", %{conn: conn} do
@@ -627,9 +625,12 @@ defmodule MPI.Web.PersonControllerTest do
 
     ids = [id_1, id_2, id_3, id_4, id_5]
 
-    conn = get(conn, person_path(conn, :index, ids: Enum.join(ids, ","), status: "active", limit: 3))
+    assert resp =
+             conn
+             |> get(person_path(conn, :index, ids: Enum.join(ids, ","), status: "active"))
+             |> json_response(200)
 
-    data = json_response(conn, 200)["data"]
+    data = resp["data"]
     assert 2 == length(data)
 
     Enum.each(data, fn person ->
@@ -862,14 +863,20 @@ defmodule MPI.Web.PersonControllerTest do
     assert is_nil(data["master_person"]) or is_map(data["master_person"])
     assert is_list(data["documents"])
 
-    Enum.each(data["documents"], fn document -> assert_document(document) end)
-    Enum.each(data["phones"], fn phone -> assert_phone(phone) end)
-    Enum.each(data["addresses"], fn address -> assert_address(address) end)
+    Enum.each(data["documents"], &assert_document(&1))
+    Enum.each(data["phones"], &assert_phone(&1))
+    Enum.each(data["addresses"], &assert_address(&1))
+    Enum.each(data["merged_persons"], &assert_merged_persons(&1))
+    assert_master_person(data["master_person"])
   end
 
   defp assert_phone(phone), do: assert_keys(PersonPhone.fields(), phone)
   defp assert_document(document), do: assert_keys(PersonDocument.fields(), document)
   defp assert_address(address), do: assert_keys(PersonAddress.fields(), address)
+  defp assert_master_person(nil), do: true
+  defp assert_master_person(master_person), do: assert_keys(~w(person_id master_person_id), master_person)
+  defp assert_merged_persons(nil), do: true
+  defp assert_merged_persons(merged_person), do: assert_keys(~w(person_id merge_person_id), merged_person)
 
   defp assert_keys(fields, entities) do
     Enum.each(fields, fn field -> assert Map.has_key?(entities, to_string(field)) end)

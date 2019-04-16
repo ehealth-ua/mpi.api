@@ -16,10 +16,7 @@ defmodule MPI.Web.PersonController do
       conn
       |> put_status(:ok)
       |> put_view(PersonView)
-      |> render("index.json", %{
-        persons: paging.entries,
-        paging: paging
-      })
+      |> render("index.json", %{persons: paging.entries, paging: paging})
     else
       {:query_error, msg} ->
         conn

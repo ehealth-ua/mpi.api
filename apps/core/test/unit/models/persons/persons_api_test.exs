@@ -188,7 +188,7 @@ defmodule Core.Persons.PersonTest do
   end
 
   test "searches by unzr first when unzr in not set, then with tax_id and birthday ordered by inserted_at" do
-    ordered_ids =
+    ids =
       Enum.reduce(1..100, [], fn n, acc ->
         %Person{id: id} =
           insert(
@@ -214,7 +214,7 @@ defmodule Core.Persons.PersonTest do
              })
 
     searched_ids = Enum.map(persons, fn %Person{id: id} -> id end)
-    assert MapSet.new(searched_ids) == MapSet.new(ordered_ids)
+    assert MapSet.new(searched_ids) == MapSet.new(ids)
   end
 
   test "searches by unzr, with tax_id and birthday presence" do

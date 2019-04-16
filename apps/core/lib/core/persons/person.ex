@@ -96,6 +96,9 @@ defmodule Core.Person do
     updated_by
   )a
 
+  @preload_fields ~w(documents phones addresses merged_persons master_person)a
+
   def fields, do: @fields
   def fields_required, do: @fields_required
+  def preload_fields, do: @preload_fields
 end

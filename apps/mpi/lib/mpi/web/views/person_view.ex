@@ -29,7 +29,7 @@ defmodule MPI.Web.PersonView do
     })
   end
 
-  def render("master_person.json", %{id: person_id, master_person: %{} = master_person}) do
+  def render("master_person.json", %{id: person_id, master_person: %{master_person_id: _} = master_person}) do
     master_person
     |> Map.take(extended_field([:master_person_id]))
     |> Map.put(:person_id, person_id)

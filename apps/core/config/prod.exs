@@ -9,6 +9,15 @@ config :core, Core.Repo,
   pool_size: {:system, :integer, "POOL_SIZE", 10},
   timeout: :infinity
 
+config :core, Core.ReadRepo,
+  username: {:system, :string, "DB_USER"},
+  password: {:system, :string, "DB_PASSWORD"},
+  database: {:system, :string, "DB_NAME"},
+  hostname: {:system, :string, "DB_HOST"},
+  port: {:system, :integer, "DB_PORT"},
+  pool_size: {:system, :integer, "POOL_SIZE", 10},
+  timeout: :infinity
+
 config :core, Core.DeduplicationRepo,
   username: {:system, :string, "DB_DEDUPLICATION_USER"},
   password: {:system, :string, "DB_DEDUPLICATION_PASSWORD"},

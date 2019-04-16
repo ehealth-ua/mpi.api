@@ -13,6 +13,7 @@ defmodule Core.Persons.PersonsAPI do
   alias Core.Repo
   alias Ecto.Changeset
 
+  @read_repo Application.get_env(:core, :repos)[:read_repo]
   @person_status_active Person.status(:active)
 
   defp trim_spaces(input_string), do: input_string |> String.split() |> Enum.join(" ")
@@ -39,21 +40,36 @@ defmodule Core.Persons.PersonsAPI do
   def get_by_id(id) do
     Person
     |> where([p], p.id == ^id)
-    |> preload(^~w(phones documents addresses merged_persons master_person)a)
+    |> join(:left, [p], phones in assoc(p, :phones), as: :phones)
+    |> join(:left, [p], d in assoc(p, :documents), as: :documents)
+    |> join(:left, [p], a in assoc(p, :addresses), as: :addresses)
+    |> join(:left, [p], mp in assoc(p, :merged_persons), as: :merged_persons)
+    |> join(:left, [p], m in assoc(p, :master_person), as: :master_person)
+    |> preload(
+      [
+        phones: phones,
+        documents: documents,
+        addresses: addresses,
+        merged_persons: merged_persons,
+        master_person: master_person
+      ],
+      phones: phones,
+      documents: documents,
+      addresses: addresses,
+      merged_persons: merged_persons,
+      master_person: master_person
+    )
     |> Repo.one()
   end
 
   def create(%{"id" => id} = params, consumer_id) when is_binary(id) do
-    params = Map.put(params, "updated_by", consumer_id)
+    params = params |> Map.put("updated_by", consumer_id) |> Map.delete("id")
 
-    with %Person{is_active: true, status: @person_status_active} = person <- get_by_id(id),
-         %Changeset{valid?: true} = changeset <- changeset(person, Map.delete(params, "id")),
+    with %Person{} = person <- get_by_id(id),
+         :ok <- person_is_active(person),
+         %Changeset{valid?: true} = changeset <- changeset(person, params),
          {:ok, person} <- Repo.update_and_log(changeset, consumer_id) do
       {:ok, {:ok, person}}
-    else
-      %Person{is_active: false} -> {:error, {:conflict, "person is not active"}}
-      %Person{status: _} -> {:error, {:conflict, "person is not active"}}
-      error -> error
     end
   end
 
@@ -91,70 +107,63 @@ defmodule Core.Persons.PersonsAPI do
   end
 
   # Used only for graphql
-  def search(filter, order_by, cursor) do
+  def ql_search(filter, order_by, cursor) do
     Person
-    |> preload(^~w(documents phones addresses merged_persons master_person)a)
+    |> preload(^Person.preload_fields())
     |> filter(filter)
     |> apply_cursor(cursor)
     |> order_by(^order_by)
-    |> Repo.all()
+    |> @read_repo.all()
   rescue
     _ in Postgrex.Error ->
       {:query_error, "invalid search characters"}
   end
 
-  def search(params, fields \\ nil) do
-    paging_params = Map.merge(%{"page_size" => Confex.get_env(:core, :max_persons_result)}, params)
+  def search(params), do: find_persons(params, nil, paginate: true, read_only: true)
 
-    persons =
-      Person
+  def list(params, fields, ops), do: find_persons(params, fields, ops)
+
+  defp find_persons(params, fields, ops) do
+    paging = params |> Map.take(~w(page_size page_number)) |> paging_params()
+    fields = fields || Person.preload_fields()
+    repo = if ops[:read_only], do: @read_repo, else: Repo
+
+    persons_query =
+      params
+      |> person_search_query()
       |> person_preload_query(fields)
-      |> join(:inner, [p], s in subquery(person_search_query(params)), on: p.id == s.id)
-      |> order_by([p], desc: p.inserted_at)
-      |> Repo.paginate(paging_params)
 
-    if Enum.empty?(persons) and params["unzr"], do: search(Map.delete(params, "unzr")), else: persons
-  rescue
-    _ in Postgrex.Error ->
-      {:query_error, "invalid search characters"}
-  end
-
-  def list(params, fields \\ nil) do
-    page_size =
-      case params |> Map.get("page_size", "") |> Integer.parse() do
-        :error -> Confex.get_env(:core, :max_persons_result)
-        {value, _} -> min(value, 500)
+    persons_data =
+      if ops[:paginate] do
+        repo.paginate(persons_query, paging)
+      else
+        persons_query
+        |> order_by([p, ...], desc: p.inserted_at)
+        |> limit(^paging.page_size)
+        |> offset(^(paging.page_number * paging.page_size))
+        |> repo.all()
       end
 
-    persons =
-      Person
-      |> person_preload_query(fields)
-      |> join(:inner, [p], s in subquery(person_search_query(params)), on: p.id == s.id)
-      |> order_by([p], desc: p.inserted_at)
-      |> limit(^page_size)
-      |> add_offset(page_size, params)
-      |> Repo.all()
+    persons = if ops[:paginate], do: persons_data.entries, else: persons_data
 
-    if Enum.empty?(persons) and params["unzr"], do: search(Map.delete(params, "unzr")), else: persons
+    if [] == persons and not is_nil(params["unzr"]) and not Enum.empty?(Map.delete(params, "unzr")) do
+      find_persons(Map.delete(params, "unzr"), fields, ops)
+    else
+      persons_data
+    end
   rescue
     _ in Postgrex.Error ->
       {:query_error, "invalid search characters"}
   end
 
-  defp add_offset(query, page_size, params) do
-    page = Map.get(params, "page_number", 1)
-    offset(query, ^((page - 1) * page_size))
+  defp person_preload_query(query, fields) do
+    {preloads, selects} = Enum.split_with(fields, &(&1 in Person.preload_fields()))
+    query = if Enum.empty?(preloads), do: query, else: preload(query, ^preloads)
+    if Enum.empty?(selects), do: query, else: select(query, ^selects)
   end
 
-  defp person_preload_query(query, fields) when is_list(fields), do: select(query, ^fields)
-
-  defp person_preload_query(query, _),
-    do: preload(query, ^~w(documents phones addresses merged_persons master_person)a)
-
   defp person_search_query(%{"unzr" => unzr}) do
-    Person
-    |> where([p], p.unzr == ^unzr)
-    |> where([p], p.status == @person_status_active)
+    where(Person, [p], p.unzr == ^unzr and p.status == @person_status_active and p.is_active)
   end
 
   defp person_search_query(params) do
@@ -163,13 +172,10 @@ defmodule Core.Persons.PersonsAPI do
     direct_params =
       params
       |> Map.drop(~w(type birth_certificate phone_number ids first_name last_name second_name))
-      |> Map.take(Enum.map(Person.__schema__(:fields), &to_string(&1)))
+      |> Map.take(Enum.map(Person.fields(), &to_string(&1)))
 
     Person
-    |> where(
-      [p],
-      ^Enum.into(direct_params, Keyword.new(), fn {k, v} -> {String.to_atom(k), v} end)
-    )
+    |> where([p], ^Enum.into(direct_params, Keyword.new(), fn {k, v} -> {String.to_atom(k), v} end))
     |> where([p], p.is_active)
     |> with_names(Map.take(params, ~w(first_name last_name second_name)))
     |> with_ids(Map.take(params, ~w(ids)))
@@ -189,11 +195,7 @@ defmodule Core.Persons.PersonsAPI do
        when not is_nil(type) and not is_nil(number) do
     type = String.upcase(type)
 
-    join(
-      query,
-      :inner,
-      [p],
-      d in PersonDocument,
+    join(query, :inner, [p], d in PersonDocument,
       on: d.person_id == p.id and d.type == ^type and fragment("lower(?) = lower(?)", d.number, ^number)
     )
   end
@@ -219,24 +221,16 @@ defmodule Core.Persons.PersonsAPI do
 
   defp with_documents(query, _), do: query
 
-  defp document_search_query(document) do
-    if document["type"] == "BIRTH_CERTIFICATE" and Map.has_key?(document, "digits") do
-      dynamic(
-        [p, d],
-        d.type == ^document["type"] and
-          fragment("regexp_replace(number,'[^[:digit:]]','', 'g') = ?", ^document["digits"])
-      )
-    else
-      dynamic([p, d], d.type == ^document["type"] and fragment("lower(?) = lower(?)", d.number, ^document["number"]))
-    end
+  defp document_search_query(%{"type" => "BIRTH_CERTIFICATE" = type, "digits" => digits}) do
+    dynamic([p, d], d.type == ^type and fragment("regexp_replace(number,'[^[:digit:]]','', 'g') = ?", ^digits))
+  end
+
+  defp document_search_query(%{"type" => type, "number" => number}) do
+    dynamic([p, d], d.type == ^type and fragment("lower(?) = lower(?)", d.number, ^number))
   end
 
   defp with_phone_number(query, %{"phone_number" => phone_number}) do
-    join(
-      query,
-      :inner,
-      [p],
-      ph in PersonPhone,
+    join(query, :inner, [p], ph in PersonPhone,
       on: ph.person_id == p.id and ph.type == "MOBILE" and ph.number == ^phone_number
     )
   end
@@ -246,21 +240,13 @@ defmodule Core.Persons.PersonsAPI do
   defp with_auth_phone_number(query, %{"auth_phone_number" => auth_phone_number}) do
     query
     |> where([p], p.status == @person_status_active)
-    |> where(
-      [p],
-      fragment("? @> ?", p.authentication_methods, ^[%{"phone_number" => auth_phone_number}])
-    )
+    |> where([p], fragment("? @> ?", p.authentication_methods, ^[%{"phone_number" => auth_phone_number}]))
   end
 
   defp with_auth_phone_number(query, _), do: query
 
-  defp with_birth_certificate(query, %{"birth_certificate" => birth_certificate})
-       when not is_nil(birth_certificate) do
-    join(
-      query,
-      :inner,
-      [p],
-      d in PersonDocument,
+  defp with_birth_certificate(query, %{"birth_certificate" => birth_certificate}) when not is_nil(birth_certificate) do
+    join(query, :inner, [p], d in PersonDocument,
       on: d.person_id == p.id and d.type == "BIRTH_CERTIFICATE" and d.number == ^birth_certificate
     )
   end
@@ -273,14 +259,24 @@ defmodule Core.Persons.PersonsAPI do
     end)
   end
 
-  defp with_ids(query, %{"ids" => ids}) when ids != "" do
-    where(query, [p], p.id in ^String.split(ids, ","))
-  end
-
+  defp with_ids(query, %{"ids" => ids}) when ids != "", do: where(query, [p], p.id in ^String.split(ids, ","))
   defp with_ids(query, _), do: query
 
-  defp person_is_active(%Person{is_active: true}), do: :ok
-  defp person_is_active(_), do: {:error, {:"422", "Person is not active"}}
+  defp person_is_active(%Person{is_active: true, status: @person_status_active}), do: :ok
+  defp person_is_active(_), do: {:error, {:conflict, "person is not active"}}
+
+  defp paging_params(params) do
+    max_persons_result = Confex.get_env(:core, :max_persons_result)
+    page_number = params["page_number"] || 0
+
+    page_size =
+      case params |> Map.get("page_size", "") |> to_string() |> Integer.parse() do
+        :error -> max_persons_result
+        {value, _} -> min(value, Repo.max_page_size())
+      end
+
+    %{page_number: page_number, page_size: page_size}
+  end
 
   def get_person_auth_method(%Person{authentication_methods: authentication_methods}) do
     List.first(authentication_methods)

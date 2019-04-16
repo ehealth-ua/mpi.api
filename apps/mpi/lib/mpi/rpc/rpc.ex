@@ -64,7 +64,7 @@ defmodule MPI.Rpc do
         }
 
   @doc """
-  Searches person by given parameters
+  Searches person by given parameters and options
 
   Available parameters:
 
@@ -82,6 +82,10 @@ defmodule MPI.Rpc do
   | documents          | `list(map)`      | [%{"type" => "PASSPORT", "number" => "123456"}, ...] | List of documents to search by with `or` condition |
 
   Returns `%Scrivener.Page{entries: list(person), page_number: number(), page_size: number(), total_entries: number(), total_pages: number()}`.
+
+  Available options:
+    - read_only :: true | false. Default `nil` equal to false. If true, read records from read db only (replica)
+    - paginate :: true | false. Default `nil` equal to false. If true, do Repo.paginate, else do Repo.all with limit, offset
 
   ## Examples
 
@@ -132,7 +136,7 @@ defmodule MPI.Rpc do
         total_pages: 1
       }
 
-      iex> MPI.Rpc.search_persons([:id, :first_name, :last_name], %{"ids" => ["26e673e1-1d68-413e-b96c-407b45d9f572"]})
+      iex> MPI.Rpc.search_persons([:id, :first_name, :last_name], %{"ids" => ["26e673e1-1d68-413e-b96c-407b45d9f572"]}, read_only: true, paginate: true)
       {:ok, [
           %{
             id: "26e673e1-1d68-413e-b96c-407b45d9f572",
@@ -143,47 +147,53 @@ defmodule MPI.Rpc do
       }
   """
 
-  @spec search_persons_paginated(params :: map()) :: {:error, any()} | successfull_search_response
-  def search_persons_paginated(%{} = params), do: search_persons_paginated(params, nil)
-
-  @spec search_persons_paginated(params :: map(), fields :: list() | nil) ::
-          {:error, any()} | successfull_search_response
-  def search_persons_paginated(%{} = params, fields) do
-    with {:search_params, true} <- {:search_params, !Enum.empty?(params)},
-         %Page{entries: persons} = page <- PersonsAPI.search(params, fields) do
-      if is_nil(fields),
-        do: %Page{page | entries: PersonView.render("index.json", %{persons: persons})},
-        else: {:ok, Enum.map(persons, &PersonView.render("person_short.json", %{person: &1, fields: fields}))}
+  @spec search_persons(params :: map(), fields :: list() | nil, options :: list) ::
+          {:error, any()} | {:ok, list(person)}
+  def search_persons(%{} = params, fields \\ nil, options \\ []) do
+    with :ok <- validate_params(params),
+         :ok <- validate_fields(fields),
+         persons when is_map(persons) or is_list(persons) <- PersonsAPI.list(params, fields, options),
+         data <- render_persons(persons, fields) do
+      {:ok, data}
     else
-      {:search_params, false} -> {:error, "search params is not specified"}
       {:query_error, reason} -> {:error, reason}
-      err -> err
+      error -> error
     end
   end
 
-  @spec search_persons(params :: map()) :: {:error, any()} | {:ok, list(person)}
-  def search_persons(%{} = params), do: search_persons(params, nil)
-
-  @spec search_persons(params :: map(), fields :: list() | nil) :: {:error, any()} | {:ok, list(person)}
-  def search_persons(%{} = params, fields) do
-    with {:search_params, true} <- {:search_params, !Enum.empty?(params)},
-         persons <- PersonsAPI.list(params, fields) do
-      if is_nil(fields),
-        do: {:ok, PersonView.render("index.json", %{persons: persons})},
-        else: {:ok, Enum.map(persons, &PersonView.render("person_short.json", %{person: &1, fields: fields}))}
-    else
-      {:search_params, false} -> {:error, "search params is not specified"}
-      {:query_error, reason} -> {:error, reason}
-      err -> err
-    end
+  defp validate_params(params) do
+    if Enum.empty?(params), do: {:error, "search params is not specified"}, else: :ok
   end
+
+  defp validate_fields(nil), do: :ok
+
+  defp validate_fields(fields) do
+    allowed_fields = [:id | Person.fields()] ++ Person.preload_fields()
+
+    if Enum.empty?(MapSet.difference(MapSet.new(fields), MapSet.new(allowed_fields))),
+      do: :ok,
+      else: {:error, "listed fields could not be fetched"}
+  end
+
+  defp render_persons(%Page{entries: entries} = paging, fields) do
+    persons = Enum.map(entries, &render_person(&1, fields))
+    paging = Map.take(paging, ~w(page_number page_size total_entries total_pages)a)
+    %{data: persons, paging: paging}
+  end
+
+  defp render_persons(persons, fields) do
+    Enum.map(persons, &render_person(&1, fields))
+  end
+
+  defp render_person(person, nil), do: PersonView.render("show.json", %{person: person})
+  defp render_person(person, fields), do: PersonView.render("person_short.json", %{person: person, fields: fields})
 
   @doc """
-  Searches person by filtering params
+  List person by filtering params (GQL only)
 
   ## Examples
 
-      iex> MPI.Rpc.search_persons([{:last_name, :equal, "Іванов"}], [asc: :inserted_at], {100, 50})
+      iex> MPI.Rpc.ql_search([{:last_name, :equal, "Іванов"}], [asc: :inserted_at], {100, 50})
       {:ok, [
           %{
             id: "26e673e1-1d68-413e-b96c-407b45d9f572",
@@ -226,8 +236,8 @@ defmodule MPI.Rpc do
       }
   """
 
-  def search_persons(filter, order_by \\ [], cursor \\ nil) when is_list(filter) and filter != [] do
-    with persons when is_list(persons) <- PersonsAPI.search(filter, order_by, cursor) do
+  def ql_search(filter, order_by \\ [], cursor \\ nil) when is_list(filter) and filter != [] do
+    with persons when is_list(persons) <- PersonsAPI.ql_search(filter, order_by, cursor) do
       {:ok, PersonView.render("index.json", %{persons: persons})}
     else
       {:query_error, reason} -> {:error, reason}

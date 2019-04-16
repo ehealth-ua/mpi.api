@@ -8,6 +8,14 @@ config :core, Core.Repo,
   port: 5432,
   pool_size: 10
 
+config :core, Core.ReadRepo,
+  username: "postgres",
+  password: "postgres",
+  database: "mpi_dev",
+  hostname: "localhost",
+  port: 5432,
+  pool_size: 10
+
 config :core, Core.DeduplicationRepo,
   username: "postgres",
   password: "postgres",
