@@ -62,7 +62,10 @@ pipeline {
       }
       steps {
         sh '''
-          sudo apt-get install -y python3-pip
+          until sudo apt-get install -y python3-pip;
+            do
+              sleep 2
+            done
           pip3 install setuptools wheel
           pip3 install -r python_requirements.txt        
           (curl -s https://raw.githubusercontent.com/edenlabllc/ci-utils/umbrella_jenkins_gce/tests.sh -o tests.sh; chmod +x ./tests.sh; ./tests.sh) || exit 1;
