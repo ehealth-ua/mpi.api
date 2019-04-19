@@ -13,6 +13,15 @@ defmodule MPI.RpcTest do
   setup :verify_on_exit!
 
   describe "search_persons/1" do
+    test "invalid arguments" do
+      assert {:error, "search params are not specified"} == Rpc.search_persons(%{})
+      assert {:error, "search params are not specified"} == Rpc.search_persons(%{"page_size" => 1})
+      assert {:error, "search params are not specified"} == Rpc.search_persons(%{unzr: "19910824-00000"})
+
+      assert {:error, "listed fields could not be fetched"} ==
+               Rpc.search_persons(%{"unzr" => "19910824-00000"}, [:no_such_field])
+    end
+
     test "search person by documents list and status" do
       %{id: person1_id} =
         insert(
@@ -276,7 +285,7 @@ defmodule MPI.RpcTest do
       fields = ~w(id first_name last_name second_name birth_date)a
       insert(:mpi, :person)
 
-      {:error, "search params is not specified"} = Rpc.search_persons(%{}, fields)
+      {:error, "search params are not specified"} = Rpc.search_persons(%{}, fields)
     end
 
     test "search_persons/2  with not-existing field return error" do

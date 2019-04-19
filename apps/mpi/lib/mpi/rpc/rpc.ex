@@ -136,7 +136,7 @@ defmodule MPI.Rpc do
         total_pages: 1
       }
 
-      iex> MPI.Rpc.search_persons([:id, :first_name, :last_name], %{"ids" => ["26e673e1-1d68-413e-b96c-407b45d9f572"]}, read_only: true, paginate: true)
+      iex> MPI.Rpc.search_persons(%{"ids" => ["26e673e1-1d68-413e-b96c-407b45d9f572"]}, [:id, :first_name, :last_name], read_only: true, paginate: true)
       {:ok, [
           %{
             id: "26e673e1-1d68-413e-b96c-407b45d9f572",
@@ -150,7 +150,7 @@ defmodule MPI.Rpc do
   @spec search_persons(params :: map(), fields :: list() | nil, options :: list) ::
           {:error, any()} | {:ok, list(person)}
   def search_persons(%{} = params, fields \\ nil, options \\ []) do
-    with :ok <- validate_params(params),
+    with :ok <- params |> Map.drop(~w(page_size page_number)) |> validate_params(),
          :ok <- validate_fields(fields),
          persons when is_map(persons) or is_list(persons) <- PersonsAPI.list(params, fields, options),
          data <- render_persons(persons, fields) do
@@ -162,7 +162,9 @@ defmodule MPI.Rpc do
   end
 
   defp validate_params(params) do
-    if Enum.empty?(params), do: {:error, "search params is not specified"}, else: :ok
+    if Enum.empty?(params) or not Enum.all?(params, fn {k, _} -> is_binary(k) end),
+      do: {:error, "search params are not specified"},
+      else: :ok
   end
 
   defp validate_fields(nil), do: :ok
