@@ -1,4 +1,4 @@
-defmodule Deduplication.V2.GenStageTest do
+defmodule Deduplication.GenStageTest do
   @moduledoc false
 
   use Core.ModelCase, async: false
@@ -10,37 +10,29 @@ defmodule Deduplication.V2.GenStageTest do
   alias Core.MergeCandidate
   alias Core.Repo
   alias Core.VerifyingId
-  alias Deduplication.Consumer
-  alias Deduplication.Producer
-  alias Deduplication.V2.Model
-  alias Deduplication.Worker
+  alias Deduplication.Model
+  alias Deduplication.DeduplicationPool
 
   setup :verify_on_exit!
   setup :set_mox_global
 
   setup do
-    GenStage.start_link(Producer, %{offset: 0}, name: Producer)
-    :ok = Supervisor.terminate_child(Deduplication.Supervisor.GenStage, Worker)
-    {:ok, _} = Supervisor.restart_child(Deduplication.Supervisor.GenStage, Worker)
     Model.set_current_verified_ts(DateTime.utc_now())
     :ok
   end
 
   def candidate_count(n), do: candidate_count(n, 0)
-
   def candidate_count(1, acc), do: acc
-
-  def candidate_count(n, acc) do
-    candidate_count(n - 1, n - 1 + acc)
-  end
+  def candidate_count(n, acc), do: candidate_count(n - 1, n - 1 + acc)
 
   def start_genstage(timeout) do
-    tasks = config()[:parallel_consumers]
+    Enum.map(
+      [GenStageProducer | DeduplicationPool.consumer_ids()],
+      &Supervisor.terminate_child(Deduplication.Supervisor.GenStage, &1)
+    )
 
-    Enum.map(0..max(tasks - 1, 0), fn _ ->
-      {:ok, _consumer} = GenStage.start_link(Consumer, %{producer_id: Producer, id: Consumer})
-    end)
-
+    Supervisor.start_link(DeduplicationPool.children(), strategy: :one_for_all)
+    DeduplicationPool.subscribe()
     Process.sleep(timeout)
   end
 
@@ -140,10 +132,10 @@ defmodule Deduplication.V2.GenStageTest do
       end)
 
       Model.set_current_verified_ts(DateTime.utc_now())
-      assert 110 == Enum.count(Model.get_locked_unverified_persons(111, 0))
+      assert 110 == Enum.count(Model.get_locked_unverified_persons())
       start_genstage(5000)
       assert 0 == Enum.count(Model.get_unverified_persons(110))
-      assert 0 == Enum.count(Model.get_locked_unverified_persons(100, 0))
+      assert 0 == Enum.count(Model.get_locked_unverified_persons())
     end
   end
 
@@ -155,11 +147,11 @@ defmodule Deduplication.V2.GenStageTest do
       end)
 
       Model.set_current_verified_ts(DateTime.utc_now())
-      Enum.map(1..53, fn _ -> insert(:mpi, :person) end)
-      assert 51 == Enum.count(Model.get_locked_unverified_persons(100, 0))
+      insert_list(53, :mpi, :person)
+      assert 51 == Enum.count(Model.get_locked_unverified_persons())
       start_genstage(5000)
       assert 0 == Enum.count(Model.get_unverified_persons(300))
-      assert 0 == Enum.count(Model.get_locked_unverified_persons(100, 0))
+      assert 0 == Enum.count(Model.get_locked_unverified_persons())
     end
   end
 end

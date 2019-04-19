@@ -1,10 +1,10 @@
-defmodule Deduplication.V2.CandidatesDistance do
+defmodule Deduplication.CandidatesDistance do
   @moduledoc """
   Count Leveshtein weigth for candidate pairs
   """
 
   alias Core.Person
-  alias Deduplication.V2.DistanceModel
+  alias Deduplication.DistanceModel
   alias Simetric.Levenshtein
 
   @document_types ~w(

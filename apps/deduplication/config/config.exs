@@ -9,14 +9,14 @@ config :logger, :console,
 
 config :deduplication, Deduplication.Application, env: Mix.env()
 
-config :deduplication, Deduplication.Sheduler,
+config :deduplication, Deduplication.Scheduler,
   deduplication_schedule: {:system, :string, "DEDUPLICATION_SCHEDULE", "* * * * *"}
 
 # ENV DEDUPLICATION_MODE defines how producer will get persons
 # :mixed - first get locked persons, then rest
 # :new - get only unlocked unverified persons
 # :locked - get only locked persons
-config :deduplication, Deduplication.Worker,
+config :deduplication, Deduplication.Producer,
   mode: {:system, :atom, "DEDUPLICATION_MODE", :mixed},
   vacuum_refresh: true,
   vacuum_refresh_timeout: {:system, :integer, "DEDUPLICATION_VACUUM_REFRESH_TIMEOUT", 20_000}
@@ -26,16 +26,14 @@ config :deduplication, Deduplication.PythonPool,
 
 config :deduplication, Deduplication.DeduplicationPool,
   parallel_consumers: {:system, :integer, "DEDUPLICATION_PARALLEL_TASKS", 20},
+  deduplication_persons_limit: {:system, :integer, "DEDUPLICATION_PERSON_LIMIT", 40},
   max_restarts: {:system, :integer, "MAX_RESTART_TRIES", 100_000_000}
 
-config :deduplication, Deduplication.Consumer,
-  deduplication_persons_limit: {:system, :integer, "DEDUPLICATION_PERSON_LIMIT", 40}
-
-config :deduplication, Deduplication.V2.Model,
+config :deduplication, Deduplication.Model,
   candidates_batch_size: {:system, :integer, "DEDUPLICATION_CANDIDATES_BATCH_SIZE", 50_000}
 
-config :deduplication, Deduplication.V2.Match,
-  py_weight: Deduplication.V2.PyWeight,
+config :deduplication, Deduplication.Match,
+  py_weight: Deduplication.PyWeight,
   score: {:system, :float, "DEDUPLICATION_SCORE", 0.7},
   weight_count_timeout: {:system, :integer, "WEIGHT_COUNT_TIMEOUT", 20000}
 

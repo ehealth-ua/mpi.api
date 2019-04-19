@@ -1,4 +1,4 @@
-defmodule Deduplication.V2.PythonWorker do
+defmodule Deduplication.PythonWorker do
   @moduledoc """
   Workers connected to running Python3 instances
   """

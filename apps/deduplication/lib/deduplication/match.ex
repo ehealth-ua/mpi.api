@@ -1,4 +1,4 @@
-defmodule Deduplication.V2.Match do
+defmodule Deduplication.Match do
   @moduledoc false
 
   use Confex, otp_app: :deduplication
@@ -8,8 +8,8 @@ defmodule Deduplication.V2.Match do
   alias Core.MergeCandidate
   alias Core.Person
   alias Core.Repo
-  alias Deduplication.V2.CandidatesDistance
-  alias Deduplication.V2.Model
+  alias Deduplication.CandidatesDistance
+  alias Deduplication.Model
   alias Ecto.UUID
 
   require Logger

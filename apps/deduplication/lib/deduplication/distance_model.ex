@@ -1,4 +1,4 @@
-defmodule Deduplication.V2.DistanceModel do
+defmodule Deduplication.DistanceModel do
   @moduledoc false
   defstruct person_id: nil,
             candidate_id: nil,

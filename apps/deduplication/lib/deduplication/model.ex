@@ -1,4 +1,4 @@
-defmodule Deduplication.V2.Model do
+defmodule Deduplication.Model do
   @moduledoc """
   Querying persons and prepare data
   """
@@ -88,13 +88,11 @@ defmodule Deduplication.V2.Model do
     |> Repo.update!()
   end
 
-  def get_locked_unverified_persons(limit, offset) do
+  def get_locked_unverified_persons do
     Person
     |> preload([:documents, :addresses])
     |> join(:inner, [p], v in VerifyingId, on: v.id == p.id and is_nil(v.is_complete))
     |> order_by([p, v], p.id)
-    |> limit(^limit)
-    |> offset(^offset)
     |> Repo.all()
   end
 

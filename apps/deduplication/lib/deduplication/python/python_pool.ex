@@ -4,7 +4,7 @@ defmodule Deduplication.PythonPool do
   use Agent
   use Confex, otp_app: :deduplication
 
-  alias Deduplication.V2.PythonWorker
+  alias Deduplication.PythonWorker
 
   def start_link(_) do
     {:ok, _} =

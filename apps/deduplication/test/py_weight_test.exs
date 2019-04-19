@@ -1,7 +1,7 @@
-defmodule Deduplication.V2.PyWeightTest do
+defmodule Deduplication.PyWeightTest do
   use Core.ModelCase, async: false
 
-  alias Deduplication.V2.PyWeight
+  alias Deduplication.PyWeight
 
   test "correct weight for single data set" do
     final_weights = %{

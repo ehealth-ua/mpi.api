@@ -1,4 +1,4 @@
-defmodule Deduplication.V2.PyWeight do
+defmodule Deduplication.PyWeight do
   @moduledoc """
   defines a weight of merge candidate according to merge coefficients
   """

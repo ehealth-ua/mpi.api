@@ -1,4 +1,4 @@
-defmodule Deduplication.V2.MatchTest do
+defmodule Deduplication.MatchTest do
   @moduledoc false
 
   use Core.ModelCase, async: false
@@ -12,9 +12,9 @@ defmodule Deduplication.V2.MatchTest do
   alias Core.PersonAddress
   alias Core.PersonDocument
   alias Core.Repo
-  alias Deduplication.V2.Match
+  alias Deduplication.Match
   alias Deduplication.MixProject
-  alias Deduplication.V2.Model
+  alias Deduplication.Model
 
   setup :verify_on_exit!
   setup :set_mox_global
@@ -36,7 +36,7 @@ defmodule Deduplication.V2.MatchTest do
     test "number of candidates > candidates_batch_size  works" do
       stub(PyWeightMock, :weight, fn %{} -> 1 end)
 
-      batch_size = Confex.fetch_env!(:deduplication, Deduplication.V2.Model)[:candidates_batch_size]
+      batch_size = Confex.fetch_env!(:deduplication, Deduplication.Model)[:candidates_batch_size]
 
       n = batch_size * 5
 

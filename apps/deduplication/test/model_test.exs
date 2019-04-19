@@ -1,11 +1,11 @@
-defmodule Deduplication.V2.ModelTest do
+defmodule Deduplication.ModelTest do
   use Core.ModelCase, async: false
   import Core.Factory
 
   alias Core.Person
   alias Core.PersonDocument
   alias Core.VerifyingId
-  alias Deduplication.V2.Model
+  alias Deduplication.Model
 
   describe "regexp" do
     test "normalize_text works" do

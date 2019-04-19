@@ -1,10 +1,10 @@
-defmodule Deduplication.V2.CandidatesDistanceTest do
+defmodule Deduplication.CandidatesDistanceTest do
   @moduledoc false
   use Core.ModelCase, async: false
   import Core.Factory
 
-  alias Deduplication.V2.CandidatesDistance
-  alias Deduplication.V2.DistanceModel
+  alias Deduplication.CandidatesDistance
+  alias Deduplication.DistanceModel
   alias Ecto.UUID
 
   describe "counting functions" do
