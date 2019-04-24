@@ -34,7 +34,7 @@ defmodule Core.Persons.PersonsAPI do
     |> cast_assoc(:phones)
     |> cast_assoc(:documents, required: true)
     |> validate_required(Person.fields_required())
-    |> unique_constraint(:last_name, name: :persons_first_name_last_name_second_name_tax_id_birth_date_inde)
+    |> unique_constraint(:last_name, name: :persons_uniq_index)
   end
 
   def get_by_id(id) do
