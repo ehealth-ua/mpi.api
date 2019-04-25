@@ -39,7 +39,7 @@ defmodule MPI.Rpc do
           confidant_person: map,
           is_active: boolean,
           updated_by: binary,
-          authentication_methods: map,
+          authentication_methods: list(map),
           gender: binary,
           birth_settlement: binary
         }
@@ -348,6 +348,62 @@ defmodule MPI.Rpc do
   def get_auth_method(id) do
     with %Person{} = person <- PersonsAPI.get_by_id(id) do
       {:ok, PersonsAPI.get_person_auth_method(person)}
+    end
+  end
+
+  @doc """
+  Creates or updates person
+
+  Available parameters
+
+  | Parameter                       | Type        | Example                                                  | Description                                            |
+  | :-----------------------------: | :---------: | :------------------------------------------------------: | :----------------------------------------------------: |
+  | id                              | `binary`    | "dfa49f43-a4e6-4963-87ee-7e3aca1f3731"                   | Primary key identifier from the database               |
+  | version                         | `binary`    | "default"                                                | Record version                                         |
+  | first_name                      | `binary`    | "Петро"                                                  | Patient first name                                     |
+  | last_name                       | `binary`    | "Іванов"                                                 | Patient last name                                      |
+  | second_name                     | `binary`    | "Миколайович"                                            | Patient second name                                    |
+  | birth_date                      | `Date.t`    | ~D[2000-08-19]                                           | Patient birth date                                     |
+  | birth_country                   | `binary`    | "Україна"                                                | Patient birth country                                  |
+  | birth_settlement                | `binary`    | "Вінниця"                                                | Patient birth settlement                               |
+  | gender                          | `binary`    | "MALE"                                                   | Patient gender                                         |
+  | email                           | `binary`    | "qq2234562qq@gmail.com"                                  | Patient's email                                        |
+  | tax_id                          | `binary`    | "3378115538"                                             | National person identifier                             |
+  | unzr                            | `binary`    | "19900101-0001"                                          | The unique number in Unified State Register            |
+  | death_date                      | `Date.t`    | ~D[2000-08-19]                                           | Patient death date                                     |
+  | preferred_way_communication     | `binary`    | "email"                                                  | The way how a patient wants to be reached              |
+  | invalid_tax_id                  | `boolean`   | false                                                    | Flag to show if person has invalid tax_id              |
+  | is_active                       | `boolean`   | true                                                     | Flag to show whether person is active in system        |
+  | secret                          | `binary`    | "secret"                                                 | Person secret word                                     |
+  | emergency_contact               | `map`       | %{"first_name" => "Петро", "last_name" => "Іванов", ...} | Patient's contract person in case of emergency         |
+  | confidant_person                | `map`       | %{"birth_country" => "Україна", ...}                     | The person(s) who is(are) responsible for the patient  |
+  | patient_signed                  | `boolean`   | true                                                     | Flag to show that patient has signed declaration       |
+  | process_disclosure_data_consent | `boolean`   | true                                                     | Flag to show that person allowed to read personal data |
+  | status                          | `binary`    | active                                                   | Patient status in the system                           |
+  | authentication_methods          | `list(map)` | [%{"phone_number" => "+380955947998", "type" => "OTP"}]  | The method to verify changes of patient by patient     |
+  | no_tax_id                       | `boolean`   | false                                                    | Flag to show whether person rejected to have taxId     |
+  | addresses                       | `list(map)` | [%{"apartment" => "23", "area" => "ЛЬВІВСЬКА", ... }]    | Patient addresses                                      |
+  | phones                          | `list(map)` | [%{"number" => "+380955947998", "type" => "MOBILE"}]     | Patient phones                                         |
+  | documents                       | `list(map)` | [%{"number" => "120518", "type" => "PASSPORT"}]          | Patient identification documents                       |
+
+  ## Examples
+
+    iex> MPI.Rpc.create_or_update_person(%{"id" => "6e8d4595-e83c-4f97-be76-c6e2b96b05f1", "birth_date" => "1990-01-01"}, "26e673e1-1d68-413e-b96c-407b45d9f572")
+    {
+      :ok,
+      %{
+        id: "6e8d4595-e83c-4f97-be76-c6e2b96b05f1",
+        authentication_methods: [
+          %{"type" => "NA"}
+        ],
+        ...
+      }
+    }
+  """
+  @spec create_or_update_person(map, binary) :: {:ok, person} | Ecto.Changeset.t() | nil | {:error, any}
+  def create_or_update_person(params, consumer_id) do
+    with {_, {:ok, %Person{} = person}} <- PersonsAPI.create(params, consumer_id) do
+      {:ok, PersonView.render("show.json", %{person: person})}
     end
   end
 end

@@ -10,6 +10,9 @@ defmodule MPI.RpcTest do
   alias Ecto.UUID
   alias MPI.Rpc
 
+  @status_active Person.status(:active)
+  @status_inactive Person.status(:inactive)
+
   setup :verify_on_exit!
 
   describe "search_persons/1" do
@@ -356,6 +359,18 @@ defmodule MPI.RpcTest do
 
     test "person not found" do
       refute Rpc.get_auth_method(UUID.generate())
+    end
+  end
+
+  describe "create_or_update_person/2" do
+    test "success" do
+      updated_by = UUID.generate()
+      %{id: person_id} = insert(:mpi, :person, status: @status_active)
+
+      assert {:ok, person} = Rpc.create_or_update_person(%{"id" => person_id, "status" => @status_inactive}, updated_by)
+
+      assert @status_inactive == person.status
+      assert updated_by == person.updated_by
     end
   end
 end
