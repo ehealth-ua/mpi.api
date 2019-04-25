@@ -10,12 +10,12 @@ config :core, Core.Repo,
   timeout: :infinity
 
 config :core, Core.ReadRepo,
-  username: {:system, :string, "DB_USER"},
-  password: {:system, :string, "DB_PASSWORD"},
-  database: {:system, :string, "DB_NAME"},
-  hostname: {:system, :string, "DB_HOST"},
-  port: {:system, :integer, "DB_PORT"},
-  pool_size: {:system, :integer, "POOL_SIZE", 10},
+  username: {:system, :string, "READ_DB_USER"},
+  password: {:system, :string, "READ_DB_PASSWORD"},
+  database: {:system, :string, "READ_DB_NAME"},
+  hostname: {:system, :string, "READ_DB_HOST"},
+  port: {:system, :integer, "READ_DB_PORT"},
+  pool_size: {:system, :integer, "READ_DB_POOL_SIZE", 10},
   timeout: :infinity
 
 config :core, Core.DeduplicationRepo,
