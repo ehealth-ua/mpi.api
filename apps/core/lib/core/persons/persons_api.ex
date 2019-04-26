@@ -37,6 +37,17 @@ defmodule Core.Persons.PersonsAPI do
     |> unique_constraint(:last_name, name: :persons_uniq_index)
   end
 
+  defp get_by_unique(person) do
+    with [%Person{} = person] <-
+           person
+           |> Map.take(~w(tax_id birth_date last_name first_name second_name status)a)
+           |> find_persons(nil, []) do
+      {:ok, person}
+    else
+      _ -> nil
+    end
+  end
+
   def get_by_id(id) do
     Person
     |> where([p], p.id == ^id)
@@ -77,8 +88,9 @@ defmodule Core.Persons.PersonsAPI do
     params = Map.merge(params, %{"inserted_by" => consumer_id, "updated_by" => consumer_id})
 
     with %Changeset{valid?: true} = changeset <- changeset(%Person{}, params),
-         {:ok, person} <- Repo.insert_and_log(changeset, consumer_id),
-         %Person{} = person <- get_by_id(person.id) do
+         {:ok, person} <- Repo.insert_and_log(changeset, consumer_id, on_conflict: :nothing),
+         {:ok, person} <- get_by_unique(person),
+         :ok <- person_is_active(person) do
       {:created, {:ok, person}}
     end
   end
