@@ -206,9 +206,10 @@ defmodule Core.Persons.PersonsAPI do
   defp with_type_number(query, %{"type" => type, "number" => number})
        when not is_nil(type) and not is_nil(number) do
     type = String.upcase(type)
+    number = String.downcase(number)
 
     join(query, :inner, [p], d in PersonDocument,
-      on: d.person_id == p.id and d.type == ^type and fragment("lower(?) = lower(?)", d.number, ^number)
+      on: d.person_id == p.id and d.type == ^type and fragment("lower(?) = ?", d.number, ^number)
     )
   end
 

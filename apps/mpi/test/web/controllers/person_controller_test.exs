@@ -502,6 +502,19 @@ defmodule MPI.Web.PersonControllerTest do
     end)
   end
 
+  test "successful persons search by document number", %{conn: conn} do
+    insert(:mpi, :person, documents: [build(:person_document, type: "PASSPORT", number: "iI9922Kk")])
+
+    assert data =
+             conn
+             |> get(person_path(conn, :index, number: "II9922KK", type: "PASSPORT"))
+             |> json_response(200)
+             |> Map.get("data")
+
+    assert 1 == length(data)
+    assert "iI9922Kk" == hd(hd(data)["documents"])["number"]
+  end
+
   test "successful persons search by auth_phone_number", %{conn: conn} do
     %{id: person_id} = person = insert(:mpi, :person)
 
