@@ -20,7 +20,7 @@ defmodule PersonDeactivator do
   @declaration_deactivated MergeCandidate.status(:deactivate_ready)
 
   def deactivate_person(master_id, candidate_id, actor_id, reason) do
-    with {:ok, %MergeCandidate{}} <-
+    with {:ok, _} <-
            master_id
            |> MergeCandidatesAPI.get_by_master_and_candidate(candidate_id)
            |> process_merge_candidate(actor_id, reason) do
