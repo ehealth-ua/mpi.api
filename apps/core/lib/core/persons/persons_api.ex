@@ -41,6 +41,10 @@ defmodule Core.Persons.PersonsAPI do
     with [%Person{} = person] <-
            person
            |> Map.take(~w(tax_id birth_date last_name first_name second_name status)a)
+           |> Enum.filter(fn {_, v} -> !is_nil(v) end)
+           |> Enum.into(%{}, fn {k, v} ->
+             {to_string(k), v}
+           end)
            |> find_persons(nil, []) do
       {:ok, person}
     else
