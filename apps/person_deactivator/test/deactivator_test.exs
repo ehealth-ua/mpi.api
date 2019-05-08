@@ -39,13 +39,16 @@ defmodule PersonDeactivatorTest do
     mc_empty = insert(:mpi, :merge_candidate)
     candidates = [mc_empty, mc_success]
 
-    expect(RPCWorkerMock, :run, 2, fn "ops", OPS.Rpc, :get_declaration, [[person_id: id, status: @active]] ->
+    expect(RPCWorkerMock, :run, 4, fn "ops", OPS.Rpc, :get_declaration, [[person_id: id, status: @active]] ->
       cond do
         id == mc_success.master_person_id ->
           {:ok, %{}}
 
         id == mc_empty.master_person_id ->
           nil
+
+        true ->
+          {:ok, %{}}
       end
     end)
 
@@ -81,7 +84,7 @@ defmodule PersonDeactivatorTest do
       :ok
     end)
 
-    expect(RPCWorkerMock, :run, 3, fn "ops", OPS.Rpc, :get_declaration, [[person_id: _, status: @active]] ->
+    expect(RPCWorkerMock, :run, 6, fn "ops", OPS.Rpc, :get_declaration, [[person_id: _, status: @active]] ->
       {:ok, %{}}
     end)
 
@@ -114,7 +117,7 @@ defmodule PersonDeactivatorTest do
       :ok
     end)
 
-    expect(RPCWorkerMock, :run, 10, fn "ops", OPS.Rpc, :get_declaration, [[person_id: _, status: @active]] ->
+    expect(RPCWorkerMock, :run, 20, fn "ops", OPS.Rpc, :get_declaration, [[person_id: _, status: @active]] ->
       {:ok, %{}}
     end)
 

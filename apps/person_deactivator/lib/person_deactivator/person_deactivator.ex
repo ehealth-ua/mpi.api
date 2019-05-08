@@ -44,12 +44,35 @@ defmodule PersonDeactivator do
 
   defp deactivate_person_with_declaration(mc, actor_id, reason) do
     with nil <- mc.person.master_person,
-         search_ops <- [person_id: mc.master_person.id, status: @declaration_active],
-         {:ok, _} <- @rpc_worker.run("ops", OPS.Rpc, :get_declaration, [search_ops]),
+         :ok <- check_declaration(mc),
          {:ok, _} <- deactivate_declaration(mc, actor_id, reason) do
       deactivate_candidate(mc, actor_id)
     else
       _ -> MergeCandidatesAPI.update_merge_candidate(mc, %{status: MergeCandidate.status(:declined)}, actor_id)
+    end
+  end
+
+  def check_declaration(mc) do
+    master_person_result =
+      @rpc_worker.run("ops", OPS.Rpc, :get_declaration, [
+        [person_id: mc.master_person.id, status: @declaration_active]
+      ])
+
+    person_result =
+      @rpc_worker.run("ops", OPS.Rpc, :get_declaration, [
+        [person_id: mc.person.id, status: @declaration_active]
+      ])
+
+    with nil <- master_person_result,
+         {:ok, _} <- person_result do
+      :error
+    else
+      {:error, :bad_rpc} ->
+        Logger.error("bad rpc")
+        System.halt()
+
+      _ ->
+        :ok
     end
   end
 
