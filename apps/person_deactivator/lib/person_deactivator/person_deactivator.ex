@@ -57,18 +57,18 @@ defmodule PersonDeactivator do
     status_merged = MergeCandidate.status(:merged)
     status_inactive = Person.status(:inactive)
 
-    with {:ok, merge_candidate} <-
+    with {:ok, person} <-
            Repo.transaction(fn ->
              Repo.insert(%MergedPair{id: id, master_person_id: master.id, merge_person_id: candidate.id})
-             PersonsAPI.update(candidate.id, %{"status" => Person.status(:inactive)}, actor_id)
-             {:ok, merge_candidate} = MergeCandidatesAPI.update_merge_candidate(mc, %{status: status_merged}, actor_id)
-             merge_candidate
+             {:ok, person} = PersonsAPI.update(candidate.id, %{"status" => Person.status(:inactive)}, actor_id)
+             {:ok, _} = MergeCandidatesAPI.update_merge_candidate(mc, %{status: status_merged}, actor_id)
+             person
            end) do
-      merge_candidate
+      person
       |> EventManager.new_event(actor_id, status_inactive)
       |> @kafka_producer.publish_to_event_manager()
 
-      {:ok, merge_candidate}
+      {:ok, person}
     end
   end
 

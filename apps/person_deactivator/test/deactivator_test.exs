@@ -153,7 +153,7 @@ defmodule PersonDeactivatorTest do
     %{
       changed_by: _,
       entity_id: _,
-      entity_type: "MergeCandidate",
+      entity_type: "Person",
       event_time: _,
       event_type: "StatusChangeEvent",
       properties: %{"status" => %{"new_value" => "inactive"}}
