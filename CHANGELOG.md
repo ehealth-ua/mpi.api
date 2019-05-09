@@ -5,21 +5,28 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
-## [2.4.1](https://github.com/edenlabllc/mpi.api/compare/2.4.0...2.4.1) (2019-3-27)
-
-
-
-
-### Bug Fixes:
-
-* multimerge (#279)
-
-## [2.4.0](https://github.com/edenlabllc/mpi.api/compare/2.3.0...2.4.0) (2019-3-27)
+## [2.4.1](https://github.com/edenlabllc/mpi.api/compare/2.4.1...2.4.1) (2019-5-9)
 
 
 
 
 ### Features:
+
+* improved query + improved document indexes (#309)
+
+* idempotency insert (#305)
+
+* mpi: expose create or update person via rpc (#306)
+
+* Deduplication Scheduler (#299)
+
+* add replica on read (#294)
+
+* schedule deduplication with Quantum  (#290)
+
+* Event manager (#288)
+
+* allow to search persons without pagination (#286)
 
 * manual_merger: created ManualMerge application (#277)
 
@@ -34,21 +41,6 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 * deactivator: check updated_at and master declaration before
 
 * extract person filter (#261)
-
-### Bug Fixes:
-
-* person_deactivator: added env var in config (#273)
-
-* person_deactivator: log error in process_merge_candidates (#270)
-
-* phoenix errors logging (#262)
-
-## [2.3.0](https://github.com/edenlabllc/mpi.api/compare/2.2.1...2.3.0) (2019-3-4)
-
-
-
-
-### Features:
 
 * Deactivator fix kafka push (#255)
 
@@ -79,6 +71,36 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 * get person auth method rpc call (#187)
 
 ### Bug Fixes:
+
+* deduplication (#314)
+
+* deduplication (#313)
+
+* search persons (#312)
+
+* add person event instead of merge candidate event (#311)
+
+* read replica config (#307)
+
+* index order and duplicate migration (#304)
+
+* sync person documents timestamps with person's (#300)
+
+* set declined status after merge decision for manual merge (#297)
+
+* reduce preloads (#293)
+
+* candidates_merger: Set MergeCanditate declined status on processed ManualMergeRequest split or trash status (#285)
+
+* manual_merger: render nil (#284)
+
+* multimerge (#279)
+
+* person_deactivator: added env var in config (#273)
+
+* person_deactivator: log error in process_merge_candidates (#270)
+
+* phoenix errors logging (#262)
 
 * typo (#253)
 
@@ -121,8 +143,3 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 * rpc doc (#189)
 
 * correct git_ops module name (#188)
-
-## [2.2.1](https://github.com/edenlabllc/ds.api/compare/2.2.1...2.2.1) (2019-1-23)
-
-
-
