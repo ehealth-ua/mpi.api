@@ -5,6 +5,15 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [2.4.2](https://github.com/edenlabllc/mpi.api/compare/2.4.1...2.4.2) (2019-5-9)
+
+
+
+
+### Bug Fixes:
+
+* idempotency insert (#316)
+
 ## [2.4.1](https://github.com/edenlabllc/mpi.api/compare/2.4.1...2.4.1) (2019-5-9)
 
 
