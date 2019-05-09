@@ -38,7 +38,7 @@ defmodule Core.Persons.PersonsAPI do
   end
 
   defp get_by_unique(person) do
-    with [%Person{} = person] <-
+    with [%Person{} = person | _] <-
            person
            |> Map.take(~w(tax_id birth_date last_name first_name second_name status)a)
            |> Enum.filter(fn {_, v} -> !is_nil(v) end)
@@ -91,11 +91,20 @@ defmodule Core.Persons.PersonsAPI do
   def create(params, consumer_id) do
     params = Map.merge(params, %{"inserted_by" => consumer_id, "updated_by" => consumer_id})
 
-    with %Changeset{valid?: true} = changeset <- changeset(%Person{}, params),
-         {:ok, person} <- Repo.insert_and_log(changeset, consumer_id, on_conflict: :nothing),
-         {:ok, person} <- get_by_unique(person),
-         :ok <- person_is_active(person) do
-      {:created, {:ok, person}}
+    with %Changeset{valid?: true} = changeset <- changeset(%Person{}, params) do
+      case get_by_unique(Changeset.apply_changes(changeset)) do
+        nil ->
+          with {:ok, person} <- Repo.insert_and_log(changeset, consumer_id, on_conflict: :nothing),
+               {:ok, person} <- get_by_unique(person) do
+            {:created, {:ok, person}}
+          end
+
+        {:ok, person} ->
+          with :ok <- person_is_active(person),
+               {:ok, person} <- Repo.update_and_log(changeset(person, params), consumer_id) do
+            {:ok, {:ok, person}}
+          end
+      end
     end
   end
 

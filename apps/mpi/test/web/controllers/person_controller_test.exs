@@ -275,7 +275,7 @@ defmodule MPI.Web.PersonControllerTest do
 
       assert conn
              |> post(person_path(conn, :create), person_data)
-             |> json_response(201)
+             |> json_response(200)
 
       person_data =
         person_data
