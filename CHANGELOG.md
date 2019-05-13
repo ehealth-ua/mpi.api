@@ -5,6 +5,19 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [2.4.3](https://github.com/edenlabllc/mpi.api/compare/2.4.2...2.4.3) (2019-5-13)
+
+
+
+
+### Bug Fixes:
+
+* idempotency insert person (#319)
+
+* update only person_documents inserted_at field (#320)
+
+* idempotency insert (#316)
+
 ## [2.4.2](https://github.com/edenlabllc/mpi.api/compare/2.4.1...2.4.2) (2019-5-9)
 
 
