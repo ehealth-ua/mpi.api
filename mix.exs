@@ -3,7 +3,7 @@ defmodule MPI.MixProject do
 
   use Mix.Project
 
-  @version "2.4.2"
+  @version "2.4.3"
   def project do
     [
       version: @version,
