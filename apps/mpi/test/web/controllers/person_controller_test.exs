@@ -273,9 +273,17 @@ defmodule MPI.Web.PersonControllerTest do
 
       assert_person(person_created["data"])
 
-      assert conn
-             |> post(person_path(conn, :create), person_data)
-             |> json_response(200)
+      assert resp =
+               conn
+               |> post(person_path(conn, :create), person_data)
+               |> json_response(409)
+
+      assert %{
+               "error" => %{
+                 "message" => "Such person already exists",
+                 "type" => "request_conflict"
+               }
+             } = resp
 
       person_data =
         person_data

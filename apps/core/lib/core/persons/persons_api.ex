@@ -99,11 +99,8 @@ defmodule Core.Persons.PersonsAPI do
             {:created, {:ok, person}}
           end
 
-        {:ok, person} ->
-          with :ok <- person_is_active(person),
-               {:ok, person} <- Repo.update_and_log(changeset(person, params), consumer_id) do
-            {:ok, {:ok, person}}
-          end
+        {:ok, _} ->
+          {:error, :has_already_been_taken}
       end
     end
   end
