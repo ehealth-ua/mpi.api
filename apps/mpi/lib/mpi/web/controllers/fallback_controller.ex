@@ -42,4 +42,11 @@ defmodule MPI.Web.FallbackController do
     |> put_view(Error)
     |> render(:"409", %{message: reason})
   end
+
+  def call(conn, {:error, :has_already_been_taken}) do
+    conn
+    |> put_status(:conflict)
+    |> put_view(Error)
+    |> render(:"409", %{message: "Such person already exists"})
+  end
 end
