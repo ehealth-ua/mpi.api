@@ -11,7 +11,7 @@ defmodule Core.Repo.Migrations.UpdatePersonDocumentsTimestamps do
   @batch_size 100
 
   def change do
-    execute("CREATE TABLE IF NOT EXISTS person_documents_update_temp AS SELECT id, inserted_at, updated_at FROM persons")
+    execute("CREATE TABLE IF NOT EXISTS person_documents_update_temp AS SELECT id, inserted_at FROM persons")
     flush()
 
     chunk_update()
@@ -21,7 +21,7 @@ defmodule Core.Repo.Migrations.UpdatePersonDocumentsTimestamps do
 
   defp chunk_update do
     from(pd in "person_documents_update_temp",
-      select: {pd.id, pd.inserted_at, pd.updated_at},
+      select: {pd.id, pd.inserted_at},
       limit: @batch_size
     )
     |> Repo.all()
@@ -32,11 +32,11 @@ defmodule Core.Repo.Migrations.UpdatePersonDocumentsTimestamps do
 
   defp do_update(rows) do
     {ids, update_values} =
-      Enum.reduce(rows, {[], []}, fn {id, inserted_at, updated_at}, {ids, patch} ->
+      Enum.reduce(rows, {[], []}, fn {id, inserted_at}, {ids, patch} ->
         {
           [id | ids],
           [
-            "('#{UUID.cast!(id)}'::uuid, '#{inserted_at}'::timestamp, '#{updated_at}'::timestamp)"
+            "('#{UUID.cast!(id)}'::uuid, '#{inserted_at}'::timestamp)"
             | patch
           ]
         }
@@ -55,8 +55,8 @@ defmodule Core.Repo.Migrations.UpdatePersonDocumentsTimestamps do
   defp update_person_documents(values) do
     SQL.query(Repo, """
       UPDATE person_documents 
-      SET inserted_at = tmp.inserted_at, updated_at = tmp.updated_at 
-      FROM (VALUES #{values}) AS tmp (id, inserted_at, updated_at) 
+      SET inserted_at = tmp.inserted_at
+      FROM (VALUES #{values}) AS tmp (id, inserted_at)
       WHERE tmp.id = person_documents.person_id;
     """)
   end
