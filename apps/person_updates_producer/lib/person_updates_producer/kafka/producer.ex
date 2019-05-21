@@ -8,8 +8,15 @@ defmodule PersonUpdatesProducer.Kafka.Producer do
   alias Kaffe.Producer
   require Logger
 
-  def publish_person_event(id, status, updated_by) do
-    event = %{"id" => id, "status" => String.downcase(status), "updated_by" => updated_by}
+  def publish_person_event(id, status, updated_by, inserted_by, updated_at, inserted_at) do
+    event = %{
+      "id" => id,
+      "status" => String.downcase(status),
+      "updated_by" => updated_by,
+      "inserted_by" => inserted_by,
+      "updated_at" => updated_at,
+      "inserted_at" => inserted_at
+    }
 
     with :ok <- Producer.produce_sync(@person_events_topic, get_partition(id), "", :erlang.term_to_binary(event)) do
       Logger.info("Published event #{inspect(event)} to kafka", application: :kaffe)

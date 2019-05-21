@@ -75,7 +75,8 @@ defmodule Core.Factories.MPI do
         %PersonUpdate{
           person_id: UUID.generate(),
           status: Person.status(:active),
-          updated_by: UUID.generate()
+          updated_by: UUID.generate(),
+          inserted_by: UUID.generate()
         }
       end
 

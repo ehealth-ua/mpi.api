@@ -30,11 +30,19 @@ defmodule Core.Persons.PersonTest do
   test "creates person" do
     active = Person.status(:active)
     assert {:created, {:ok, %Person{id: id}}} = PersonsAPI.create(build_person_map(), @test_consumer_id)
-    assert [%PersonUpdate{person_id: ^id, updated_by: @test_consumer_id, status: ^active}] = Repo.all(PersonUpdate)
+
+    assert [
+             %PersonUpdate{
+               person_id: ^id,
+               updated_by: @test_consumer_id,
+               inserted_by: @test_consumer_id,
+               status: ^active
+             }
+           ] = Repo.all(PersonUpdate)
   end
 
   test "updates person" do
-    insert_person_test_data(%{updated_by: @test_consumer_id})
+    insert_person_test_data(%{updated_by: @test_consumer_id, inserted_by: @test_consumer_id})
 
     person_map =
       build_person_map()
@@ -44,12 +52,17 @@ defmodule Core.Persons.PersonTest do
         "status" => @inactive
       })
 
-    assert {:ok, {:ok, %Person{id: id, first_name: @test_consumer_first_name_changed}}} =
+    assert {:ok, {:ok, %Person{id: id, inserted_by: inserted_by, first_name: @test_consumer_first_name_changed}}} =
              PersonsAPI.create(person_map, @test_consumer_id)
 
     assert [
-             %PersonUpdate{person_id: ^id, updated_by: @test_consumer_id, status: @active},
-             %PersonUpdate{person_id: ^id, updated_by: @test_consumer_id, status: @inactive}
+             %PersonUpdate{
+               person_id: ^id,
+               updated_by: @test_consumer_id,
+               inserted_by: @test_consumer_id,
+               status: @active
+             },
+             %PersonUpdate{person_id: ^id, updated_by: @test_consumer_id, inserted_by: inserted_by, status: @inactive}
            ] = Repo.all(PersonUpdate)
   end
 

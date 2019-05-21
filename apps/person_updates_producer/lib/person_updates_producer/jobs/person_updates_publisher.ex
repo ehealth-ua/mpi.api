@@ -20,8 +20,15 @@ defmodule PersonUpdatesProducer.Jobs.PersonUpdatesPublisher do
   defp publish_updates([]), do: :ok
 
   defp publish_updates(updates) do
-    Enum.each(updates, fn %PersonUpdate{person_id: id, status: status, updated_by: updated_by} ->
-      :ok = @kafka_producer.publish_person_event(id, status, updated_by)
+    Enum.each(updates, fn %PersonUpdate{
+                            person_id: id,
+                            status: status,
+                            updated_by: updated_by,
+                            inserted_by: inserted_by,
+                            updated_at: updated_at,
+                            inserted_at: inserted_at
+                          } ->
+      :ok = @kafka_producer.publish_person_event(id, status, updated_by, inserted_by, updated_at, inserted_at)
     end)
 
     ids = Enum.map(updates, & &1.id)
