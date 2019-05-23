@@ -209,6 +209,8 @@ defmodule MPI.RpcTest do
       insert_list(4, :mpi, :person)
       insert_list(8, :mpi, :person, status: Person.status(:inactive))
 
+      authentication_methods = build_list(1, :authentication_method, phone_number: phone_number)
+
       insert_list(
         2,
         :mpi,
@@ -217,8 +219,11 @@ defmodule MPI.RpcTest do
         documents: [build(:document, type: "PASSPORT", number: document_number)],
         birth_date: birth_date,
         tax_id: tax_id,
-        authentication_methods: build_list(1, :authentication_method, phone_number: phone_number)
+        person_authentication_methods: authentication_methods,
+        authentication_methods: array_of_map(authentication_methods)
       )
+
+      authentication_methods = build_list(1, :authentication_method, phone_number: phone_number)
 
       person =
         insert(
@@ -228,7 +233,8 @@ defmodule MPI.RpcTest do
           documents: [build(:document, type: "PASSPORT", number: document_number)],
           birth_date: birth_date,
           tax_id: tax_id,
-          authentication_methods: build_list(1, :authentication_method, phone_number: phone_number)
+          person_authentication_methods: authentication_methods,
+          authentication_methods: array_of_map(authentication_methods)
         )
 
       filter = [
@@ -317,7 +323,8 @@ defmodule MPI.RpcTest do
 
       person = Rpc.reset_auth_method(id, UUID.generate())
 
-      assert {:ok, %{id: ^id, authentication_methods: [%{"type" => "NA"}]}} = person
+      assert {:ok, %{id: ^id, authentication_methods: authentication_methods}} = person
+      assert "NA" == hd(authentication_methods).type
     end
 
     test "person inactive" do
@@ -334,27 +341,55 @@ defmodule MPI.RpcTest do
 
   describe "get_auth_method/1" do
     test "success" do
+      phone_number = "+38#{Enum.random(1_000_000_000..9_999_999_999)}"
+
+      # persons with person_authentication_methods loaded
+
       %{id: id1} =
         insert(:mpi, :person,
           authentication_methods: [
             %{
               type: "OTP",
-              phone_number: "+38#{Enum.random(1_000_000_000..9_999_999_999)}"
+              phone_number: phone_number
+            }
+          ],
+          person_authentication_methods: [
+            %{
+              type: "OTP",
+              phone_number: phone_number
             }
           ]
         )
 
       %{id: id2} =
         insert(:mpi, :person,
-          authentication_methods: [
-            %{
-              type: "OFFLINE"
-            }
-          ]
+          authentication_methods: [%{type: "OFFLINE"}],
+          person_authentication_methods: [%{type: "OFFLINE"}]
         )
 
-      assert {:ok, %{"phone_number" => _, "type" => "OTP"}} = Rpc.get_auth_method(id1)
+      # persons with empty person_authentication_methods
+
+      %{id: id3} =
+        insert(:mpi, :person,
+          authentication_methods: [
+            %{
+              type: "OTP",
+              phone_number: phone_number
+            }
+          ],
+          person_authentication_methods: []
+        )
+
+      %{id: id4} =
+        insert(:mpi, :person,
+          authentication_methods: [%{type: "OFFLINE"}],
+          person_authentication_methods: []
+        )
+
+      assert {:ok, %{"phone_number" => phone_number, "type" => "OTP"}} = Rpc.get_auth_method(id1)
       assert {:ok, %{"type" => "OFFLINE"}} = Rpc.get_auth_method(id2)
+      assert {:ok, %{"phone_number" => phone_number, "type" => "OTP"}} = Rpc.get_auth_method(id3)
+      assert {:ok, %{"type" => "OFFLINE"}} = Rpc.get_auth_method(id4)
     end
 
     test "person not found" do
@@ -372,5 +407,14 @@ defmodule MPI.RpcTest do
       assert @status_inactive == person.status
       assert updated_by == person.updated_by
     end
+  end
+
+  defp array_of_map(authentication_methods) do
+    Enum.map(authentication_methods, fn authentication_method ->
+      authentication_method
+      |> Map.take(~w(type phone_number)a)
+      |> Enum.filter(fn {_, v} -> !is_nil(v) end)
+      |> Enum.into(%{}, fn {k, v} -> {to_string(k), v} end)
+    end)
   end
 end

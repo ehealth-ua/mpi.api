@@ -10,6 +10,7 @@ defmodule Deduplication.MatchTest do
   alias Core.MergeCandidate
   alias Core.Person
   alias Core.PersonAddress
+  alias Core.PersonAuthenticationMethod
   alias Core.PersonDocument
   alias Core.Repo
   alias Deduplication.Match
@@ -67,17 +68,21 @@ defmodule Deduplication.MatchTest do
 
     test "only matched persons" do
       person_ids =
-        5
-        |> insert_list(:mpi, :person,
-          tax_id: "123456789",
-          documents: [build(:document, number: "000123")],
-          authentication_methods: [
+        Enum.map(1..5, fn _ ->
+          authentication_methods = [
             build(:authentication_method,
               type: "OTP",
               phone_number: "+380630000000"
             )
           ]
-        )
+
+          insert(:mpi, :person,
+            tax_id: "123456789",
+            documents: [build(:document, number: "000123")],
+            person_authentication_methods: authentication_methods,
+            authentication_methods: array_of_map(authentication_methods)
+          )
+        end)
         |> Enum.map(& &1.id)
 
       persons = Model.get_unverified_persons(5)
@@ -99,30 +104,37 @@ defmodule Deduplication.MatchTest do
 
     test "matched persons by all fields with rest" do
       person_ids =
-        5
-        |> insert_list(:mpi, :person,
-          tax_id: "123456789",
-          documents: [build(:document, number: "000123")],
-          authentication_methods: [
+        Enum.map(1..5, fn _ ->
+          authentication_methods = [
             build(:authentication_method,
               type: "OTP",
               phone_number: "+380630000000"
             )
           ]
-        )
+
+          insert(:mpi, :person,
+            tax_id: "123456789",
+            documents: [build(:document, number: "000123")],
+            person_authentication_methods: authentication_methods,
+            authentication_methods: array_of_map(authentication_methods)
+          )
+        end)
         |> Enum.map(& &1.id)
 
       Enum.each(1..5, fn i ->
+        authentication_methods = [
+          build(:authentication_method,
+            type: "OTP",
+            phone_number: "+3806300000#{i}"
+          )
+        ]
+
         p =
           insert(:mpi, :person,
             tax_id: "#{i}",
             documents: [build(:document, number: "#{i}")],
-            authentication_methods: [
-              build(:authentication_method,
-                type: "OTP",
-                phone_number: "+3806300000#{i}"
-              )
-            ]
+            person_authentication_methods: authentication_methods,
+            authentication_methods: array_of_map(authentication_methods)
           )
 
         p.id
@@ -156,17 +168,21 @@ defmodule Deduplication.MatchTest do
       expect(PyWeightMock, :weight, 3, fn %{} -> 0.85 end)
       stub(PyWeightMock, :weight, fn %{} -> 0.95 end)
 
-      5
-      |> insert_list(:mpi, :person,
-        tax_id: "123456789",
-        documents: [build(:document, number: "000123")],
-        authentication_methods: [
+      Enum.map(1..5, fn _ ->
+        authentication_methods = [
           build(:authentication_method,
             type: "OTP",
             phone_number: "+380630000000"
           )
         ]
-      )
+
+        insert(:mpi, :person,
+          tax_id: "123456789",
+          documents: [build(:document, number: "000123")],
+          person_authentication_methods: authentication_methods,
+          authentication_methods: array_of_map(authentication_methods)
+        )
+      end)
       |> Enum.map(& &1.id)
 
       persons = Model.get_unverified_persons(5)
@@ -185,16 +201,19 @@ defmodule Deduplication.MatchTest do
     test "test Worker.deduplicate/0 document number + auth phone number " do
       t_person_ids =
         Enum.map(1..5, fn i ->
+          authentication_methods = [
+            build(:authentication_method,
+              type: "OTP",
+              phone_number: "+380630000000"
+            )
+          ]
+
           p =
             insert(:mpi, :person,
               tax_id: "000#{i}",
               documents: [build(:document, number: "0000")],
-              authentication_methods: [
-                build(:authentication_method,
-                  type: "OTP",
-                  phone_number: "+380630000000"
-                )
-              ]
+              person_authentication_methods: authentication_methods,
+              authentication_methods: array_of_map(authentication_methods)
             )
 
           p.id
@@ -202,31 +221,37 @@ defmodule Deduplication.MatchTest do
 
       a_person_ids =
         Enum.map(1..5, fn i ->
+          authentication_methods = [
+            build(:authentication_method,
+              type: "OTP",
+              phone_number: "+38063000000#{i}"
+            )
+          ]
+
           p =
             insert(:mpi, :person,
               tax_id: "#{i}",
               documents: [build(:document, number: "0000")],
-              authentication_methods: [
-                build(:authentication_method,
-                  type: "OTP",
-                  phone_number: "+38063000000#{i}"
-                )
-              ]
+              person_authentication_methods: authentication_methods,
+              authentication_methods: array_of_map(authentication_methods)
             )
 
           p.id
         end)
 
       Enum.each(1..3, fn i ->
+        authentication_methods = [
+          build(:authentication_method,
+            type: "OTP",
+            phone_number: "+38093111111#{i}"
+          )
+        ]
+
         insert(:mpi, :person,
           tax_id: "#{i * 100}",
           documents: [build(:document, number: "111#{i}")],
-          authentication_methods: [
-            build(:authentication_method,
-              type: "OTP",
-              phone_number: "+38093111111#{i}"
-            )
-          ]
+          person_authentication_methods: authentication_methods,
+          authentication_methods: array_of_map(authentication_methods)
         )
       end)
 
@@ -259,31 +284,37 @@ defmodule Deduplication.MatchTest do
     test "document numbers only" do
       person_ids =
         Enum.map(1..5, fn i ->
+          authentication_methods = [
+            build(:authentication_method,
+              type: "OTP",
+              phone_number: "+38063000000#{i}"
+            )
+          ]
+
           p =
             insert(:mpi, :person,
               tax_id: "#{i}",
               documents: [build(:document, number: "0000")],
-              authentication_methods: [
-                build(:authentication_method,
-                  type: "OTP",
-                  phone_number: "+38063000000#{i}"
-                )
-              ]
+              person_authentication_methods: authentication_methods,
+              authentication_methods: array_of_map(authentication_methods)
             )
 
           p.id
         end)
 
       Enum.each(1..5, fn i ->
+        authentication_methods = [
+          build(:authentication_method,
+            type: "OTP",
+            phone_number: "#{i}"
+          )
+        ]
+
         insert(:mpi, :person,
           tax_id: "#{i * 10}",
           documents: [build(:document, number: "999#{i}")],
-          authentication_methods: [
-            build(:authentication_method,
-              type: "OTP",
-              phone_number: "#{i}"
-            )
-          ]
+          person_authentication_methods: authentication_methods,
+          authentication_methods: array_of_map(authentication_methods)
         )
       end)
 
@@ -307,16 +338,19 @@ defmodule Deduplication.MatchTest do
     test "test Worker.deduplicate/0 document number + tax_id" do
       t_person_ids =
         Enum.map(1..5, fn i ->
+          authentication_methods = [
+            build(:authentication_method,
+              type: "OTP",
+              phone_number: "+38063000000#{i}"
+            )
+          ]
+
           p =
             insert(:mpi, :person,
               tax_id: "#{i}",
               documents: [build(:document, number: "0000")],
-              authentication_methods: [
-                build(:authentication_method,
-                  type: "OTP",
-                  phone_number: "+38063000000#{i}"
-                )
-              ]
+              person_authentication_methods: authentication_methods,
+              authentication_methods: array_of_map(authentication_methods)
             )
 
           p.id
@@ -324,31 +358,37 @@ defmodule Deduplication.MatchTest do
 
       a_person_ids =
         Enum.map(1..5, fn i ->
+          authentication_methods = [
+            build(:authentication_method,
+              type: "OTP",
+              phone_number: "+38063000000#{i}"
+            )
+          ]
+
           p =
             insert(:mpi, :person,
               tax_id: "#{i}",
               documents: [build(:document, number: "0000")],
-              authentication_methods: [
-                build(:authentication_method,
-                  type: "OTP",
-                  phone_number: "+38063000000#{i}"
-                )
-              ]
+              person_authentication_methods: authentication_methods,
+              authentication_methods: array_of_map(authentication_methods)
             )
 
           p.id
         end)
 
       Enum.each(1..3, fn i ->
+        authentication_methods = [
+          build(:authentication_method,
+            type: "OTP",
+            phone_number: "+38093111111#{i}"
+          )
+        ]
+
         insert(:mpi, :person,
           tax_id: "#{i * 100}",
           documents: [build(:document, number: "111#{i}")],
-          authentication_methods: [
-            build(:authentication_method,
-              type: "OTP",
-              phone_number: "+38093111111#{i}"
-            )
-          ]
+          person_authentication_methods: authentication_methods,
+          authentication_methods: array_of_map(authentication_methods)
         )
       end)
 
@@ -382,31 +422,37 @@ defmodule Deduplication.MatchTest do
     test "auth phone only" do
       person_ids =
         Enum.map(1..5, fn i ->
+          authentication_methods = [
+            build(:authentication_method,
+              type: "OTP",
+              phone_number: "+380630000000"
+            )
+          ]
+
           p =
             insert(:mpi, :person,
               tax_id: "#{i}",
               documents: [build(:document, number: "#{i}")],
-              authentication_methods: [
-                build(:authentication_method,
-                  type: "OTP",
-                  phone_number: "+380630000000"
-                )
-              ]
+              person_authentication_methods: authentication_methods,
+              authentication_methods: array_of_map(authentication_methods)
             )
 
           p.id
         end)
 
       Enum.each(1..5, fn i ->
+        authentication_methods = [
+          build(:authentication_method,
+            type: "OTP",
+            phone_number: "#{i}"
+          )
+        ]
+
         insert(:mpi, :person,
           tax_id: "#{i * 10}",
           documents: [build(:document, number: "999#{i}")],
-          authentication_methods: [
-            build(:authentication_method,
-              type: "OTP",
-              phone_number: "#{i}"
-            )
-          ]
+          person_authentication_methods: authentication_methods,
+          authentication_methods: array_of_map(authentication_methods)
         )
       end)
 
@@ -430,16 +476,19 @@ defmodule Deduplication.MatchTest do
     test "test Worker.deduplicate/0 auth phone + tax_id" do
       t_person_ids =
         Enum.map(1..5, fn i ->
+          authentication_methods = [
+            build(:authentication_method,
+              type: "OTP",
+              phone_number: "+380630000000"
+            )
+          ]
+
           p =
             insert(:mpi, :person,
               tax_id: "#{i}",
               documents: [build(:document, number: "#{i}")],
-              authentication_methods: [
-                build(:authentication_method,
-                  type: "OTP",
-                  phone_number: "+380630000000"
-                )
-              ]
+              person_authentication_methods: authentication_methods,
+              authentication_methods: array_of_map(authentication_methods)
             )
 
           p.id
@@ -447,31 +496,37 @@ defmodule Deduplication.MatchTest do
 
       a_person_ids =
         Enum.map(1..5, fn i ->
+          authentication_methods = [
+            build(:authentication_method,
+              type: "OTP",
+              phone_number: "+380630000000"
+            )
+          ]
+
           p =
             insert(:mpi, :person,
               tax_id: "#{i}",
               documents: [build(:document, number: "000#{i}")],
-              authentication_methods: [
-                build(:authentication_method,
-                  type: "OTP",
-                  phone_number: "+380630000000"
-                )
-              ]
+              person_authentication_methods: authentication_methods,
+              authentication_methods: array_of_map(authentication_methods)
             )
 
           p.id
         end)
 
       Enum.each(1..3, fn i ->
+        authentication_methods = [
+          build(:authentication_method,
+            type: "OTP",
+            phone_number: "+38093111111#{i}"
+          )
+        ]
+
         insert(:mpi, :person,
           tax_id: "#{i * 100}",
           documents: [build(:document, number: "111#{i}")],
-          authentication_methods: [
-            build(:authentication_method,
-              type: "OTP",
-              phone_number: "+38093111111#{i}"
-            )
-          ]
+          person_authentication_methods: authentication_methods,
+          authentication_methods: array_of_map(authentication_methods)
         )
       end)
 
@@ -525,21 +580,25 @@ defmodule Deduplication.MatchTest do
 
     test "duplicates persons with rest persons" do
       Enum.each(1..1, fn i ->
+        authentication_methods = [build(:authentication_method, type: "OFFLINE")]
+
         insert(:mpi, :person,
           tax_id: "#{i}",
           documents: [build(:document, number: "999#{i}")],
-          authentication_methods: [build(:authentication_method, type: "OFFLINE")]
+          person_authentication_methods: authentication_methods,
+          authentication_methods: array_of_map(authentication_methods)
         )
       end)
 
       Enum.each(1..3, fn i ->
+        authentication_methods = [build(:authentication_method, type: "OFFLINE")]
+
         insert(:mpi, :person,
           tax_id: "123456789",
           first_name: "#{i}",
-          documents: [
-            build(:document, number: "#{i}")
-          ],
-          authentication_methods: [build(:authentication_method, type: "OFFLINE")]
+          documents: [build(:document, number: "#{i}")],
+          person_authentication_methods: authentication_methods,
+          authentication_methods: array_of_map(authentication_methods)
         )
       end)
 
@@ -562,11 +621,14 @@ defmodule Deduplication.MatchTest do
 
     test "duplicates persons only" do
       Enum.each(1..10, fn i ->
+        authentication_methods = [build(:authentication_method, type: "OFFLINE")]
+
         insert(:mpi, :person,
           tax_id: "123456789",
           first_name: "#{i}",
           documents: [build(:document, number: "#{i}")],
-          authentication_methods: [build(:authentication_method, type: "OFFLINE")]
+          person_authentication_methods: authentication_methods,
+          authentication_methods: array_of_map(authentication_methods)
         )
       end)
 
@@ -804,6 +866,8 @@ defmodule Deduplication.MatchTest do
          registration_address_settlement,
          authentication_number
        ) do
+    authentication_methods = [create_authentication_methods(authentication_number)]
+
     %Person{
       id: id,
       first_name: first_name,
@@ -822,7 +886,8 @@ defmodule Deduplication.MatchTest do
         create_address("RESIDENCE", residence_address_settlement),
         create_address("REGISTRATION", registration_address_settlement)
       ],
-      authentication_methods: [create_authentication_methods(authentication_number)]
+      person_authentication_methods: authentication_methods,
+      authentication_methods: array_of_map(authentication_methods)
     }
   end
 
@@ -843,9 +908,18 @@ defmodule Deduplication.MatchTest do
   end
 
   defp create_authentication_methods(phone_number) do
-    %{
-      "type" => "OTP",
-      "phone_number" => phone_number
+    %PersonAuthenticationMethod{
+      type: "OTP",
+      phone_number: phone_number
     }
+  end
+
+  defp array_of_map(authentication_methods) do
+    Enum.map(authentication_methods, fn authentication_method ->
+      authentication_method
+      |> Map.take(~w(type phone_number)a)
+      |> Enum.filter(fn {_, v} -> !is_nil(v) end)
+      |> Enum.into(%{}, fn {k, v} -> {to_string(k), v} end)
+    end)
   end
 end

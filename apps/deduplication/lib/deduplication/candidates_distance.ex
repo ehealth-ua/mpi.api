@@ -100,12 +100,12 @@ defmodule Deduplication.CandidatesDistance do
         %Person{
           documents: person_documents,
           addresses: person_addresses,
-          authentication_methods: person_phones
+          person_authentication_methods: person_phones
         } = person,
         %Person{
           documents: candidate_documents,
           addresses: candidate_addresses,
-          authentication_methods: candidate_phones
+          person_authentication_methods: candidate_phones
         } = candidate
       ) do
     %{} = document_levenshtein = match_document_levenshtein(person_documents, candidate_documents)
@@ -156,8 +156,8 @@ defmodule Deduplication.CandidatesDistance do
   def levenshtein(_, _), do: nil
 
   def equal_auth_phones(person_phones, candidate_phones) do
-    person_phone = get_element_by_type("OTP", "phone_number", person_phones)
-    candidate_phone = get_element_by_type("OTP", "phone_number", candidate_phones)
+    person_phone = get_element_by_type("OTP", :phone_number, person_phones)
+    candidate_phone = get_element_by_type("OTP", :phone_number, candidate_phones)
 
     exactly_equals(person_phone, candidate_phone)
   end

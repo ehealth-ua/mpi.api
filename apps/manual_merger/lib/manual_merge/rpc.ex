@@ -70,7 +70,7 @@ defmodule ManualMerger.Rpc do
           confidant_person: map,
           is_active: boolean,
           updated_by: binary,
-          authentication_methods: map,
+          authentication_methods: list(map),
           gender: binary,
           birth_settlement: binary
         }

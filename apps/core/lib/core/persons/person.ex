@@ -4,6 +4,7 @@ defmodule Core.Person do
   use Ecto.Schema
   alias Core.MergedPair
   alias Core.PersonAddress
+  alias Core.PersonAuthenticationMethod
   alias Core.PersonDocument
   alias Core.PersonPhone
 
@@ -44,6 +45,7 @@ defmodule Core.Person do
     has_many(:addresses, PersonAddress, on_delete: :delete_all, on_replace: :delete)
     has_many(:merged_persons, MergedPair, foreign_key: :master_person_id, on_delete: :delete_all, on_replace: :delete)
     has_one(:master_person, MergedPair, foreign_key: :merge_person_id, on_delete: :delete_all, on_replace: :delete)
+    has_many(:person_authentication_methods, PersonAuthenticationMethod, on_delete: :delete_all, on_replace: :delete)
     timestamps(type: :utc_datetime_usec)
   end
 
@@ -96,7 +98,7 @@ defmodule Core.Person do
     updated_by
   )a
 
-  @preload_fields ~w(documents phones addresses merged_persons master_person)a
+  @preload_fields ~w(documents phones addresses merged_persons master_person person_authentication_methods)a
 
   def fields, do: @fields
   def fields_required, do: @fields_required

@@ -8,6 +8,7 @@ defmodule Core.Persons.PersonsAPI do
 
   alias Core.Maybe
   alias Core.Person
+  alias Core.PersonAuthenticationMethod
   alias Core.PersonDocument
   alias Core.PersonPhone
   alias Core.Repo
@@ -28,13 +29,25 @@ defmodule Core.Persons.PersonsAPI do
   end
 
   def changeset(%Person{} = person, params) do
-    person
-    |> cast(trim_name_spaces(params), Person.fields())
-    |> cast_assoc(:addresses)
-    |> cast_assoc(:phones)
-    |> cast_assoc(:documents, required: true)
-    |> validate_required(Person.fields_required())
-    |> unique_constraint(:last_name, name: :persons_uniq_index)
+    changeset =
+      person
+      |> cast(trim_name_spaces(params), Person.fields())
+      |> cast_assoc(:addresses)
+      |> cast_assoc(:phones)
+      |> cast_assoc(:documents, required: true)
+      |> validate_required(Person.fields_required())
+      |> unique_constraint(:last_name, name: :persons_uniq_index)
+
+    with %Changeset{valid?: true} <- changeset,
+         person <- apply_changes(changeset) do
+      authentication_methods = person.authentication_methods
+
+      changeset
+      |> cast(%{person_authentication_methods: authentication_methods}, [])
+      |> cast_assoc(:person_authentication_methods, required: true)
+    else
+      _ -> changeset
+    end
   end
 
   defp get_by_unique(person) do
@@ -60,19 +73,22 @@ defmodule Core.Persons.PersonsAPI do
     |> join(:left, [p], a in assoc(p, :addresses), as: :addresses)
     |> join(:left, [p], mp in assoc(p, :merged_persons), as: :merged_persons)
     |> join(:left, [p], m in assoc(p, :master_person), as: :master_person)
+    |> join(:left, [p], am in assoc(p, :person_authentication_methods), as: :person_authentication_methods)
     |> preload(
       [
         phones: phones,
         documents: documents,
         addresses: addresses,
         merged_persons: merged_persons,
-        master_person: master_person
+        master_person: master_person,
+        person_authentication_methods: person_authentication_methods
       ],
       phones: phones,
       documents: documents,
       addresses: addresses,
       merged_persons: merged_persons,
-      master_person: master_person
+      master_person: master_person,
+      person_authentication_methods: person_authentication_methods
     )
     |> Repo.one()
   end
@@ -193,7 +209,9 @@ defmodule Core.Persons.PersonsAPI do
 
     direct_params =
       params
-      |> Map.drop(~w(type birth_certificate phone_number ids first_name last_name second_name))
+      |> Map.drop(
+        ~w(type number birth_certificate phone_number ids first_name last_name second_name auth_phone_number documents)
+      )
       |> Map.take(Enum.map(Person.fields(), &to_string(&1)))
 
     Person
@@ -263,7 +281,9 @@ defmodule Core.Persons.PersonsAPI do
   defp with_auth_phone_number(query, %{"auth_phone_number" => auth_phone_number}) do
     query
     |> where([p], p.status == @person_status_active)
-    |> where([p], fragment("? @> ?", p.authentication_methods, ^[%{"phone_number" => auth_phone_number}]))
+    |> join(:inner, [p], am in PersonAuthenticationMethod,
+      on: am.person_id == p.id and am.phone_number == ^auth_phone_number
+    )
   end
 
   defp with_auth_phone_number(query, _), do: query
@@ -301,7 +321,20 @@ defmodule Core.Persons.PersonsAPI do
     %{page_number: page_number, page_size: page_size}
   end
 
-  def get_person_auth_method(%Person{authentication_methods: authentication_methods}) do
-    List.first(authentication_methods)
+  def get_person_auth_method(person_id) do
+    authentication_method =
+      PersonAuthenticationMethod
+      |> where([am], am.person_id == ^person_id)
+      |> order_by([am], desc: am.updated_at)
+      |> limit([am], 1)
+      |> @read_repo.one()
+
+    if is_nil(authentication_method) do
+      with %Person{} = person <- get_by_id(person_id) do
+        List.first(person.authentication_methods)
+      end
+    else
+      authentication_method
+    end
   end
 end
