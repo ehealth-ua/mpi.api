@@ -346,8 +346,9 @@ defmodule MPI.Rpc do
   """
   @spec get_auth_method(id :: binary()) :: nil | {:ok, map()}
   def get_auth_method(id) do
-    with %Person{} = person <- PersonsAPI.get_by_id(id) do
-      {:ok, PersonsAPI.get_person_auth_method(person)}
+    case PersonsAPI.get_person_auth_method(id) do
+      nil -> nil
+      auth_method -> {:ok, PersonView.render("person_authentication_method.json", auth_method)}
     end
   end
 

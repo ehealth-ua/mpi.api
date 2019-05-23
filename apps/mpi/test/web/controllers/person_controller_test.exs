@@ -38,11 +38,26 @@ defmodule MPI.Web.PersonControllerTest do
 
   defp json_person_attributes?(data) do
     is_equal?("phones", :phones, ["number", "type"], data) &&
-      is_equal?("documents", :documents, ["number", "type"], data)
+      is_equal?("documents", :documents, ["number", "type"], data) &&
+      is_equal?("authentication_methods", :person_authentication_methods, ["phone_number", "type"], data)
   end
 
-  test "successful show person", %{conn: conn} do
-    person = insert(:mpi, :person)
+  test "successful show person, auth methods are sorted by updated_at", %{conn: conn} do
+    updated_at = DateTime.add(DateTime.utc_now(), -60, :second)
+
+    person =
+      insert(
+        :mpi,
+        :person,
+        person_authentication_methods: [
+          build(:authentication_method,
+            type: "OTP",
+            phone_number: "+38#{Enum.random(1_000_000_000..9_999_999_999)}",
+            updated_at: updated_at
+          ),
+          build(:authentication_method, type: "OFFLINE")
+        ]
+      )
 
     resp =
       conn
@@ -52,6 +67,33 @@ defmodule MPI.Web.PersonControllerTest do
     assert resp["data"]["id"] == person.id
     json_person_attributes?(resp["data"])
     assert_person(resp["data"])
+
+    {:ok, last_updated_at, _} =
+      resp
+      |> get_in(~w(data authentication_methods))
+      |> hd()
+      |> Map.get("updated_at")
+      |> DateTime.from_iso8601()
+
+    assert DateTime.compare(last_updated_at, updated_at) == :gt
+  end
+
+  test "successful show person when person_authentication_methods attr is empty", %{conn: conn} do
+    person =
+      insert(
+        :mpi,
+        :person,
+        person_authentication_methods: []
+      )
+
+    resp =
+      conn
+      |> get(person_path(conn, :show, person.id))
+      |> json_response(200)
+
+    assert resp["data"]["id"] == person.id
+    assert_person(resp["data"])
+    assert person.authentication_methods == get_in(resp, ~w(data authentication_methods))
   end
 
   test "person is not found", %{conn: conn} do
@@ -65,8 +107,10 @@ defmodule MPI.Web.PersonControllerTest do
   end
 
   test "successful create person", %{conn: conn} do
-    person_data = string_params_for(:person)
-    person_data["documents"]
+    person_data =
+      :person
+      |> string_params_for()
+      |> Map.delete("person_authentication_methods")
 
     resp =
       conn
@@ -92,6 +136,7 @@ defmodule MPI.Web.PersonControllerTest do
         second_name: "  second name",
         last_name: "last name  "
       })
+      |> Map.delete("person_authentication_methods")
 
     resp =
       conn
@@ -115,7 +160,11 @@ defmodule MPI.Web.PersonControllerTest do
 
   test "successful create person with inserted_by, updated_by by x-consumer-id without merge candidates", %{conn: conn} do
     user_id = UUID.generate()
-    person_data = :person |> string_params_for() |> Map.drop(~w(phones merged_persons master_person))
+
+    person_data =
+      :person
+      |> string_params_for()
+      |> Map.drop(~w(phones merged_persons master_person person_authentication_methods))
 
     resp =
       conn
@@ -134,7 +183,7 @@ defmodule MPI.Web.PersonControllerTest do
     person_data =
       :person
       |> string_params_for()
-      |> Map.delete("phones")
+      |> Map.drop(~w(phones person_authentication_methods))
 
     resp =
       conn
@@ -156,7 +205,7 @@ defmodule MPI.Web.PersonControllerTest do
     person_data =
       :person
       |> string_params_for()
-      |> Map.delete("documents")
+      |> Map.drop(~w(documents person_authentication_methods))
 
     resp =
       conn
@@ -232,7 +281,7 @@ defmodule MPI.Web.PersonControllerTest do
       person_data =
         :person
         |> string_params_for()
-        |> Map.delete("no_tax_id")
+        |> Map.drop(~w(no_tax_id person_authentication_methods))
 
       person_created =
         conn
@@ -248,7 +297,7 @@ defmodule MPI.Web.PersonControllerTest do
       person =
         :person
         |> string_params_for(documents: [document])
-        |> Map.delete("unzr")
+        |> Map.drop(~w(unzr person_authentication_methods))
 
       person_created =
         conn
@@ -265,6 +314,7 @@ defmodule MPI.Web.PersonControllerTest do
         :person
         |> string_params_for()
         |> Map.put("first_name", "test1")
+        |> Map.delete("person_authentication_methods")
 
       person_created =
         conn
@@ -354,6 +404,38 @@ defmodule MPI.Web.PersonControllerTest do
     assert error["type"] == "validation_failed"
   end
 
+  test "create person failed on authentication_methods constraint", %{conn: conn} do
+    auth_method = build(:authentication_method)
+
+    person_data =
+      :person
+      |> string_params_for(
+        person_authentication_methods: [auth_method, auth_method],
+        authentication_methods: array_of_map([auth_method, auth_method])
+      )
+      |> Map.delete("person_authentication_methods")
+
+    conn
+    |> post(person_path(conn, :create), person_data)
+    |> json_response(422)
+  end
+
+  test "create person failed when OTP authentication_methods does not contain phone_number", %{conn: conn} do
+    authentication_methods = [build(:authentication_method, type: "OTP", phone_number: nil)]
+
+    person_data =
+      :person
+      |> string_params_for(
+        person_authentication_methods: authentication_methods,
+        authentication_methods: array_of_map(authentication_methods)
+      )
+      |> Map.delete("person_authentication_methods")
+
+    conn
+    |> post(person_path(conn, :create), person_data)
+    |> json_response(422)
+  end
+
   test "HEAD /persons/:id OK", %{conn: conn} do
     person = insert(:mpi, :person)
 
@@ -377,7 +459,10 @@ defmodule MPI.Web.PersonControllerTest do
   test "successful update person", %{conn: conn} do
     person = insert(:mpi, :person)
 
-    person_data = string_params_for(:person)
+    person_data =
+      :person
+      |> string_params_for()
+      |> Map.delete("person_authentication_methods")
 
     resp =
       conn
@@ -408,11 +493,13 @@ defmodule MPI.Web.PersonControllerTest do
     person = insert(:mpi, :person)
 
     person_data =
-      string_params_for(:person, %{
+      :person
+      |> string_params_for(%{
         first_name: "   first   name ",
         second_name: "  second name",
         last_name: "last name  "
       })
+      |> Map.delete("person_authentication_methods")
 
     resp =
       conn
@@ -438,7 +525,7 @@ defmodule MPI.Web.PersonControllerTest do
 
       assert resp["data"]
       assert_person(resp["data"])
-      assert [%{"type" => "NA"}] == resp["data"]["authentication_methods"]
+      assert "NA" == hd(resp["data"]["authentication_methods"])["type"]
     end
 
     test "invalid status", %{conn: conn} do
@@ -460,6 +547,42 @@ defmodule MPI.Web.PersonControllerTest do
     conn
     |> put(person_path(conn, :update, UUID.generate()), %{})
     |> assert_not_found()
+  end
+
+  test "update person failed on authentication_methods constraint", %{conn: conn} do
+    person = insert(:mpi, :person)
+
+    auth_method = build(:authentication_method)
+
+    person_data =
+      :person
+      |> string_params_for(
+        person_authentication_methods: [auth_method, auth_method],
+        authentication_methods: array_of_map([auth_method, auth_method])
+      )
+      |> Map.delete("person_authentication_methods")
+
+    conn
+    |> put(person_path(conn, :update, person.id), person_data)
+    |> json_response(422)
+  end
+
+  test "update person failed when OTP authentication_methods does not contain phone_number", %{conn: conn} do
+    person = insert(:mpi, :person)
+
+    authentication_methods = [build(:authentication_method, type: "OTP", phone_number: nil)]
+
+    person_data =
+      :person
+      |> string_params_for(
+        person_authentication_methods: authentication_methods,
+        authentication_methods: array_of_map(authentication_methods)
+      )
+      |> Map.delete("person_authentication_methods")
+
+    conn
+    |> put(person_path(conn, :update, person.id), person_data)
+    |> json_response(422)
   end
 
   test "successful persons search by last_name", %{conn: conn} do
@@ -524,13 +647,12 @@ defmodule MPI.Web.PersonControllerTest do
   end
 
   test "successful persons search by auth_phone_number", %{conn: conn} do
-    %{id: person_id} = person = insert(:mpi, :person)
+    %{id: person_id} =
+      insert(:mpi, :person,
+        person_authentication_methods: [build(:authentication_method, type: "OTP", phone_number: "123")]
+      )
 
-    auth_phone_number =
-      person
-      |> Map.get(:authentication_methods)
-      |> Enum.random()
-      |> Map.get(:phone_number)
+    auth_phone_number = "123"
 
     insert(
       :mpi,
@@ -899,5 +1021,14 @@ defmodule MPI.Web.PersonControllerTest do
       |> Map.fetch("error")
 
     assert {:ok, %{"type" => "not_found"}} === response
+  end
+
+  defp array_of_map(authentication_methods) do
+    Enum.map(authentication_methods, fn authentication_method ->
+      authentication_method
+      |> Map.take(~w(type phone_number)a)
+      |> Enum.filter(fn {_, v} -> !is_nil(v) end)
+      |> Enum.into(%{}, fn {k, v} -> {to_string(k), v} end)
+    end)
   end
 end

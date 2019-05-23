@@ -7,6 +7,7 @@ defmodule Deduplication.Model do
 
   alias Core.Person
   alias Core.PersonAddress
+  alias Core.PersonAuthenticationMethod
   alias Core.PersonDocument
   alias Core.Repo
   alias Core.VerifiedTs
@@ -90,7 +91,7 @@ defmodule Deduplication.Model do
 
   def get_locked_unverified_persons do
     Person
-    |> preload([:documents, :addresses])
+    |> preload([:documents, :addresses, :person_authentication_methods])
     |> join(:inner, [p], v in VerifyingId, on: v.id == p.id and is_nil(v.is_complete))
     |> order_by([p, v], p.id)
     |> Repo.all()
@@ -103,7 +104,7 @@ defmodule Deduplication.Model do
 
              persons =
                Person
-               |> preload([:documents, :addresses])
+               |> preload([:documents, :addresses, :person_authentication_methods])
                |> join(:left, [p], v in VerifyingId, on: v.id == p.id)
                |> where(
                  [p, v],
@@ -128,7 +129,8 @@ defmodule Deduplication.Model do
   Makes union subqueries because few 'where' plan is not optimal for one query
   """
   def get_candidates(%Person{} = person) do
-    auth_phone_number = person_auth_phone(person.authentication_methods)
+    authentication_methods = Enum.map(person.person_authentication_methods, &Map.take(&1, ~w(type phone_number)a))
+    auth_phone_number = person_auth_phone(authentication_methods)
     documents_numbers = person_uniq_documents(person.documents)
     retrieve_candidates(person, documents_numbers, auth_phone_number)
   end
@@ -149,7 +151,7 @@ defmodule Deduplication.Model do
     # add false if null - subquery parameters can not be removed
     current_candidates =
       Person
-      |> preload([p, ca], [:documents, :addresses])
+      |> preload([p, ca], [:documents, :addresses, :person_authentication_methods])
       |> join(
         # allow right join, to avoid long nested loop
         :right,
@@ -161,12 +163,12 @@ defmodule Deduplication.Model do
             UNION
             (SELECT id FROM persons AS p WHERE tax_id = ? and tax_id IS NOT NULL)
             UNION
-            (SELECT id FROM persons AS p WHERE authentication_methods @> ?)
+            (SELECT person_id FROM person_authentication_methods AS p WHERE phone_number = ?)
           )
           ",
           ^documents_numbers_only,
           ^person.tax_id,
-          ^[%{"phone_number" => auth_phone_number, "type" => "OTP"}]
+          ^auth_phone_number
         ),
         on: ca.id == p.id
       )
@@ -190,7 +192,7 @@ defmodule Deduplication.Model do
 
   defp person_auth_phone(authentication_methods) do
     Enum.reduce_while(authentication_methods, nil, fn
-      %{"type" => "OTP", "phone_number" => phone_number}, _acc ->
+      %{type: "OTP", phone_number: phone_number}, _acc ->
         {:halt, phone_number}
 
       _, acc ->
@@ -212,7 +214,37 @@ defmodule Deduplication.Model do
           birth_settlement: birth_settlement,
           tax_id: tax_id,
           documents: documents,
-          addresses: addresses
+          addresses: addresses,
+          authentication_methods: authentication_methods,
+          person_authentication_methods: person_authentication_methods
+        } = person
+      )
+      when is_nil(person_authentication_methods) or person_authentication_methods == [] do
+    normalized_documents = normalize_documents(documents)
+
+    %{
+      person
+      | first_name: normalize_text(first_name),
+        last_name: normalize_text(last_name),
+        second_name: normalize_text(second_name),
+        birth_settlement: normalize_birth_settlement(birth_settlement),
+        tax_id: normalize_tax_id(tax_id, normalized_documents),
+        documents: normalized_documents,
+        addresses: normalize_addresses(addresses),
+        person_authentication_methods: authentication_methods
+    }
+  end
+
+  def normalize_person(
+        %Person{
+          first_name: first_name,
+          last_name: last_name,
+          second_name: second_name,
+          birth_settlement: birth_settlement,
+          tax_id: tax_id,
+          documents: documents,
+          addresses: addresses,
+          person_authentication_methods: person_authentication_methods
         } = person
       ) do
     normalized_documents = normalize_documents(documents)
@@ -225,7 +257,8 @@ defmodule Deduplication.Model do
         birth_settlement: normalize_birth_settlement(birth_settlement),
         tax_id: normalize_tax_id(tax_id, normalized_documents),
         documents: normalized_documents,
-        addresses: normalize_addresses(addresses)
+        addresses: normalize_addresses(addresses),
+        person_authentication_methods: normalize_authentication_methods(person_authentication_methods)
     }
   end
 
@@ -272,6 +305,12 @@ defmodule Deduplication.Model do
   def normalize_addresses(addresses) do
     Enum.map(addresses, fn %PersonAddress{type: type, settlement: settlement} ->
       %{type: type, settlement: settlement}
+    end)
+  end
+
+  def normalize_authentication_methods(person_authentication_methods) do
+    Enum.map(person_authentication_methods, fn %PersonAuthenticationMethod{type: type, phone_number: phone_number} ->
+      %{type: type, phone_number: phone_number}
     end)
   end
 end

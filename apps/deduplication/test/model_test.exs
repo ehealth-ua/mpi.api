@@ -171,6 +171,17 @@ defmodule Deduplication.ModelTest do
       assert id2 == person2.id
     end
 
+    test "normalize unverified person works when person_authentication_methods attr is empty" do
+      person = insert(:mpi, :person, tax_id: "123456789", person_authentication_methods: [])
+      [unverified_person] = Model.get_unverified_persons(10)
+      unverified_person = Model.normalize_person(unverified_person)
+      assert person.id == unverified_person.id
+
+      Enum.each(unverified_person.documents, fn document ->
+        assert %{document: _, number: _, type: _} = document
+      end)
+    end
+
     test "get candidates works" do
       p00 = insert(:mpi, :person, tax_id: "000000000").id
       insert(:mpi, :person, tax_id: "999999999")

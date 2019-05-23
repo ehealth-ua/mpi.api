@@ -162,18 +162,24 @@ defmodule Core.Persons.PersonTest do
   test "searches with auth phone number" do
     insert_person_test_data(%{
       id: @test_person_id,
-      authentication_methods: [%{type: "OTP", phone_number: @test_phone_number}]
+      authentication_methods: [%{type: "OTP", phone_number: @test_phone_number}],
+      person_authentication_methods: [%{type: "OTP", phone_number: @test_phone_number}]
     })
 
     insert_person_test_data(%{
       id: @test_consumer_id,
       authentication_methods: [%{type: "OTP", phone_number: @test_phone_number}],
+      person_authentication_methods: [%{type: "OTP", phone_number: @test_phone_number}],
       status: Person.status(:inactive)
     })
 
     insert_person_test_data(%{
       id: @test_person_id2,
       authentication_methods: [
+        %{type: "OTP", phone_number: @test_phone_number2},
+        %{type: "OFFLINE"}
+      ],
+      person_authentication_methods: [
         %{type: "OTP", phone_number: @test_phone_number2},
         %{type: "OFFLINE"}
       ]

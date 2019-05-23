@@ -78,20 +78,26 @@ defmodule Deduplication.GenStageTest do
       n2 = 23
 
       Enum.each(1..n1, fn i ->
+        authentication_methods = [build(:authentication_method, type: "OFFLINE")]
+
         insert(:mpi, :person,
           tax_id: "123456789",
           first_name: "#{i}",
           documents: [build(:document, number: "#{i}")],
-          authentication_methods: [build(:authentication_method, type: "OFFLINE")]
+          person_authentication_methods: authentication_methods,
+          authentication_methods: array_of_map(authentication_methods)
         )
       end)
 
       Enum.each(1..n2, fn i ->
+        authentication_methods = [build(:authentication_method, type: "OFFLINE")]
+
         insert(:mpi, :person,
           tax_id: "000000000",
           first_name: "#{i}",
           documents: [build(:document, number: "999#{i}")],
-          authentication_methods: [build(:authentication_method, type: "OFFLINE")]
+          person_authentication_methods: authentication_methods,
+          authentication_methods: array_of_map(authentication_methods)
         )
       end)
 
@@ -153,5 +159,14 @@ defmodule Deduplication.GenStageTest do
       assert 0 == Enum.count(Model.get_unverified_persons(300))
       assert 0 == Enum.count(Model.get_locked_unverified_persons())
     end
+  end
+
+  defp array_of_map(authentication_methods) do
+    Enum.map(authentication_methods, fn authentication_method ->
+      authentication_method
+      |> Map.take(~w(type phone_number)a)
+      |> Enum.filter(fn {_, v} -> !is_nil(v) end)
+      |> Enum.into(%{}, fn {k, v} -> {to_string(k), v} end)
+    end)
   end
 end

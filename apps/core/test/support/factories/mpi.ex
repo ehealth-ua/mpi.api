@@ -10,6 +10,7 @@ defmodule Core.Factories.MPI do
       alias Core.MergedPair
       alias Core.Person
       alias Core.PersonAddress
+      alias Core.PersonAuthenticationMethod
       alias Core.PersonDocument
       alias Core.PersonPhone
       alias Core.PersonUpdate
@@ -30,6 +31,11 @@ defmodule Core.Factories.MPI do
 
       def person_factory do
         birthday = ~D[1996-12-12]
+
+        authentication_methods = [
+          build(:authentication_method, type: "OTP", phone_number: "+38#{Enum.random(1_000_000_000..9_999_999_999)}"),
+          build(:authentication_method, type: "OFFLINE")
+        ]
 
         %Person{
           version: "0.1",
@@ -55,12 +61,13 @@ defmodule Core.Factories.MPI do
           status: @person_status_active,
           inserted_by: UUID.generate(),
           updated_by: UUID.generate(),
-          authentication_methods: build_list(2, :authentication_method),
+          authentication_methods: array_of_map(authentication_methods),
           merged_persons: [],
           master_person: nil,
           phones: build_list(1, :person_phone),
           documents: build_list(2, :person_document),
-          addresses: build_list(2, :person_address)
+          addresses: build_list(2, :person_address),
+          person_authentication_methods: authentication_methods
         }
       end
 
@@ -151,10 +158,16 @@ defmodule Core.Factories.MPI do
       end
 
       def authentication_method_factory do
-        %{
+        authentication_method = %PersonAuthenticationMethod{
+          person_id: UUID.generate(),
           type: Enum.random(["OTP", "OFFLINE"]),
           phone_number: "+38#{Enum.random(1_000_000_000..9_999_999_999)}"
         }
+
+        case authentication_method do
+          %PersonAuthenticationMethod{type: "OTP"} -> authentication_method
+          _ -> %{authentication_method | phone_number: nil}
+        end
       end
 
       def verifying_ids_factory do
@@ -244,6 +257,15 @@ defmodule Core.Factories.MPI do
 
       defp street do
         Enum.random(~w(Героїв Перемоги Бандери))
+      end
+
+      defp array_of_map(authentication_methods) do
+        Enum.map(authentication_methods, fn authentication_method ->
+          authentication_method
+          |> Map.take(~w(type phone_number)a)
+          |> Enum.filter(fn {_, v} -> !is_nil(v) end)
+          |> Enum.into(%{}, fn {k, v} -> {to_string(k), v} end)
+        end)
       end
     end
   end

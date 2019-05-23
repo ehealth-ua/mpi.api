@@ -258,10 +258,10 @@ defmodule Deduplication.CandidatesDistanceTest do
     test "equal_auth_phones  match works" do
       assert 0 ==
                CandidatesDistance.equal_auth_phones(
-                 [%{"type" => "OTP", "phone_number" => "123"}],
+                 [%{type: "OTP", phone_number: "123"}],
                  [
-                   %{"phone_number" => "123", "type" => "OTP"},
-                   %{"phone_number" => "123", "type" => "AUTH"}
+                   %{phone_number: "123", type: "OTP"},
+                   %{phone_number: "123", type: "AUTH"}
                  ]
                )
     end
@@ -334,6 +334,8 @@ defmodule Deduplication.CandidatesDistanceTest do
     end
 
     test "levenshtein_weight for similar persons works" do
+      authentication_methods = [%{type: "OTP", phone_number: "123"}]
+
       person =
         build(:person,
           id: UUID.generate(),
@@ -345,7 +347,8 @@ defmodule Deduplication.CandidatesDistanceTest do
           birth_date: ~D[1996-12-12],
           birth_settlement: "смт. Рокита",
           documents: [%{type: "PASSPORT", document: "упп7423", number: "7423"}],
-          authentication_methods: [%{"phone_number" => "123", "type" => "OTP"}],
+          person_authentication_methods: authentication_methods,
+          authentication_methods: array_of_map(authentication_methods),
           addresses: [
             %{type: "REGISTRATION", settlement: "0123"},
             %{type: "RESIDENCE", settlement: "4567"}
@@ -363,7 +366,8 @@ defmodule Deduplication.CandidatesDistanceTest do
           birth_date: ~D[1996-12-12],
           birth_settlement: "Рокита",
           documents: [%{type: "PASSPORT", document: "пп7423", number: "7423"}],
-          authentication_methods: [%{"phone_number" => "123", "type" => "OTP"}],
+          person_authentication_methods: authentication_methods,
+          authentication_methods: array_of_map(authentication_methods),
           addresses: [
             %{type: "REGISTRATION", settlement: "0123"},
             %{type: "RESIDENCE", settlement: "4567"}
@@ -390,6 +394,8 @@ defmodule Deduplication.CandidatesDistanceTest do
     end
 
     test "levenshtein_weight for twins persons works" do
+      authentication_methods = [%{type: "OTP", phone_number: "123"}]
+
       person =
         build(:person,
           id: UUID.generate(),
@@ -401,12 +407,15 @@ defmodule Deduplication.CandidatesDistanceTest do
           birth_date: ~D[1996-12-12],
           birth_settlement: "смт. Рокита",
           documents: [%{type: "PASSPORT", document: "упп7423", number: "7423"}],
-          authentication_methods: [%{"phone_number" => "123", "type" => "OTP"}],
+          person_authentication_methods: authentication_methods,
+          authentication_methods: array_of_map(authentication_methods),
           addresses: [
             %{type: "REGISTRATION", settlement: "0123"},
             %{type: "RESIDENCE", settlement: "4567"}
           ]
         )
+
+      authentication_methods = [%{type: "OTP", phone_number: "9999"}]
 
       clone =
         build(:person,
@@ -419,7 +428,8 @@ defmodule Deduplication.CandidatesDistanceTest do
           birth_date: ~D[1996-12-12],
           birth_settlement: "Рокита",
           documents: [%{type: "PASSPORT", document: "пп7422", number: "7422"}],
-          authentication_methods: [%{"phone_number" => "9999", "type" => "OTP"}],
+          person_authentication_methods: authentication_methods,
+          authentication_methods: array_of_map(authentication_methods),
           addresses: [
             %{type: "REGISTRATION", settlement: "0123"},
             %{type: "RESIDENCE", settlement: "4567"}
@@ -601,5 +611,14 @@ defmodule Deduplication.CandidatesDistanceTest do
                  twins_flag: 0
                })
     end
+  end
+
+  defp array_of_map(authentication_methods) do
+    Enum.map(authentication_methods, fn authentication_method ->
+      authentication_method
+      |> Map.take(~w(type phone_number)a)
+      |> Enum.filter(fn {_, v} -> !is_nil(v) end)
+      |> Enum.into(%{}, fn {k, v} -> {to_string(k), v} end)
+    end)
   end
 end
