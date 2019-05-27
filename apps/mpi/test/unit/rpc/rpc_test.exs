@@ -315,6 +315,29 @@ defmodule MPI.RpcTest do
     test "not found" do
       refute Rpc.get_person_by_id(UUID.generate())
     end
+
+    test "success when person_authentication_methods attr is empty" do
+      person =
+        insert(
+          :mpi,
+          :person,
+          person_authentication_methods: []
+        )
+
+      person_id = person.id
+      authentication_methods = person.authentication_methods
+      rpc_response = Rpc.get_person_by_id(person.id)
+
+      assert {:ok, %{id: ^person_id}} = rpc_response
+
+      assert authentication_methods
+             |> Enum.map(fn authentication_method ->
+               Enum.into(authentication_method, %{}, fn {k, v} -> {String.to_atom(k), v} end)
+             end) ==
+               rpc_response
+               |> elem(1)
+               |> Map.get(:authentication_methods)
+    end
   end
 
   describe "reset_auth_method/2" do
