@@ -45,7 +45,7 @@ defmodule Core.Repo.Migrations.MigratePersonAuthenticationMethods do
         persons
         |> Enum.reduce([], fn person, acc ->
           authentication_methods = process_person_authentication_methods(person)
-          acc = authentication_methods ++ acc
+          authentication_methods ++ acc
         end)
         |> insert_authentication_methods()
 

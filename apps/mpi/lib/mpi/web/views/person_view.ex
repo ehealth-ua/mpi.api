@@ -87,6 +87,9 @@ defmodule MPI.Web.PersonView do
       })
       when is_nil(person_authentication_methods) or person_authentication_methods == [] do
     authentication_methods
+    |> Enum.map(fn authentication_method ->
+      Enum.into(authentication_method, %{}, fn {k, v} -> {String.to_atom(k), v} end)
+    end)
   end
 
   def render("person_authentication_methods.json", %{
