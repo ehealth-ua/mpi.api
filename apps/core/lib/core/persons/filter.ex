@@ -4,9 +4,18 @@ defmodule Core.Persons.Filter do
   use EctoFilter
   use EctoFilter.Operators.JSON
 
-  def apply(query, {:status, :equal, value}, _type, Core.Person) do
+  alias Core.Person
+  alias Core.PersonDocument
+
+  def apply(query, {:status, :equal, value}, _type, Person) do
     where(query, [..., p], fragment("upper(?)", p.status) == ^value)
   end
 
-  def apply(query, operation, type, context), do: super(query, operation, type, context)
+  def apply(query, {:number, :equal, value}, _type, PersonDocument) do
+    where(query, [..., d], fragment("lower(?) = ?", d.number, ^String.downcase(value)))
+  end
+
+  def apply(query, operation, type, context) do
+    super(query, operation, type, context)
+  end
 end

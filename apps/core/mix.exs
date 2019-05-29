@@ -46,7 +46,6 @@ defmodule Core.MixProject do
       {:confex, "~> 3.4"},
       {:ecto, "~> 3.0"},
       {:ecto_sql, "~> 3.0"},
-      {:scrivener_ecto, git: "https://github.com/AlexKovalevych/scrivener_ecto.git", branch: "fix_page_number"},
       {:ecto_trail, "~> 0.4.1"},
       {:httpoison, "~> 1.4"},
       {:jason, "~> 1.1"},
@@ -56,7 +55,8 @@ defmodule Core.MixProject do
       {:ecto_filter, git: "https://github.com/edenlabllc/ecto_filter", branch: "ecto_3"},
       {:mox, "~> 0.4.0", only: [:test]},
       {:ex_doc, "~> 0.19", only: :dev, runtime: false},
-      {:ex_machina, "~> 2.3", only: [:dev, :test]}
+      {:ex_machina, "~> 2.3", only: [:dev, :test]},
+      {:ecto_paginator, git: "https://github.com/edenlabllc/ecto_paginator.git"}
     ]
   end
 
