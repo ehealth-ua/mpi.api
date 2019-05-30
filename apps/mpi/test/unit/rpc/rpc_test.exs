@@ -274,6 +274,15 @@ defmodule MPI.RpcTest do
                Map.take(person, ~w(documents phones addresses merged_persons master_person)a)
     end
 
+    test "search_persons/2 by ids with all params" do
+      %{id: id} = insert(:mpi, :person)
+      insert(:mpi, :person)
+      params = %{"ids" => id}
+
+      assert {:ok, %{data: [%{id: ^id}], paging: %{total_entries: 1}}} =
+               Rpc.search_persons(params, [:id], paginate: true)
+    end
+
     test "search_persons/2 by ids" do
       fields = ~w(id first_name last_name second_name birth_date)a
       %{id: id1} = insert(:mpi, :person)
@@ -305,11 +314,21 @@ defmodule MPI.RpcTest do
     end
   end
 
-  describe "get_person_by_id/1" do
+  describe "get_person_by_id/2" do
     test "success" do
       %{id: id} = insert(:mpi, :person)
 
       assert {:ok, %{id: ^id}} = Rpc.get_person_by_id(id)
+    end
+
+    test "success with fields param" do
+      person = insert(:mpi, :person)
+      person_id = person.id
+      fields = ~w(id first_name last_name second_name birth_date)a
+
+      resp = Rpc.get_person_by_id(person_id, fields)
+      assert {:ok, %{id: ^person_id}} = resp
+      assert resp |> elem(1) |> Map.keys() |> MapSet.new() == MapSet.new(fields)
     end
 
     test "not found" do

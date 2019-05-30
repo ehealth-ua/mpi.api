@@ -249,6 +249,7 @@ defmodule MPI.Rpc do
 
   @doc """
   Resolves person by id
+  Optionally, a list of fields could be given to limit the selection of fields for the response
 
   ## Examples
 
@@ -304,11 +305,23 @@ defmodule MPI.Rpc do
           status: "active"
         }
       }
+
+      iex> MPI.Rpc.get_person_by_id("26e673e1-1d68-413e-b96c-407b45d9f572", [:id, :first_name, :last_name, :second_name, :birth_date])
+      {
+        :ok,
+        %{
+          birth_date: ~D[1991-08-27],
+          first_name: "Петро",
+          id: "26e673e1-1d68-413e-b96c-407b45d9f572",
+          last_name: "Іванов",
+          second_name: "Миколайович"
+        }
+      }
   """
-  @spec get_person_by_id(id :: binary()) :: nil | {:ok, person()}
-  def get_person_by_id(id) do
+  @spec get_person_by_id(id :: binary(), fields :: list() | nil) :: nil | {:ok, person()}
+  def get_person_by_id(id, fields \\ nil) do
     with %Person{} = person <- PersonsAPI.get_by_id(id) do
-      {:ok, PersonView.render("show.json", %{person: person})}
+      {:ok, render_person(person, fields)}
     end
   end
 
