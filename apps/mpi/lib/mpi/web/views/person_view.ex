@@ -16,7 +16,6 @@ defmodule MPI.Web.PersonView do
     person
     |> Map.take(fields)
     |> Map.delete(:authentication_methods)
-    |> Enum.reduce(%{}, fn {field, value}, person_enc -> Map.put(person_enc, to_string(field), value) end)
   end
 
   def render("show.json", %{person: %Person{} = person}) do

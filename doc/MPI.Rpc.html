@@ -5,9 +5,9 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.19.1">
-    <title>MPI.Rpc –  v2.4.1</title>
+    <title>MPI.Rpc –  v2.4.3</title>
     <link rel="stylesheet" href="dist/app-240d7fc7e5.css" />
-    <script src="dist/sidebar_items-3b7506e32d.js"></script>
+    <script src="dist/sidebar_items-65fdb942bc.js"></script>
     
   </head>
   <body data-type="modules">
@@ -28,7 +28,7 @@
       <h1 class="sidebar-projectName">
       </h1>
       <h2 class="sidebar-projectVersion">
-        v2.4.1
+        v2.4.3
       </h2>
     </div>
   </a>
@@ -57,7 +57,7 @@
 
 
       <h1>
-        <small class="visible-xs"> v2.4.1</small>
+        <small class="visible-xs"> v2.4.3</small>
 MPI.Rpc              </h1>
 
 
@@ -114,9 +114,10 @@ MPI.Rpc              </h1>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="#get_person_by_id/1">get_person_by_id(id)</a>
+    <a href="#get_person_by_id/2">get_person_by_id(id, fields \\ nil)</a>
   </div>
-    <div class="summary-synopsis"><p>Resolves person by id</p>
+    <div class="summary-synopsis"><p>Resolves person by id
+Optionally, a list of fields could be given to limit the selection of fields for the response</p>
 </div>
 </div>
 <div class="summary-row">
@@ -377,13 +378,13 @@ MPI.Rpc              </h1>
 <p>  iex&gt; MPI.Rpc.create_or_update_person(%{“id” =&gt; “6e8d4595-e83c-4f97-be76-c6e2b96b05f1”, “birth_date” =&gt; “1990-01-01”}, “26e673e1-1d68-413e-b96c-407b45d9f572”)
   {</p>
 <pre><code class="nohighlight makeup elixir"><span class="ss">:ok</span><span class="p">,</span><span class="w">
-</span><span class="p" data-group-id="7939761507-1">%{</span><span class="w">
+</span><span class="p" data-group-id="1408245932-1">%{</span><span class="w">
   </span><span class="ss">id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;6e8d4595-e83c-4f97-be76-c6e2b96b05f1&quot;</span><span class="p">,</span><span class="w">
-  </span><span class="ss">authentication_methods</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="7939761507-2">[</span><span class="w">
-    </span><span class="p" data-group-id="7939761507-3">%{</span><span class="s">&quot;type&quot;</span><span class="w"> </span><span class="o">=</span><span class="o">&gt;</span><span class="w"> </span><span class="s">&quot;NA&quot;</span><span class="p" data-group-id="7939761507-3">}</span><span class="w">
-  </span><span class="p" data-group-id="7939761507-2">]</span><span class="p">,</span><span class="w">
+  </span><span class="ss">authentication_methods</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="1408245932-2">[</span><span class="w">
+    </span><span class="p" data-group-id="1408245932-3">%{</span><span class="s">&quot;type&quot;</span><span class="w"> </span><span class="o">=</span><span class="o">&gt;</span><span class="w"> </span><span class="s">&quot;NA&quot;</span><span class="p" data-group-id="1408245932-3">}</span><span class="w">
+  </span><span class="p" data-group-id="1408245932-2">]</span><span class="p">,</span><span class="w">
   </span><span class="n">...</span><span class="w">
-</span><span class="p" data-group-id="7939761507-1">}</span></code></pre>
+</span><span class="p" data-group-id="1408245932-1">}</span></code></pre>
 <p>  }</p>
   </section>
 </div>
@@ -406,47 +407,51 @@ MPI.Rpc              </h1>
   Examples
 </h2>
 
-<pre><code class="nohighlight makeup elixir"><span class="gp unselectable">iex&gt; </span><span class="nc">MPI.Rpc</span><span class="o">.</span><span class="n">get_auth_method</span><span class="p" data-group-id="4927842617-1">(</span><span class="s">&quot;26e673e1-1d68-413e-b96c-407b45d9f572&quot;</span><span class="p" data-group-id="4927842617-1">)</span><span class="w">
-</span><span class="p" data-group-id="4927842617-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4927842617-3">%{</span><span class="s">&quot;type&quot;</span><span class="w"> </span><span class="o">=</span><span class="o">&gt;</span><span class="w"> </span><span class="s">&quot;OTP&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;phone_number&quot;</span><span class="w"> </span><span class="o">=</span><span class="o">&gt;</span><span class="w"> </span><span class="s">&quot;+380630000000&quot;</span><span class="p" data-group-id="4927842617-3">}</span><span class="p" data-group-id="4927842617-2">}</span></code></pre>
+<pre><code class="nohighlight makeup elixir"><span class="gp unselectable">iex&gt; </span><span class="nc">MPI.Rpc</span><span class="o">.</span><span class="n">get_auth_method</span><span class="p" data-group-id="9348601483-1">(</span><span class="s">&quot;26e673e1-1d68-413e-b96c-407b45d9f572&quot;</span><span class="p" data-group-id="9348601483-1">)</span><span class="w">
+</span><span class="p" data-group-id="9348601483-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9348601483-3">%{</span><span class="s">&quot;type&quot;</span><span class="w"> </span><span class="o">=</span><span class="o">&gt;</span><span class="w"> </span><span class="s">&quot;OTP&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;phone_number&quot;</span><span class="w"> </span><span class="o">=</span><span class="o">&gt;</span><span class="w"> </span><span class="s">&quot;+380630000000&quot;</span><span class="p" data-group-id="9348601483-3">}</span><span class="p" data-group-id="9348601483-2">}</span></code></pre>
   </section>
 </div>
-<div class="detail" id="get_person_by_id/1">
-    <div class="detail-header">
-    <a href="#get_person_by_id/1" class="detail-link" title="Link to this function">
+<div class="detail" id="get_person_by_id/2">
+  
+    <span id="get_person_by_id/1"></span>
+  <div class="detail-header">
+    <a href="#get_person_by_id/2" class="detail-link" title="Link to this function">
       <span class="icon-link" aria-hidden="true"></span>
       <span class="sr-only">Link to this function</span>
     </a>
-    <span class="signature">get_person_by_id(id)</span>
+    <span class="signature">get_person_by_id(id, fields \\ nil)</span>
         
       <div class="specs">
-          <pre>get_person_by_id(id :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>()) :: nil | {:ok, <a href="#t:person/0">person</a>()}</pre>
+          <pre>get_person_by_id(id :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>(), fields :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>() | nil) ::
+  nil | {:ok, <a href="#t:person/0">person</a>()}</pre>
       </div>
   </div>
   <section class="docstring">
-<p>Resolves person by id</p>
-<h2 id="get_person_by_id/1-examples" class="section-heading">
-  <a href="#get_person_by_id/1-examples" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
+<p>Resolves person by id
+Optionally, a list of fields could be given to limit the selection of fields for the response</p>
+<h2 id="get_person_by_id/2-examples" class="section-heading">
+  <a href="#get_person_by_id/2-examples" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
   Examples
 </h2>
 
-<pre><code class="nohighlight makeup elixir"><span class="gp unselectable">iex&gt; </span><span class="nc">MPI.Rpc</span><span class="o">.</span><span class="n">get_person_by_id</span><span class="p" data-group-id="9609660525-1">(</span><span class="s">&quot;26e673e1-1d68-413e-b96c-407b45d9f572&quot;</span><span class="p" data-group-id="9609660525-1">)</span><span class="w">
-</span><span class="p" data-group-id="9609660525-2">{</span><span class="w">
+<pre><code class="nohighlight makeup elixir"><span class="gp unselectable">iex&gt; </span><span class="nc">MPI.Rpc</span><span class="o">.</span><span class="n">get_person_by_id</span><span class="p" data-group-id="8182392023-1">(</span><span class="s">&quot;26e673e1-1d68-413e-b96c-407b45d9f572&quot;</span><span class="p" data-group-id="8182392023-1">)</span><span class="w">
+</span><span class="p" data-group-id="8182392023-2">{</span><span class="w">
   </span><span class="ss">:ok</span><span class="p">,</span><span class="w">
-  </span><span class="p" data-group-id="9609660525-3">%{</span><span class="w">
+  </span><span class="p" data-group-id="8182392023-3">%{</span><span class="w">
     </span><span class="ss">id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;26e673e1-1d68-413e-b96c-407b45d9f572&quot;</span><span class="p">,</span><span class="w">
     </span><span class="ss">first_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Петро&quot;</span><span class="p">,</span><span class="w">
     </span><span class="ss">last_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Іванов&quot;</span><span class="p">,</span><span class="w">
     </span><span class="ss">second_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Миколайович&quot;</span><span class="p">,</span><span class="w">
     </span><span class="ss">birth_country</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Ukraine&quot;</span><span class="p">,</span><span class="w">
-    </span><span class="ss">inserted_at</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="9609660525-4">#</span><span class="nc" data-group-id="9609660525-4">DateTime</span><span class="p" data-group-id="9609660525-4">&lt;</span><span class="mi">2018</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mi">05</span><span class="w"> </span><span class="mi">09</span><span class="p">:</span><span class="mi">54</span><span class="p">:</span><span class="mf">49.406483</span><span class="nc">Z</span><span class="p" data-group-id="9609660525-4">&gt;</span><span class="p">,</span><span class="w">
-    </span><span class="ss">updated_at</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="9609660525-5">#</span><span class="nc" data-group-id="9609660525-5">DateTime</span><span class="p" data-group-id="9609660525-5">&lt;</span><span class="mi">2018</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mi">05</span><span class="w"> </span><span class="mi">09</span><span class="p">:</span><span class="mi">54</span><span class="p">:</span><span class="mf">49.406486</span><span class="nc">Z</span><span class="p" data-group-id="9609660525-5">&gt;</span><span class="p">,</span><span class="w">
+    </span><span class="ss">inserted_at</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="8182392023-4">#</span><span class="nc" data-group-id="8182392023-4">DateTime</span><span class="p" data-group-id="8182392023-4">&lt;</span><span class="mi">2018</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mi">05</span><span class="w"> </span><span class="mi">09</span><span class="p">:</span><span class="mi">54</span><span class="p">:</span><span class="mf">49.406483</span><span class="nc">Z</span><span class="p" data-group-id="8182392023-4">&gt;</span><span class="p">,</span><span class="w">
+    </span><span class="ss">updated_at</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="8182392023-5">#</span><span class="nc" data-group-id="8182392023-5">DateTime</span><span class="p" data-group-id="8182392023-5">&lt;</span><span class="mi">2018</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mi">05</span><span class="w"> </span><span class="mi">09</span><span class="p">:</span><span class="mi">54</span><span class="p">:</span><span class="mf">49.406486</span><span class="nc">Z</span><span class="p" data-group-id="8182392023-5">&gt;</span><span class="p">,</span><span class="w">
     </span><span class="ss">inserted_by</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;bc11085d-3e47-49a5-90c4-c787ee41c1ba&quot;</span><span class="p">,</span><span class="w">
     </span><span class="ss">updated_by</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;d221d7f1-81cb-44d3-b6d4-8d7e42f97ff9&quot;</span><span class="p">,</span><span class="w">
     </span><span class="ss">invalid_tax_id</span><span class="p">:</span><span class="w"> </span><span class="no">false</span><span class="p">,</span><span class="w">
     </span><span class="ss">email</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;petroivanov@email.com&quot;</span><span class="p">,</span><span class="w">
     </span><span class="ss">unzr</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;19900101-0001&quot;</span><span class="p">,</span><span class="w">
     </span><span class="ss">process_disclosure_data_consent</span><span class="p">:</span><span class="w"> </span><span class="no">true</span><span class="p">,</span><span class="w">
-    </span><span class="ss">addresses</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="9609660525-6">[</span><span class="p" data-group-id="9609660525-7">%{</span><span class="w">
+    </span><span class="ss">addresses</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="8182392023-6">[</span><span class="p" data-group-id="8182392023-7">%{</span><span class="w">
       </span><span class="s">&quot;APARTMENT&quot;</span><span class="w"> </span><span class="o">=</span><span class="o">&gt;</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">,</span><span class="w">
       </span><span class="s">&quot;BUILDING&quot;</span><span class="w"> </span><span class="o">=</span><span class="o">&gt;</span><span class="w"> </span><span class="s">&quot;48а&quot;</span><span class="p">,</span><span class="w">
       </span><span class="s">&quot;COUNTRY&quot;</span><span class="w"> </span><span class="o">=</span><span class="o">&gt;</span><span class="w"> </span><span class="s">&quot;UA&quot;</span><span class="p">,</span><span class="w">
@@ -457,13 +462,13 @@ MPI.Rpc              </h1>
       </span><span class="s">&quot;STREET_TYPE&quot;</span><span class="w"> </span><span class="o">=</span><span class="o">&gt;</span><span class="w"> </span><span class="s">&quot; STREET&quot;</span><span class="p">,</span><span class="w">
       </span><span class="s">&quot;TYPE&quot;</span><span class="w"> </span><span class="o">=</span><span class="o">&gt;</span><span class="w"> </span><span class="s">&quot;REGISTRATION&quot;</span><span class="p">,</span><span class="w">
       </span><span class="s">&quot;area&quot;</span><span class="w"> </span><span class="o">=</span><span class="o">&gt;</span><span class="w"> </span><span class="s">&quot;ХАРКІВСЬКА&quot;</span><span class="w">
-    </span><span class="p" data-group-id="9609660525-7">}</span><span class="p" data-group-id="9609660525-6">]</span><span class="p">,</span><span class="w">
+    </span><span class="p" data-group-id="8182392023-7">}</span><span class="p" data-group-id="8182392023-6">]</span><span class="p">,</span><span class="w">
     </span><span class="ss">death_date</span><span class="p">:</span><span class="w"> </span><span class="no">nil</span><span class="p">,</span><span class="w">
     </span><span class="ss">birth_settlement</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Київ&quot;</span><span class="p">,</span><span class="w">
     </span><span class="ss">preferred_way_communication</span><span class="p">:</span><span class="w"> </span><span class="no">nil</span><span class="p">,</span><span class="w">
-    </span><span class="ss">merged_persons</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="9609660525-8">[</span><span class="p" data-group-id="9609660525-8">]</span><span class="p">,</span><span class="w">
+    </span><span class="ss">merged_persons</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="8182392023-8">[</span><span class="p" data-group-id="8182392023-8">]</span><span class="p">,</span><span class="w">
     </span><span class="ss">master_person</span><span class="p">:</span><span class="w"> </span><span class="no">nil</span><span class="p">,</span><span class="w">
-    </span><span class="ss">documents</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="9609660525-9">[</span><span class="p" data-group-id="9609660525-9">]</span><span class="p">,</span><span class="w">
+    </span><span class="ss">documents</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="8182392023-9">[</span><span class="p" data-group-id="8182392023-9">]</span><span class="p">,</span><span class="w">
     </span><span class="ss">gender</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;MALE&quot;</span><span class="p">,</span><span class="w">
     </span><span class="ss">patient_signed</span><span class="p">:</span><span class="w"> </span><span class="no">true</span><span class="p">,</span><span class="w">
     </span><span class="ss">no_tax_id</span><span class="p">:</span><span class="w"> </span><span class="no">false</span><span class="p">,</span><span class="w">
@@ -471,16 +476,28 @@ MPI.Rpc              </h1>
     </span><span class="ss">birth_date</span><span class="p">:</span><span class="w"> </span><span class="ld">~D[1991-08-27]</span><span class="p">,</span><span class="w">
     </span><span class="ss">is_active</span><span class="p">:</span><span class="w"> </span><span class="no">true</span><span class="p">,</span><span class="w">
     </span><span class="ss">version</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;1&quot;</span><span class="p">,</span><span class="w">
-    </span><span class="ss">emergency_contact</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="9609660525-10">%{</span><span class="p" data-group-id="9609660525-10">}</span><span class="p">,</span><span class="w">
+    </span><span class="ss">emergency_contact</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="8182392023-10">%{</span><span class="p" data-group-id="8182392023-10">}</span><span class="p">,</span><span class="w">
     </span><span class="ss">tax_id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;3126509816&quot;</span><span class="p">,</span><span class="w">
     </span><span class="ss">confidant_person</span><span class="p">:</span><span class="w"> </span><span class="no">nil</span><span class="p">,</span><span class="w">
-    </span><span class="ss">authentication_methods</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="9609660525-11">[</span><span class="w">
-      </span><span class="p" data-group-id="9609660525-12">%{</span><span class="s">&quot;phone_number&quot;</span><span class="w"> </span><span class="o">=</span><span class="o">&gt;</span><span class="w"> </span><span class="s">&quot;+380508887700&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;type&quot;</span><span class="w"> </span><span class="o">=</span><span class="o">&gt;</span><span class="w"> </span><span class="s">&quot;OTP&quot;</span><span class="p" data-group-id="9609660525-12">}</span><span class="w">
-    </span><span class="p" data-group-id="9609660525-11">]</span><span class="p">,</span><span class="w">
-    </span><span class="ss">phones</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="9609660525-13">[</span><span class="p" data-group-id="9609660525-13">]</span><span class="p">,</span><span class="w">
+    </span><span class="ss">authentication_methods</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="8182392023-11">[</span><span class="w">
+      </span><span class="p" data-group-id="8182392023-12">%{</span><span class="s">&quot;phone_number&quot;</span><span class="w"> </span><span class="o">=</span><span class="o">&gt;</span><span class="w"> </span><span class="s">&quot;+380508887700&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;type&quot;</span><span class="w"> </span><span class="o">=</span><span class="o">&gt;</span><span class="w"> </span><span class="s">&quot;OTP&quot;</span><span class="p" data-group-id="8182392023-12">}</span><span class="w">
+    </span><span class="p" data-group-id="8182392023-11">]</span><span class="p">,</span><span class="w">
+    </span><span class="ss">phones</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="8182392023-13">[</span><span class="p" data-group-id="8182392023-13">]</span><span class="p">,</span><span class="w">
     </span><span class="ss">status</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;active&quot;</span><span class="w">
-  </span><span class="p" data-group-id="9609660525-3">}</span><span class="w">
-</span><span class="p" data-group-id="9609660525-2">}</span></code></pre>
+  </span><span class="p" data-group-id="8182392023-3">}</span><span class="w">
+</span><span class="p" data-group-id="8182392023-2">}</span><span class="w">
+
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">MPI.Rpc</span><span class="o">.</span><span class="n">get_person_by_id</span><span class="p" data-group-id="8182392023-14">(</span><span class="s">&quot;26e673e1-1d68-413e-b96c-407b45d9f572&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="8182392023-15">[</span><span class="ss">:id</span><span class="p">,</span><span class="w"> </span><span class="ss">:first_name</span><span class="p">,</span><span class="w"> </span><span class="ss">:last_name</span><span class="p">,</span><span class="w"> </span><span class="ss">:second_name</span><span class="p">,</span><span class="w"> </span><span class="ss">:birth_date</span><span class="p" data-group-id="8182392023-15">]</span><span class="p" data-group-id="8182392023-14">)</span><span class="w">
+</span><span class="p" data-group-id="8182392023-16">{</span><span class="w">
+  </span><span class="ss">:ok</span><span class="p">,</span><span class="w">
+  </span><span class="p" data-group-id="8182392023-17">%{</span><span class="w">
+    </span><span class="ss">birth_date</span><span class="p">:</span><span class="w"> </span><span class="ld">~D[1991-08-27]</span><span class="p">,</span><span class="w">
+    </span><span class="ss">first_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Петро&quot;</span><span class="p">,</span><span class="w">
+    </span><span class="ss">id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;26e673e1-1d68-413e-b96c-407b45d9f572&quot;</span><span class="p">,</span><span class="w">
+    </span><span class="ss">last_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Іванов&quot;</span><span class="p">,</span><span class="w">
+    </span><span class="ss">second_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Миколайович&quot;</span><span class="w">
+  </span><span class="p" data-group-id="8182392023-17">}</span><span class="w">
+</span><span class="p" data-group-id="8182392023-16">}</span></code></pre>
   </section>
 </div>
 <div class="detail" id="ql_search/3">
@@ -502,29 +519,29 @@ MPI.Rpc              </h1>
   Examples
 </h2>
 
-<pre><code class="nohighlight makeup elixir"><span class="gp unselectable">iex&gt; </span><span class="nc">MPI.Rpc</span><span class="o">.</span><span class="n">ql_search</span><span class="p" data-group-id="4082458201-1">(</span><span class="p" data-group-id="4082458201-2">[</span><span class="p" data-group-id="4082458201-3">{</span><span class="ss">:last_name</span><span class="p">,</span><span class="w"> </span><span class="ss">:equal</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Іванов&quot;</span><span class="p" data-group-id="4082458201-3">}</span><span class="p" data-group-id="4082458201-2">]</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4082458201-4">[</span><span class="ss">asc</span><span class="p">:</span><span class="w"> </span><span class="ss">:inserted_at</span><span class="p" data-group-id="4082458201-4">]</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4082458201-5">{</span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="mi">50</span><span class="p" data-group-id="4082458201-5">}</span><span class="p" data-group-id="4082458201-1">)</span><span class="w">
-</span><span class="p" data-group-id="4082458201-6">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4082458201-7">[</span><span class="w">
-    </span><span class="p" data-group-id="4082458201-8">%{</span><span class="w">
+<pre><code class="nohighlight makeup elixir"><span class="gp unselectable">iex&gt; </span><span class="nc">MPI.Rpc</span><span class="o">.</span><span class="n">ql_search</span><span class="p" data-group-id="2716912783-1">(</span><span class="p" data-group-id="2716912783-2">[</span><span class="p" data-group-id="2716912783-3">{</span><span class="ss">:last_name</span><span class="p">,</span><span class="w"> </span><span class="ss">:equal</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Іванов&quot;</span><span class="p" data-group-id="2716912783-3">}</span><span class="p" data-group-id="2716912783-2">]</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2716912783-4">[</span><span class="ss">asc</span><span class="p">:</span><span class="w"> </span><span class="ss">:inserted_at</span><span class="p" data-group-id="2716912783-4">]</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2716912783-5">{</span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="mi">50</span><span class="p" data-group-id="2716912783-5">}</span><span class="p" data-group-id="2716912783-1">)</span><span class="w">
+</span><span class="p" data-group-id="2716912783-6">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2716912783-7">[</span><span class="w">
+    </span><span class="p" data-group-id="2716912783-8">%{</span><span class="w">
       </span><span class="ss">id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;26e673e1-1d68-413e-b96c-407b45d9f572&quot;</span><span class="p">,</span><span class="w">
       </span><span class="ss">first_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Петро&quot;</span><span class="p">,</span><span class="w">
       </span><span class="ss">last_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Іванов&quot;</span><span class="p">,</span><span class="w">
       </span><span class="ss">second_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Миколайович&quot;</span><span class="p">,</span><span class="w">
       </span><span class="ss">birth_country</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Ukraine&quot;</span><span class="p">,</span><span class="w">
-      </span><span class="ss">inserted_at</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="4082458201-9">#</span><span class="nc" data-group-id="4082458201-9">DateTime</span><span class="p" data-group-id="4082458201-9">&lt;</span><span class="mi">2018</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mi">05</span><span class="w"> </span><span class="mi">09</span><span class="p">:</span><span class="mi">54</span><span class="p">:</span><span class="mf">49.406483</span><span class="nc">Z</span><span class="p" data-group-id="4082458201-9">&gt;</span><span class="p">,</span><span class="w">
-      </span><span class="ss">updated_at</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="4082458201-10">#</span><span class="nc" data-group-id="4082458201-10">DateTime</span><span class="p" data-group-id="4082458201-10">&lt;</span><span class="mi">2018</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mi">05</span><span class="w"> </span><span class="mi">09</span><span class="p">:</span><span class="mi">54</span><span class="p">:</span><span class="mf">49.406486</span><span class="nc">Z</span><span class="p" data-group-id="4082458201-10">&gt;</span><span class="p">,</span><span class="w">
+      </span><span class="ss">inserted_at</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="2716912783-9">#</span><span class="nc" data-group-id="2716912783-9">DateTime</span><span class="p" data-group-id="2716912783-9">&lt;</span><span class="mi">2018</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mi">05</span><span class="w"> </span><span class="mi">09</span><span class="p">:</span><span class="mi">54</span><span class="p">:</span><span class="mf">49.406483</span><span class="nc">Z</span><span class="p" data-group-id="2716912783-9">&gt;</span><span class="p">,</span><span class="w">
+      </span><span class="ss">updated_at</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="2716912783-10">#</span><span class="nc" data-group-id="2716912783-10">DateTime</span><span class="p" data-group-id="2716912783-10">&lt;</span><span class="mi">2018</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mi">05</span><span class="w"> </span><span class="mi">09</span><span class="p">:</span><span class="mi">54</span><span class="p">:</span><span class="mf">49.406486</span><span class="nc">Z</span><span class="p" data-group-id="2716912783-10">&gt;</span><span class="p">,</span><span class="w">
       </span><span class="ss">inserted_by</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;bc11085d-3e47-49a5-90c4-c787ee41c1ba&quot;</span><span class="p">,</span><span class="w">
       </span><span class="ss">updated_by</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;d221d7f1-81cb-44d3-b6d4-8d7e42f97ff9&quot;</span><span class="p">,</span><span class="w">
       </span><span class="ss">invalid_tax_id</span><span class="p">:</span><span class="w"> </span><span class="no">false</span><span class="p">,</span><span class="w">
       </span><span class="ss">email</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;petroivanov@email.com&quot;</span><span class="p">,</span><span class="w">
       </span><span class="ss">unzr</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;19900101-0001&quot;</span><span class="p">,</span><span class="w">
       </span><span class="ss">process_disclosure_data_consent</span><span class="p">:</span><span class="w"> </span><span class="no">true</span><span class="p">,</span><span class="w">
-      </span><span class="ss">addresses</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="4082458201-11">[</span><span class="p" data-group-id="4082458201-11">]</span><span class="p">,</span><span class="w">
+      </span><span class="ss">addresses</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="2716912783-11">[</span><span class="p" data-group-id="2716912783-11">]</span><span class="p">,</span><span class="w">
       </span><span class="ss">death_date</span><span class="p">:</span><span class="w"> </span><span class="no">nil</span><span class="p">,</span><span class="w">
       </span><span class="ss">birth_settlement</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Київ&quot;</span><span class="p">,</span><span class="w">
       </span><span class="ss">preferred_way_communication</span><span class="p">:</span><span class="w"> </span><span class="no">nil</span><span class="p">,</span><span class="w">
-      </span><span class="ss">merged_persons</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="4082458201-12">[</span><span class="p" data-group-id="4082458201-12">]</span><span class="p">,</span><span class="w">
+      </span><span class="ss">merged_persons</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="2716912783-12">[</span><span class="p" data-group-id="2716912783-12">]</span><span class="p">,</span><span class="w">
       </span><span class="ss">master_person</span><span class="p">:</span><span class="w"> </span><span class="no">nil</span><span class="p">,</span><span class="w">
-      </span><span class="ss">documents</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="4082458201-13">[</span><span class="p" data-group-id="4082458201-13">]</span><span class="p">,</span><span class="w">
+      </span><span class="ss">documents</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="2716912783-13">[</span><span class="p" data-group-id="2716912783-13">]</span><span class="p">,</span><span class="w">
       </span><span class="ss">gender</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;MALE&quot;</span><span class="p">,</span><span class="w">
       </span><span class="ss">patient_signed</span><span class="p">:</span><span class="w"> </span><span class="no">true</span><span class="p">,</span><span class="w">
       </span><span class="ss">no_tax_id</span><span class="p">:</span><span class="w"> </span><span class="no">false</span><span class="p">,</span><span class="w">
@@ -532,17 +549,17 @@ MPI.Rpc              </h1>
       </span><span class="ss">birth_date</span><span class="p">:</span><span class="w"> </span><span class="ld">~D[1991-08-27]</span><span class="p">,</span><span class="w">
       </span><span class="ss">is_active</span><span class="p">:</span><span class="w"> </span><span class="no">true</span><span class="p">,</span><span class="w">
       </span><span class="ss">version</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;1&quot;</span><span class="p">,</span><span class="w">
-      </span><span class="ss">emergency_contact</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="4082458201-14">%{</span><span class="p" data-group-id="4082458201-14">}</span><span class="p">,</span><span class="w">
+      </span><span class="ss">emergency_contact</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="2716912783-14">%{</span><span class="p" data-group-id="2716912783-14">}</span><span class="p">,</span><span class="w">
       </span><span class="ss">tax_id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;3126509816&quot;</span><span class="p">,</span><span class="w">
       </span><span class="ss">confidant_person</span><span class="p">:</span><span class="w"> </span><span class="no">nil</span><span class="p">,</span><span class="w">
-      </span><span class="ss">authentication_methods</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="4082458201-15">[</span><span class="w">
-        </span><span class="p" data-group-id="4082458201-16">%{</span><span class="s">&quot;phone_number&quot;</span><span class="w"> </span><span class="o">=</span><span class="o">&gt;</span><span class="w"> </span><span class="s">&quot;+380508887700&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;type&quot;</span><span class="w"> </span><span class="o">=</span><span class="o">&gt;</span><span class="w"> </span><span class="s">&quot;OTP&quot;</span><span class="p" data-group-id="4082458201-16">}</span><span class="w">
-      </span><span class="p" data-group-id="4082458201-15">]</span><span class="p">,</span><span class="w">
-      </span><span class="ss">phones</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="4082458201-17">[</span><span class="p" data-group-id="4082458201-17">]</span><span class="p">,</span><span class="w">
+      </span><span class="ss">authentication_methods</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="2716912783-15">[</span><span class="w">
+        </span><span class="p" data-group-id="2716912783-16">%{</span><span class="s">&quot;phone_number&quot;</span><span class="w"> </span><span class="o">=</span><span class="o">&gt;</span><span class="w"> </span><span class="s">&quot;+380508887700&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;type&quot;</span><span class="w"> </span><span class="o">=</span><span class="o">&gt;</span><span class="w"> </span><span class="s">&quot;OTP&quot;</span><span class="p" data-group-id="2716912783-16">}</span><span class="w">
+      </span><span class="p" data-group-id="2716912783-15">]</span><span class="p">,</span><span class="w">
+      </span><span class="ss">phones</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="2716912783-17">[</span><span class="p" data-group-id="2716912783-17">]</span><span class="p">,</span><span class="w">
       </span><span class="ss">status</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;active&quot;</span><span class="w">
-    </span><span class="p" data-group-id="4082458201-8">}</span><span class="w">
-  </span><span class="p" data-group-id="4082458201-7">]</span><span class="w">
-</span><span class="p" data-group-id="4082458201-6">}</span></code></pre>
+    </span><span class="p" data-group-id="2716912783-8">}</span><span class="w">
+  </span><span class="p" data-group-id="2716912783-7">]</span><span class="w">
+</span><span class="p" data-group-id="2716912783-6">}</span></code></pre>
   </section>
 </div>
 <div class="detail" id="reset_auth_method/2">
@@ -565,17 +582,17 @@ MPI.Rpc              </h1>
   Examples
 </h2>
 
-<pre><code class="nohighlight makeup elixir"><span class="gp unselectable">iex&gt; </span><span class="nc">MPI.Rpc</span><span class="o">.</span><span class="n">reset_auth_method</span><span class="p" data-group-id="5295304250-1">(</span><span class="s">&quot;26e673e1-1d68-413e-b96c-407b45d9f572&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;22f673e1-1d68-413e-b96c-407b45d9ffa3&quot;</span><span class="p" data-group-id="5295304250-1">)</span><span class="w">
-</span><span class="p" data-group-id="5295304250-2">{</span><span class="w">
+<pre><code class="nohighlight makeup elixir"><span class="gp unselectable">iex&gt; </span><span class="nc">MPI.Rpc</span><span class="o">.</span><span class="n">reset_auth_method</span><span class="p" data-group-id="5450338094-1">(</span><span class="s">&quot;26e673e1-1d68-413e-b96c-407b45d9f572&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;22f673e1-1d68-413e-b96c-407b45d9ffa3&quot;</span><span class="p" data-group-id="5450338094-1">)</span><span class="w">
+</span><span class="p" data-group-id="5450338094-2">{</span><span class="w">
   </span><span class="ss">:ok</span><span class="p">,</span><span class="w">
-  </span><span class="p" data-group-id="5295304250-3">%{</span><span class="w">
+  </span><span class="p" data-group-id="5450338094-3">%{</span><span class="w">
     </span><span class="ss">id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;26e673e1-1d68-413e-b96c-407b45d9f572&quot;</span><span class="p">,</span><span class="w">
-    </span><span class="ss">authentication_methods</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="5295304250-4">[</span><span class="w">
-      </span><span class="p" data-group-id="5295304250-5">%{</span><span class="s">&quot;type&quot;</span><span class="w"> </span><span class="o">=</span><span class="o">&gt;</span><span class="w"> </span><span class="s">&quot;NA&quot;</span><span class="p" data-group-id="5295304250-5">}</span><span class="w">
-    </span><span class="p" data-group-id="5295304250-4">]</span><span class="p">,</span><span class="w">
+    </span><span class="ss">authentication_methods</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="5450338094-4">[</span><span class="w">
+      </span><span class="p" data-group-id="5450338094-5">%{</span><span class="s">&quot;type&quot;</span><span class="w"> </span><span class="o">=</span><span class="o">&gt;</span><span class="w"> </span><span class="s">&quot;NA&quot;</span><span class="p" data-group-id="5450338094-5">}</span><span class="w">
+    </span><span class="p" data-group-id="5450338094-4">]</span><span class="p">,</span><span class="w">
     </span><span class="n">...</span><span class="w">
-  </span><span class="p" data-group-id="5295304250-3">}</span><span class="w">
-</span><span class="p" data-group-id="5295304250-2">}</span></code></pre>
+  </span><span class="p" data-group-id="5450338094-3">}</span><span class="w">
+</span><span class="p" data-group-id="5450338094-2">}</span></code></pre>
   </section>
 </div>
 <div class="detail" id="search_persons/3">
@@ -654,30 +671,30 @@ MPI.Rpc              </h1>
   Examples
 </h2>
 
-<pre><code class="nohighlight makeup elixir"><span class="gp unselectable">iex&gt; </span><span class="nc">MPI.Rpc</span><span class="o">.</span><span class="n">search_persons</span><span class="p" data-group-id="5463321296-1">(</span><span class="p" data-group-id="5463321296-2">%{</span><span class="s">&quot;last_name&quot;</span><span class="w"> </span><span class="o">=</span><span class="o">&gt;</span><span class="w"> </span><span class="s">&quot;Іванов&quot;</span><span class="p" data-group-id="5463321296-2">}</span><span class="p" data-group-id="5463321296-1">)</span><span class="w">
-</span><span class="p" data-group-id="5463321296-3">%</span><span class="nc" data-group-id="5463321296-3">Scrivener.Page</span><span class="p" data-group-id="5463321296-3">{</span><span class="w">
-  </span><span class="ss">entries</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="5463321296-4">[</span><span class="w">
-    </span><span class="p" data-group-id="5463321296-5">%{</span><span class="w">
+<pre><code class="nohighlight makeup elixir"><span class="gp unselectable">iex&gt; </span><span class="nc">MPI.Rpc</span><span class="o">.</span><span class="n">search_persons</span><span class="p" data-group-id="3963662485-1">(</span><span class="p" data-group-id="3963662485-2">%{</span><span class="s">&quot;last_name&quot;</span><span class="w"> </span><span class="o">=</span><span class="o">&gt;</span><span class="w"> </span><span class="s">&quot;Іванов&quot;</span><span class="p" data-group-id="3963662485-2">}</span><span class="p" data-group-id="3963662485-1">)</span><span class="w">
+</span><span class="p" data-group-id="3963662485-3">%</span><span class="nc" data-group-id="3963662485-3">Scrivener.Page</span><span class="p" data-group-id="3963662485-3">{</span><span class="w">
+  </span><span class="ss">entries</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="3963662485-4">[</span><span class="w">
+    </span><span class="p" data-group-id="3963662485-5">%{</span><span class="w">
       </span><span class="ss">id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;26e673e1-1d68-413e-b96c-407b45d9f572&quot;</span><span class="p">,</span><span class="w">
       </span><span class="ss">first_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Петро&quot;</span><span class="p">,</span><span class="w">
       </span><span class="ss">last_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Іванов&quot;</span><span class="p">,</span><span class="w">
       </span><span class="ss">second_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Миколайович&quot;</span><span class="p">,</span><span class="w">
       </span><span class="ss">birth_country</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Ukraine&quot;</span><span class="p">,</span><span class="w">
-      </span><span class="ss">inserted_at</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="5463321296-6">#</span><span class="nc" data-group-id="5463321296-6">DateTime</span><span class="p" data-group-id="5463321296-6">&lt;</span><span class="mi">2018</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mi">05</span><span class="w"> </span><span class="mi">09</span><span class="p">:</span><span class="mi">54</span><span class="p">:</span><span class="mf">49.406483</span><span class="nc">Z</span><span class="p" data-group-id="5463321296-6">&gt;</span><span class="p">,</span><span class="w">
-      </span><span class="ss">updated_at</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="5463321296-7">#</span><span class="nc" data-group-id="5463321296-7">DateTime</span><span class="p" data-group-id="5463321296-7">&lt;</span><span class="mi">2018</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mi">05</span><span class="w"> </span><span class="mi">09</span><span class="p">:</span><span class="mi">54</span><span class="p">:</span><span class="mf">49.406486</span><span class="nc">Z</span><span class="p" data-group-id="5463321296-7">&gt;</span><span class="p">,</span><span class="w">
+      </span><span class="ss">inserted_at</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="3963662485-6">#</span><span class="nc" data-group-id="3963662485-6">DateTime</span><span class="p" data-group-id="3963662485-6">&lt;</span><span class="mi">2018</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mi">05</span><span class="w"> </span><span class="mi">09</span><span class="p">:</span><span class="mi">54</span><span class="p">:</span><span class="mf">49.406483</span><span class="nc">Z</span><span class="p" data-group-id="3963662485-6">&gt;</span><span class="p">,</span><span class="w">
+      </span><span class="ss">updated_at</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="3963662485-7">#</span><span class="nc" data-group-id="3963662485-7">DateTime</span><span class="p" data-group-id="3963662485-7">&lt;</span><span class="mi">2018</span><span class="o">-</span><span class="mi">11</span><span class="o">-</span><span class="mi">05</span><span class="w"> </span><span class="mi">09</span><span class="p">:</span><span class="mi">54</span><span class="p">:</span><span class="mf">49.406486</span><span class="nc">Z</span><span class="p" data-group-id="3963662485-7">&gt;</span><span class="p">,</span><span class="w">
       </span><span class="ss">inserted_by</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;bc11085d-3e47-49a5-90c4-c787ee41c1ba&quot;</span><span class="p">,</span><span class="w">
       </span><span class="ss">updated_by</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;d221d7f1-81cb-44d3-b6d4-8d7e42f97ff9&quot;</span><span class="p">,</span><span class="w">
       </span><span class="ss">invalid_tax_id</span><span class="p">:</span><span class="w"> </span><span class="no">false</span><span class="p">,</span><span class="w">
       </span><span class="ss">email</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;petroivanov@email.com&quot;</span><span class="p">,</span><span class="w">
       </span><span class="ss">unzr</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;19900101-0001&quot;</span><span class="p">,</span><span class="w">
       </span><span class="ss">process_disclosure_data_consent</span><span class="p">:</span><span class="w"> </span><span class="no">true</span><span class="p">,</span><span class="w">
-      </span><span class="ss">addresses</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="5463321296-8">[</span><span class="p" data-group-id="5463321296-8">]</span><span class="p">,</span><span class="w">
+      </span><span class="ss">addresses</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="3963662485-8">[</span><span class="p" data-group-id="3963662485-8">]</span><span class="p">,</span><span class="w">
       </span><span class="ss">death_date</span><span class="p">:</span><span class="w"> </span><span class="no">nil</span><span class="p">,</span><span class="w">
       </span><span class="ss">birth_settlement</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Київ&quot;</span><span class="p">,</span><span class="w">
       </span><span class="ss">preferred_way_communication</span><span class="p">:</span><span class="w"> </span><span class="no">nil</span><span class="p">,</span><span class="w">
       </span><span class="ss">master_person</span><span class="p">:</span><span class="w"> </span><span class="no">nil</span><span class="p">,</span><span class="w">
-      </span><span class="ss">merged_persons</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="5463321296-9">[</span><span class="p" data-group-id="5463321296-9">]</span><span class="p">,</span><span class="w">
-      </span><span class="ss">documents</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="5463321296-10">[</span><span class="p" data-group-id="5463321296-10">]</span><span class="p">,</span><span class="w">
+      </span><span class="ss">merged_persons</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="3963662485-9">[</span><span class="p" data-group-id="3963662485-9">]</span><span class="p">,</span><span class="w">
+      </span><span class="ss">documents</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="3963662485-10">[</span><span class="p" data-group-id="3963662485-10">]</span><span class="p">,</span><span class="w">
       </span><span class="ss">gender</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;MALE&quot;</span><span class="p">,</span><span class="w">
       </span><span class="ss">patient_signed</span><span class="p">:</span><span class="w"> </span><span class="no">true</span><span class="p">,</span><span class="w">
       </span><span class="ss">no_tax_id</span><span class="p">:</span><span class="w"> </span><span class="no">false</span><span class="p">,</span><span class="w">
@@ -685,31 +702,31 @@ MPI.Rpc              </h1>
       </span><span class="ss">birth_date</span><span class="p">:</span><span class="w"> </span><span class="ld">~D[1991-08-27]</span><span class="p">,</span><span class="w">
       </span><span class="ss">is_active</span><span class="p">:</span><span class="w"> </span><span class="no">true</span><span class="p">,</span><span class="w">
       </span><span class="ss">version</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;1&quot;</span><span class="p">,</span><span class="w">
-      </span><span class="ss">emergency_contact</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="5463321296-11">%{</span><span class="p" data-group-id="5463321296-11">}</span><span class="p">,</span><span class="w">
+      </span><span class="ss">emergency_contact</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="3963662485-11">%{</span><span class="p" data-group-id="3963662485-11">}</span><span class="p">,</span><span class="w">
       </span><span class="ss">tax_id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;3126509816&quot;</span><span class="p">,</span><span class="w">
       </span><span class="ss">confidant_person</span><span class="p">:</span><span class="w"> </span><span class="no">nil</span><span class="p">,</span><span class="w">
-      </span><span class="ss">authentication_methods</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="5463321296-12">[</span><span class="w">
-        </span><span class="p" data-group-id="5463321296-13">%{</span><span class="s">&quot;phone_number&quot;</span><span class="w"> </span><span class="o">=</span><span class="o">&gt;</span><span class="w"> </span><span class="s">&quot;+380508887700&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;type&quot;</span><span class="w"> </span><span class="o">=</span><span class="o">&gt;</span><span class="w"> </span><span class="s">&quot;OTP&quot;</span><span class="p" data-group-id="5463321296-13">}</span><span class="w">
-      </span><span class="p" data-group-id="5463321296-12">]</span><span class="p">,</span><span class="w">
-      </span><span class="ss">phones</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="5463321296-14">[</span><span class="p" data-group-id="5463321296-14">]</span><span class="p">,</span><span class="w">
+      </span><span class="ss">authentication_methods</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="3963662485-12">[</span><span class="w">
+        </span><span class="p" data-group-id="3963662485-13">%{</span><span class="s">&quot;phone_number&quot;</span><span class="w"> </span><span class="o">=</span><span class="o">&gt;</span><span class="w"> </span><span class="s">&quot;+380508887700&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;type&quot;</span><span class="w"> </span><span class="o">=</span><span class="o">&gt;</span><span class="w"> </span><span class="s">&quot;OTP&quot;</span><span class="p" data-group-id="3963662485-13">}</span><span class="w">
+      </span><span class="p" data-group-id="3963662485-12">]</span><span class="p">,</span><span class="w">
+      </span><span class="ss">phones</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="3963662485-14">[</span><span class="p" data-group-id="3963662485-14">]</span><span class="p">,</span><span class="w">
       </span><span class="ss">status</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;active&quot;</span><span class="w">
-    </span><span class="p" data-group-id="5463321296-5">}</span><span class="w">
-  </span><span class="p" data-group-id="5463321296-4">]</span><span class="p">,</span><span class="w">
+    </span><span class="p" data-group-id="3963662485-5">}</span><span class="w">
+  </span><span class="p" data-group-id="3963662485-4">]</span><span class="p">,</span><span class="w">
   </span><span class="ss">page_number</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
   </span><span class="ss">page_size</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
   </span><span class="ss">total_entries</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
   </span><span class="ss">total_pages</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="w">
-</span><span class="p" data-group-id="5463321296-3">}</span><span class="w">
+</span><span class="p" data-group-id="3963662485-3">}</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">MPI.Rpc</span><span class="o">.</span><span class="n">search_persons</span><span class="p" data-group-id="5463321296-15">(</span><span class="p" data-group-id="5463321296-16">%{</span><span class="s">&quot;ids&quot;</span><span class="w"> </span><span class="o">=</span><span class="o">&gt;</span><span class="w"> </span><span class="p" data-group-id="5463321296-17">[</span><span class="s">&quot;26e673e1-1d68-413e-b96c-407b45d9f572&quot;</span><span class="p" data-group-id="5463321296-17">]</span><span class="p" data-group-id="5463321296-16">}</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="5463321296-18">[</span><span class="ss">:id</span><span class="p">,</span><span class="w"> </span><span class="ss">:first_name</span><span class="p">,</span><span class="w"> </span><span class="ss">:last_name</span><span class="p" data-group-id="5463321296-18">]</span><span class="p">,</span><span class="w"> </span><span class="ss">read_only</span><span class="p">:</span><span class="w"> </span><span class="no">true</span><span class="p">,</span><span class="w"> </span><span class="ss">paginate</span><span class="p">:</span><span class="w"> </span><span class="no">true</span><span class="p" data-group-id="5463321296-15">)</span><span class="w">
-</span><span class="p" data-group-id="5463321296-19">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="5463321296-20">[</span><span class="w">
-    </span><span class="p" data-group-id="5463321296-21">%{</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">MPI.Rpc</span><span class="o">.</span><span class="n">search_persons</span><span class="p" data-group-id="3963662485-15">(</span><span class="p" data-group-id="3963662485-16">%{</span><span class="s">&quot;ids&quot;</span><span class="w"> </span><span class="o">=</span><span class="o">&gt;</span><span class="w"> </span><span class="p" data-group-id="3963662485-17">[</span><span class="s">&quot;26e673e1-1d68-413e-b96c-407b45d9f572&quot;</span><span class="p" data-group-id="3963662485-17">]</span><span class="p" data-group-id="3963662485-16">}</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3963662485-18">[</span><span class="ss">:id</span><span class="p">,</span><span class="w"> </span><span class="ss">:first_name</span><span class="p">,</span><span class="w"> </span><span class="ss">:last_name</span><span class="p" data-group-id="3963662485-18">]</span><span class="p">,</span><span class="w"> </span><span class="ss">read_only</span><span class="p">:</span><span class="w"> </span><span class="no">true</span><span class="p">,</span><span class="w"> </span><span class="ss">paginate</span><span class="p">:</span><span class="w"> </span><span class="no">true</span><span class="p" data-group-id="3963662485-15">)</span><span class="w">
+</span><span class="p" data-group-id="3963662485-19">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3963662485-20">[</span><span class="w">
+    </span><span class="p" data-group-id="3963662485-21">%{</span><span class="w">
       </span><span class="ss">id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;26e673e1-1d68-413e-b96c-407b45d9f572&quot;</span><span class="p">,</span><span class="w">
       </span><span class="ss">first_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Петро&quot;</span><span class="p">,</span><span class="w">
       </span><span class="ss">last_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Іванов&quot;</span><span class="w">
-    </span><span class="p" data-group-id="5463321296-21">}</span><span class="w">
-  </span><span class="p" data-group-id="5463321296-20">]</span><span class="w">
-</span><span class="p" data-group-id="5463321296-19">}</span></code></pre>
+    </span><span class="p" data-group-id="3963662485-21">}</span><span class="w">
+  </span><span class="p" data-group-id="3963662485-20">]</span><span class="w">
+</span><span class="p" data-group-id="3963662485-19">}</span></code></pre>
   </section>
 </div>
         </section>
