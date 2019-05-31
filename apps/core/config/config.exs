@@ -12,7 +12,9 @@ config :core,
   namespace: Core,
   ecto_repos: [Core.Repo, Core.ReadRepo, Core.DeduplicationRepo],
   max_persons_result: {:system, :integer, "MAX_PERSONS_RESULT", 15},
-  system_user: {:system, "EHEALTH_SYSTEM_USER", "4261eacf-8008-4e62-899f-de1e2f7065f0"}
+  system_user: {:system, "EHEALTH_SYSTEM_USER", "4261eacf-8008-4e62-899f-de1e2f7065f0"},
+  max_page_size: {:system, :integer, "MAX_PAGE_SIZE", 300},
+  page_size: {:system, :integer, "PAGE_SIZE", 50}
 
 config :core, Core.ManualMerge, max_postponed_requests: {:system, :integer, "MAX_POSTPONED_MANUAL_MERGE_REQUESTS", 5}
 
