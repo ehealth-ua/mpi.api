@@ -126,37 +126,7 @@ defmodule Core.Persons.PersonTest do
              page_size: 2,
              total_entries: 0,
              total_pages: 1
-           } == PersonsAPI.search(%{"birth_certificate" => "АК \"27"})
-  end
-
-  test "searches with type and number" do
-    insert_person_test_data(%{
-      id: @test_person_id,
-      documents: [%{type: "PASSPORT", number: @test_document_number}]
-    })
-
-    insert_person_test_data(%{id: @test_person_id2, documents: []})
-
-    assert %Scrivener.Page{
-             entries: [
-               %Person{
-                 id: @test_person_id,
-                 documents: [%PersonDocument{type: "PASSPORT", number: @test_document_number}]
-               }
-             ]
-           } = PersonsAPI.search(%{"type" => "passport", "number" => @test_document_number})
-
-    test_params_to_entries_count = [
-      {%{"type" => "PASSPORT", "number" => @test_document_number}, 1},
-      {%{"type" => "passport", "number" => @test_document_number}, 1},
-      {%{"type" => "national_id", "number" => @test_document_number}, 0},
-      {%{"type" => nil}, 2},
-      {%{}, 2}
-    ]
-
-    for {params, expected_count} <- test_params_to_entries_count do
-      %Scrivener.Page{total_entries: ^expected_count} = PersonsAPI.search(params)
-    end
+           } == PersonsAPI.search(%{"birth_certificate" => "АК \"27", "page_size" => 2})
   end
 
   test "searches with auth phone number" do
@@ -204,36 +174,6 @@ defmodule Core.Persons.PersonTest do
     for {params, expected_count} <- test_params_to_entries_count do
       %Scrivener.Page{total_entries: ^expected_count} = PersonsAPI.search(params)
     end
-  end
-
-  test "searches by unzr first when unzr in not set, then with tax_id and birthday ordered by inserted_at" do
-    ids =
-      Enum.reduce(1..100, [], fn n, acc ->
-        %Person{id: id} =
-          insert(
-            :mpi,
-            :person,
-            tax_id: "0123456789",
-            birth_date: ~D[1996-12-12],
-            unzr: nil,
-            last_name: Integer.to_string(n, 2)
-          )
-
-        [id | acc]
-      end)
-
-    assert %Scrivener.Page{
-             entries: persons
-           } =
-             PersonsAPI.search(%{
-               "page_size" => "200",
-               "unzr" => "19961212-01234",
-               "tax_id" => "0123456789",
-               birth_date: ~D[1996-12-12]
-             })
-
-    searched_ids = Enum.map(persons, fn %Person{id: id} -> id end)
-    assert MapSet.new(searched_ids) == MapSet.new(ids)
   end
 
   test "searches by unzr, with tax_id and birthday presence" do
