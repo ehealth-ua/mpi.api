@@ -13,9 +13,16 @@ defmodule MPI.Web.PersonView do
   end
 
   def render("person_short.json", %{person: %{} = person, fields: fields}) do
-    person
-    |> Map.take(fields)
-    |> Map.delete(:authentication_methods)
+    response =
+      person
+      |> Map.take(List.delete(fields, :phones))
+      |> Map.delete(:authentication_methods)
+
+    if :phones in fields do
+      Map.put(response, :phones, render("person_phones.json", person))
+    else
+      response
+    end
   end
 
   def render("show.json", %{person: %Person{} = person}) do
