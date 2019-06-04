@@ -5,6 +5,31 @@ See [Conventional Commits](Https://conventionalcommits.org) for commit guideline
 
 <!-- changelog -->
 
+## [2.5.0](https://github.com/edenlabllc/mpi.api/compare/2.4.3...2.5.0) (2019-6-4)
+
+
+
+
+### Features:
+
+* person preload fields (#330)
+
+* rpc get_person_by_id func improved (fields param could be given) (#329)
+
+* Migration for person authentication methods#3376 (#325)
+
+### Bug Fixes:
+
+* render phones (#332)
+
+* set queue target and interval for ecto repos (#331)
+
+* person authentication_methods json field render fixed (#326)
+
+* person updates now contain all needed columns (#323)
+
+* inserted at in person documents, attempt 2 (#324)
+
 ## [2.4.3](https://github.com/edenlabllc/mpi.api/compare/2.4.2...2.4.3) (2019-5-13)
 
 
