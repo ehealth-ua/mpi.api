@@ -33,7 +33,8 @@ defmodule PersonDeactivator.MixProject do
   defp deps do
     [
       {:kaffe, "~> 1.11"},
-      {:libcluster, "~> 3.0", git: "https://github.com/AlexKovalevych/libcluster.git", branch: "kube_namespaces"},
+      {:libcluster, "~> 3.0",
+       git: "https://github.com/AlexKovalevych/libcluster.git", branch: "fix_kubernetes_strategy"},
       {:core, in_umbrella: true}
     ]
   end

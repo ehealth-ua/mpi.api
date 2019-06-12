@@ -42,7 +42,7 @@ defmodule Core.MixProject do
   defp deps do
     [
       {:confex_config_provider, "~> 0.1.0"},
-      {:kube_rpc, "~> 0.2.0"},
+      {:kube_rpc, "~> 0.3.0"},
       {:confex, "~> 3.4"},
       {:ecto, "~> 3.0"},
       {:ecto_sql, "~> 3.0"},
