@@ -13,16 +13,10 @@ defmodule MPI.Web.PersonView do
   end
 
   def render("person_short.json", %{person: %{} = person, fields: fields}) do
-    response =
-      person
-      |> Map.take(List.delete(fields, :phones))
-      |> Map.delete(:authentication_methods)
-
-    if :phones in fields do
-      Map.put(response, :phones, render("person_phones.json", person))
-    else
-      response
-    end
+    person
+    |> Map.take(fields)
+    |> render_phones()
+    |> render_authentication_methods()
   end
 
   def render("show.json", %{person: %Person{} = person}) do
@@ -131,4 +125,13 @@ defmodule MPI.Web.PersonView do
   defp extended_field(fields) do
     ~w(id inserted_at updated_at)a ++ fields
   end
+
+  defp render_phones(%{phones: _} = person), do: %{person | phones: render("person_phones.json", person)}
+  defp render_phones(person), do: person
+
+  defp render_authentication_methods(%{authentication_methods: _} = person) do
+    %{person | authentication_methods: render("person_authentication_methods.json", person)}
+  end
+
+  defp render_authentication_methods(person), do: person
 end

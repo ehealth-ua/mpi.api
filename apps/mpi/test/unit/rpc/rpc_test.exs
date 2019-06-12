@@ -324,7 +324,7 @@ defmodule MPI.RpcTest do
     test "success with fields param" do
       person = insert(:mpi, :person)
       person_id = person.id
-      fields = ~w(id first_name last_name second_name birth_date)a
+      fields = ~w(id first_name last_name second_name birth_date authentication_methods)a
 
       resp = Rpc.get_person_by_id(person_id, fields)
       assert {:ok, %{id: ^person_id}} = resp
