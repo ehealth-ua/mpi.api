@@ -48,3 +48,8 @@ uploads/
 
 # Python
 __pycache__
+
+# Environment files (never commit real secrets)
+.env
+.env.local
+.env.production
